@@ -2,10 +2,11 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
+import { getAnalytics } from 'firebase/analytics';
 
 /**
  * Configuración de Firebase para QUEHAYHOY
- * Reemplaza estos valores con los de tu proyecto en Firebase Console
+ * Credenciales desde .env (VITE_FIREBASE_*)
  */
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,18 +20,28 @@ const firebaseConfig = {
 
 const hasValidConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
 
-// Inicializar Firebase solo si hay configuración
 let app = null;
 let db = null;
 let auth = null;
 let functions = null;
+let analytics = null;
 
 if (hasValidConfig) {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
   functions = getFunctions(app);
+  if (typeof window !== 'undefined') {
+    analytics = getAnalytics(app);
+  }
 }
 
-export { db, auth, functions };
+/** Firestore - base de datos */
+export { db };
+/** Auth - autenticación (Google, Apple, etc.) */
+export { auth };
+/** Cloud Functions */
+export { functions };
+/** Analytics - métricas (opcional) */
+export { analytics };
 export default app;

@@ -1,127 +1,125 @@
 import { useState, useMemo } from 'react'
 import { useTheme } from './contexts/ThemeContext.jsx'
-import { Navbar } from './components/layout'
-import { EventCard, CategoryFilter } from './components/events'
+import { useEvents } from './hooks/useEvents'
+import { Navbar, BottomNav, FloatingButtons } from './components/layout'
+import { EventCardCarousel, CategorySelector } from './components/events'
 import './App.css'
 
-// Eventos de ejemplo para demo (con categorías: bares, ferias, conciertos)
-const DEMO_EVENTS = [
-  {
-    id: '1',
-    title: 'Noche de Jazz en Urdesa',
-    description: 'Velada íntima con música en vivo y ambiente acogedor.',
-    category: 'bares',
-    capacity_level: 'INTIMATE',
-    capacity: 25,
-    sector: 'Urdesa',
-    date: 'Sáb 22 Mar · 20:00',
-    price: 15,
-  },
-  {
-    id: '2',
-    title: 'Festival Gastronómico Samborondón',
-    description: 'Degustación de platos locales con más de 100 asistentes.',
-    category: 'ferias',
-    capacity_level: 'SOCIAL',
-    capacity: 120,
-    sector: 'Samborondón',
-    date: 'Dom 23 Mar · 12:00',
-    price: 25,
-  },
-  {
-    id: '3',
-    title: 'Concierto Masivo Puerto Santa Ana',
-    description: 'Artistas nacionales e internacionales en el malecón.',
-    category: 'conciertos',
-    capacity_level: 'MASSIVE',
-    capacity: 500,
-    sector: 'Puerto Santa Ana',
-    date: 'Vie 28 Mar · 19:00',
-    price: 45,
-  },
-  {
-    id: '4',
-    title: 'Bar con Terraza Urdesa',
-    description: 'Cócteles y tapas con vista a la ciudad.',
-    category: 'bares',
-    capacity_level: 'SOCIAL',
-    capacity: 80,
-    sector: 'Urdesa',
-    date: 'Jue 21 Mar · 18:00',
-    price: 12,
-  },
-  {
-    id: '5',
-    title: 'Feria Artesanal Malecón',
-    description: 'Artesanías y productos locales.',
-    category: 'ferias',
-    capacity_level: 'MASSIVE',
-    capacity: 800,
-    sector: 'Puerto Santa Ana',
-    date: 'Sáb 22 Mar · 10:00',
-    price: 0,
-  },
-]
-
 function App() {
-  const { theme } = useTheme()
+  const { theme, toggleTheme } = useTheme()
+  const { events, loading: eventsLoading, error: eventsError } = useEvents()
   const isDark = theme === 'dark'
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeNavTab, setActiveNavTab] = useState('home')
+  const [filterGratis, setFilterGratis] = useState(false)
 
   const filteredEvents = useMemo(() => {
-    let list = DEMO_EVENTS
+    let list = events
     if (activeCategory !== 'all') {
       list = list.filter((e) => e.category === activeCategory)
+    }
+    if (filterGratis) {
+      list = list.filter((e) => e.price === 0)
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       list = list.filter(
         (e) =>
-          e.title.toLowerCase().includes(q) ||
+          e.title?.toLowerCase().includes(q) ||
           e.sector?.toLowerCase().includes(q) ||
           e.description?.toLowerCase().includes(q)
       )
     }
     return list
-  }, [activeCategory, searchQuery])
+  }, [events, activeCategory, searchQuery, filterGratis])
 
   return (
     <div
-      className={`min-h-screen transition-colors ${
-        isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-white text-gray-900'
+      className={`min-h-screen transition-colors pb-20 md:pb-8 ${
+        isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-gray-50 text-gray-900'
       }`}
     >
       <Navbar searchValue={searchQuery} onSearchChange={setSearchQuery} />
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
-        <h2
-          className="text-2xl font-bold mb-4"
-          style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
-        >
-          Eventos en Guayaquil
-        </h2>
-
-        <div className="mb-6">
-          <CategoryFilter
+      <main className="mx-auto max-w-6xl px-4 py-4 md:py-6">
+        <section className="mb-6">
+          <CategorySelector
             activeCategory={activeCategory}
             onSelect={setActiveCategory}
             isDark={isDark}
           />
-        </div>
+        </section>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredEvents.map((event) => (
-            <EventCard key={event.id} event={event} isDark={isDark} />
-          ))}
-        </div>
+        <section className="mb-8 pb-20 md:pb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+            >
+              <span>🔥</span>
+              Top Finde Guayaquil
+            </h2>
+            <a
+              href="#"
+              className="text-sm font-medium text-[#14b8a6] hover:underline"
+            >
+              Ver todo
+            </a>
+          </div>
 
-        {filteredEvents.length === 0 && (
-          <p className="text-center text-gray-500 dark:text-gray-400 py-12">
-            No hay eventos que coincidan con tu búsqueda o filtro.
-          </p>
-        )}
+          {eventsLoading ? (
+            <div className="flex justify-center py-16">
+              <div
+                className="w-10 h-10 border-4 border-[#14b8a6] border-t-transparent rounded-full animate-spin"
+                role="status"
+                aria-label="Cargando"
+              />
+            </div>
+          ) : eventsError ? (
+            <p
+              className="text-center py-12"
+              style={{ color: isDark ? '#ef4444' : '#dc2626' }}
+            >
+              {eventsError}
+            </p>
+          ) : (
+            <>
+              <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:overflow-visible scrollbar-hide">
+                {filteredEvents.map((event) => (
+                  <EventCardCarousel
+                    key={event.id}
+                    event={event}
+                    isDark={isDark}
+                  />
+                ))}
+              </div>
+
+              {filteredEvents.length === 0 && (
+                <p
+                  className="text-center py-12"
+                  style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
+                >
+                  No hay eventos que coincidan con tu búsqueda o filtro.
+                </p>
+              )}
+            </>
+          )}
+        </section>
       </main>
+
+      <FloatingButtons
+        onFilter={() => setFilterGratis(false)}
+        onGratis={() => setFilterGratis((v) => !v)}
+        onToggleTheme={toggleTheme}
+        isDark={isDark}
+      />
+
+      <BottomNav
+        activeTab={activeNavTab}
+        onTabChange={setActiveNavTab}
+        hasNotifications={true}
+      />
     </div>
   )
 }

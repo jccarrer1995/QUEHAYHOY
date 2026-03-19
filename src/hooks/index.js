@@ -1,2 +1,1 @@
-// Hooks export
-export { useTheme } from '../contexts/ThemeContext';
+export { useEvents } from './useEvents.js'
