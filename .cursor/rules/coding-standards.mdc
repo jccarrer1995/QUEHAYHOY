@@ -1,0 +1,29 @@
+---
+description: Estándares de código para QUEHAYHOY (React, TypeScript, Tailwind)
+alwaysApply: true
+---
+
+# Estándares de código QUEHAYHOY
+
+## Cuando generes código, asegúrate de:
+
+1. **Estructura de carpetas**: Seguir la estructura de carpetas existente del proyecto.
+
+2. **TypeScript estricto**: No usar `any`; definir tipos e interfaces explícitos.
+
+3. **Hooks y patrones**: Usar los hooks y patterns establecidos:
+   - React Query para fetch y cache
+   - Zustand para estado global
+   - react-hook-form para formularios
+
+4. **Imports**: Importar desde los índices de features (`@/features/nombre`), no desde archivos internos.
+
+5. **Estilos**: Usar Tailwind para styling; evitar CSS modules o styled-components salvo excepción justificada.
+
+6. **Modo claro y oscuro**: Todo el diseño debe funcionar correctamente en ambos modos. Usar Tailwind `dark:` para variantes oscuras, o estilos inline cuando sea necesario para garantizar contraste (p. ej. fondo `#121212`, texto `#E0E0E0` en dark; negro `#0a0a0a` sobre blanco en light).
+
+7. **Multi-tenant**: Considerar el sistema multi-tenant en componentes y lógica de negocio.
+
+7. **Estados de carga y error**: Siempre manejar estados de loading y error en componentes asíncronos.
+
+8. **Código testeable**: Escribir funciones puras, separar concerns y facilitar tests unitarios.
