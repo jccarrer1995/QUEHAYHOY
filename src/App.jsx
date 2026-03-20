@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, FloatingButtons } from './components/layout'
-import { EventCardCarousel, CategorySelector, SectorSelector } from './components/events'
+import { EventCardCarousel, CategorySelector, SectorSelector, EventSkeleton, EventDetail } from './components/events'
 import './App.css'
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
   const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, activeSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
+  const [eventDetailId, setEventDetailId] = useState(null)
 
   const filteredEvents = useMemo(() => {
     let list = events
@@ -74,12 +75,14 @@ function App() {
           </div>
 
           {eventsLoading ? (
-            <div className="flex justify-center py-16">
-              <div
-                className="w-10 h-10 border-4 border-[#14b8a6] border-t-transparent rounded-full animate-spin"
-                role="status"
-                aria-label="Cargando"
-              />
+            <div
+              className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide"
+              aria-label="Cargando eventos"
+              aria-busy="true"
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <EventSkeleton key={i} isDark={isDark} />
+              ))}
             </div>
           ) : eventsError ? (
             <p
@@ -96,6 +99,7 @@ function App() {
                     key={event.id}
                     event={event}
                     isDark={isDark}
+                    onSelect={setEventDetailId}
                   />
                 ))}
               </div>
@@ -119,6 +123,10 @@ function App() {
       />
 
       <BottomNav activeTab={activeNavTab} onTabChange={setActiveNavTab} />
+
+      {eventDetailId ? (
+        <EventDetail eventId={eventDetailId} isDark={isDark} onClose={() => setEventDetailId(null)} />
+      ) : null}
     </div>
   )
 }

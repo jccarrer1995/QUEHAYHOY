@@ -182,3 +182,57 @@
     border-right-color: var(--border);
   }
 }
+
+@keyframes qe-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton shimmer (degradado que se mueve) */
+.skeleton-shimmer-light,
+.skeleton-shimmer-dark {
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: qe-shimmer 1.2s linear infinite;
+}
+
+.skeleton-shimmer-light {
+  background-image: linear-gradient(
+    90deg,
+    rgba(229, 231, 235, 0.2) 0%,
+    rgba(229, 231, 235, 0.55) 50%,
+    rgba(229, 231, 235, 0.2) 100%
+  );
+}
+
+.skeleton-shimmer-dark {
+  background-image: linear-gradient(
+    90deg,
+    rgba(55, 65, 81, 0.25) 0%,
+    rgba(55, 65, 81, 0.65) 50%,
+    rgba(55, 65, 81, 0.25) 100%
+  );
+}
+
+@keyframes qe-logo-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+}
+
+.qe-logo-pulse {
+  animation: qe-logo-pulse 1.2s ease-in-out infinite;
+}

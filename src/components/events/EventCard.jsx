@@ -9,9 +9,14 @@
  * - MASSIVE: >400 personas 🔥 Masivo
  */
 import { optimizeImageUrl } from '../../lib/index.js'
+import { Users, Megaphone, Sparkles } from 'lucide-react'
 
 export function EventCard({ event, isDark = false }) {
   const { title, description, capacity_level, capacity, sector, date, price, imageUrl } = event ?? {};
+  const capacityKey =
+    typeof capacity_level === 'string' ? capacity_level.trim().toUpperCase() : capacity_level;
+  const capacityLevelText =
+    typeof capacity_level === 'string' && capacity_level.trim() ? capacity_level.trim() : null;
 
   const badgeConfig = {
     INTIMATE: {
@@ -29,14 +34,14 @@ export function EventCard({ event, isDark = false }) {
     SOCIAL: {
       label: 'Social',
       emoji: '👥',
-      className: 'bg-blue-100 text-blue-800 border-blue-300',
-      darkClassName: 'dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-600',
+      className: 'bg-white text-[#14b8a6] border-[#14b8a6]',
+      darkClassName: 'dark:bg-white dark:text-[#14b8a6] dark:border-[#14b8a6]',
     },
     LARGE: {
       label: 'Social',
       emoji: '👥',
-      className: 'bg-blue-100 text-blue-800 border-blue-300',
-      darkClassName: 'dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-600',
+      className: 'bg-white text-[#14b8a6] border-[#14b8a6]',
+      darkClassName: 'dark:bg-white dark:text-[#14b8a6] dark:border-[#14b8a6]',
     },
     MASSIVE: {
       label: 'Masivo',
@@ -47,7 +52,15 @@ export function EventCard({ event, isDark = false }) {
   };
 
   const getBadgeByCapacity = (level, cap) => {
-    if (level) return badgeConfig[level] ?? badgeConfig.SOCIAL;
+    const normalizedLevel = typeof level === 'string' ? level.trim().toUpperCase() : level;
+    if (normalizedLevel) {
+      const v = String(normalizedLevel);
+      if (v.includes('SOCIAL') || v.includes('LARGE')) return badgeConfig.SOCIAL;
+      if (v.includes('INTIMATE')) return badgeConfig.INTIMATE;
+      if (v.includes('EXCLUSIVE')) return badgeConfig.EXCLUSIVE;
+      if (v.includes('MASSIVE')) return badgeConfig.MASSIVE;
+      return badgeConfig[normalizedLevel] ?? badgeConfig.SOCIAL;
+    }
     if (typeof cap === 'number') {
       if (cap < 30) return badgeConfig.INTIMATE;
       if (cap <= 150) return badgeConfig.SOCIAL;
@@ -57,7 +70,12 @@ export function EventCard({ event, isDark = false }) {
     return badgeConfig.SOCIAL;
   };
 
-  const badge = getBadgeByCapacity(capacity_level, capacity);
+  const badge = getBadgeByCapacity(capacityKey, capacity);
+  const showUsersIcon = typeof capacityKey === 'string' ? capacityKey === 'SOCIAL' : false
+  const showMegaphoneIcon =
+    typeof capacityKey === 'string' ? capacityKey === 'MASIVO' || capacityKey === 'MASSIVE' : false
+  const showSparklesIcon =
+    typeof capacityKey === 'string' ? capacityKey === 'EXCLUSIVO' || capacityKey === 'EXCLUSIVE' || capacityKey === 'INTIMATE' : false
   const cardBg = isDark ? 'bg-[#121212]' : 'bg-white';
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900';
   const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
@@ -71,7 +89,7 @@ export function EventCard({ event, isDark = false }) {
         md:hover:border-b-2 md:hover:border-b-[#00C3BB]`}
     >
       {/* Imagen */}
-      <div className="aspect-video bg-gray-200 dark:bg-gray-800 relative overflow-hidden">
+      <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden">
         {imageUrl ? (
           <img
             src={optimizeImageUrl(imageUrl)}
@@ -86,34 +104,40 @@ export function EventCard({ event, isDark = false }) {
         )}
         {/* Badge de aforo */}
         <span
-          className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-medium rounded-md border ${badge.className} ${badge.darkClassName}`}
+          className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-medium rounded-md border ${badge.className} ${badge.darkClassName} inline-flex items-center gap-1`}
         >
-          {badge.emoji} {badge.label}
+          {showUsersIcon && <Users className="w-4 h-4" aria-hidden="true" />}
+          {showMegaphoneIcon && <Megaphone className="w-4 h-4" aria-hidden="true" />}
+          {showSparklesIcon && <Sparkles className="w-4 h-4" aria-hidden="true" />}
+          {!showUsersIcon && !showMegaphoneIcon && !showSparklesIcon && badge.emoji && (
+            <span aria-hidden="true">{badge.emoji}</span>
+          )}
+          <span>{capacityLevelText ?? badge.label}</span>
           {capacity != null && (
-            <span className="ml-1 opacity-90">({capacity})</span>
+            <span className="opacity-90">({capacity})</span>
           )}
         </span>
       </div>
 
-      <div className="p-4">
-        <h3 className={`font-semibold text-lg ${textColor} line-clamp-2`}>
+      <div className="p-3">
+        <h3 className={`font-semibold text-base leading-tight ${textColor} line-clamp-2`}>
           {title ?? 'Evento sin título'}
         </h3>
         <div className="flex flex-wrap items-center gap-2 mt-1">
           {sector && (
-            <span className={`text-sm ${textMuted}`}>{sector}</span>
+            <span className={`text-xs md:text-sm ${textMuted}`}>{sector}</span>
           )}
           {price != null && (
-            <span className={`text-sm font-medium ${isDark ? 'text-[#14b8a6]' : 'text-teal-600'}`}>
+            <span className={`text-xs md:text-sm font-medium ${isDark ? 'text-[#14b8a6]' : 'text-teal-600'}`}>
               {typeof price === 'number' ? `$${price}` : price}
             </span>
           )}
         </div>
         {date && (
-          <p className={`text-sm ${textMuted} mt-0.5`}>{date}</p>
+          <p className={`text-xs md:text-sm ${textMuted} mt-0.5`}>{date}</p>
         )}
         {description && (
-          <p className={`text-sm ${textMuted} mt-2 line-clamp-2`}>
+          <p className={`text-xs md:text-sm ${textMuted} mt-1 line-clamp-2`}>
             {description}
           </p>
         )}
