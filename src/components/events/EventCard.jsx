@@ -65,7 +65,10 @@ export function EventCard({ event, isDark = false }) {
 
   return (
     <article
-      className={`rounded-xl border ${borderColor} ${cardBg} overflow-hidden shadow-sm hover:shadow-md transition-shadow`}
+      className={`rounded-xl border ${borderColor} ${cardBg} overflow-hidden shadow-sm
+        transition-all duration-300 ease-in-out
+        md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
+        md:hover:border-b-2 md:hover:border-b-[#00C3BB]`}
     >
       {/* Imagen */}
       <div className="aspect-video bg-gray-200 dark:bg-gray-800 relative overflow-hidden">

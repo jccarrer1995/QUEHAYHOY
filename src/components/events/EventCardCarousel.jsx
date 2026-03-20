@@ -44,7 +44,10 @@ export function EventCardCarousel({ event, isDark = false }) {
 
   return (
     <article
-      className={`flex-shrink-0 w-[280px] sm:w-[300px] md:flex-shrink md:w-full rounded-2xl border ${borderCl} ${cardBg} overflow-hidden shadow-sm hover:shadow-md transition-shadow`}
+      className={`flex-shrink-0 w-[280px] sm:w-[300px] md:flex-shrink md:w-full rounded-2xl border ${borderCl} ${cardBg} overflow-hidden shadow-sm
+        transition-all duration-300 ease-in-out
+        md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
+        md:hover:border-b-2 md:hover:border-b-[#00C3BB]`}
     >
       <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
         {imageUrl ? (
