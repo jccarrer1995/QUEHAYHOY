@@ -13,36 +13,9 @@ function App() {
   const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, activeSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
-  const [quickFilters, setQuickFilters] = useState([])
-
-  const handleQuickFilterToggle = (id) => {
-    setQuickFilters((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    )
-  }
-
-  const filterGratis = quickFilters.includes('gratis')
-  const filterHoy = quickFilters.includes('hoy')
-  const filterBajo = quickFilters.includes('bajo')
 
   const filteredEvents = useMemo(() => {
     let list = events
-    if (filterGratis) {
-      list = list.filter((e) => e.price === 0)
-    }
-    if (filterBajo) {
-      list = list.filter((e) => (e.price ?? 999) <= 15)
-    }
-    if (filterHoy) {
-      const today = new Date().toISOString().slice(0, 10)
-      list = list.filter((e) => {
-        const d = e.date
-        if (!d) return false
-        if (typeof d === 'string') return d.slice(0, 10) === today || d.includes(today)
-        if (d?.toDate) return d.toDate().toISOString().slice(0, 10) === today
-        return false
-      })
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       list = list.filter(
@@ -53,7 +26,7 @@ function App() {
       )
     }
     return list
-  }, [events, searchQuery, filterGratis, filterHoy, filterBajo])
+  }, [events, searchQuery])
 
   return (
     <div
@@ -64,23 +37,21 @@ function App() {
       <Navbar
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
-        quickFilters={quickFilters}
-        onQuickFilterToggle={handleQuickFilterToggle}
       />
 
       <main className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-4 md:py-6">
-        {/* Sectores y categorías arriba - móvil y desktop */}
+        {/* Categoría y sectores arriba - móvil y desktop */}
         <section className="mb-3">
-          <SectorSelector
-            activeSector={activeSector}
-            onSelect={setActiveSector}
+          <CategorySelector
+            activeCategory={activeCategory}
+            onSelect={setActiveCategory}
             isDark={isDark}
           />
         </section>
         <section className="mb-4">
-          <CategorySelector
-            activeCategory={activeCategory}
-            onSelect={setActiveCategory}
+          <SectorSelector
+            activeSector={activeSector}
+            onSelect={setActiveSector}
             isDark={isDark}
           />
         </section>
@@ -143,9 +114,6 @@ function App() {
       </main>
 
       <FloatingButtons
-        onFilter={() => setQuickFilters([])}
-        onGratis={() => handleQuickFilterToggle('gratis')}
-        isGratisActive={filterGratis}
         onToggleTheme={toggleTheme}
         isDark={isDark}
       />

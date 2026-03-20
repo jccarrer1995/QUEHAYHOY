@@ -3,16 +3,13 @@
  * Mobile: hamburger, logo, campana | Desktop: logo, search, nav, campana, tema
  * QuickFilters (pills) debajo del buscador
  */
-import { useState } from 'react'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
-import { QuickFilters } from './QuickFilters.jsx'
 
 const ACCENT = 'text-[#14b8a6] dark:text-[#14b8a6]'
 
-export function Navbar({ searchValue = '', onSearchChange, quickFilters = [], onQuickFilterToggle }) {
+export function Navbar({ searchValue = '', onSearchChange }) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
-  const [menuOpen, setMenuOpen] = useState(false)
 
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const bgColor = isDark ? 'bg-[#121212]' : 'bg-white'
@@ -26,20 +23,8 @@ export function Navbar({ searchValue = '', onSearchChange, quickFilters = [], on
     <header className={`sticky top-0 z-50 border-b ${borderColor} ${bgColor}`}>
       <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-3 md:py-0">
         <div className="flex items-center justify-between gap-3 md:h-[50px] md:min-h-[50px]">
-          {/* Hamburger - solo móvil */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Menú"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-
           {/* Logo - móvil centrado | desktop: esquina izquierda, compacto */}
-          <h1 className={`flex-1 md:flex-none md:min-w-[90px] text-center md:text-left font-bold tracking-tight flex items-center gap-0.5 text-xl md:text-sm md:leading-normal`}>
+          <h1 className={`flex-1 md:flex-none md:min-w-[90px] text-left md:text-left font-bold tracking-tight flex items-center gap-0.5 text-xl md:text-sm md:leading-normal`}>
             <span className={textColor}>QUEHAY</span>
             <span className={ACCENT}>H</span>
             <span className="text-base md:text-xs" aria-hidden>🔥</span>
@@ -84,19 +69,8 @@ export function Navbar({ searchValue = '', onSearchChange, quickFilters = [], on
           </div>
         </div>
 
-        {/* QuickFilters - desktop: debajo del header */}
-        {onQuickFilterToggle && (
-          <div className="hidden md:block mt-2">
-            <QuickFilters
-              activeFilters={quickFilters}
-              onToggle={onQuickFilterToggle}
-              isDark={isDark}
-            />
-          </div>
-        )}
-
         {/* Buscador móvil - debajo del header */}
-        <div className="mt-3 md:hidden">
+        <div className="mt-0 md:hidden">
           <div className="relative">
             <input
               type="search"
@@ -108,31 +82,7 @@ export function Navbar({ searchValue = '', onSearchChange, quickFilters = [], on
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
           </div>
-          {onQuickFilterToggle && (
-            <div className="mt-3">
-              <QuickFilters
-                activeFilters={quickFilters}
-                onToggle={onQuickFilterToggle}
-                isDark={isDark}
-              />
-            </div>
-          )}
         </div>
-
-        {/* Menú hamburger desplegable */}
-        {menuOpen && (
-          <div className="md:hidden mt-3 py-3 border-t border-gray-200 dark:border-gray-800">
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
-              >
-                {isDark ? '☀️ Modo claro' : '🌙 Modo oscuro'}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )

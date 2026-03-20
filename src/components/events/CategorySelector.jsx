@@ -12,15 +12,15 @@ export const CATEGORIES = [
 ]
 
 export function CategorySelector({ activeCategory, onSelect, isDark = false }) {
-  const cardBg = isDark ? 'bg-white/5 dark:bg-gray-800/80' : 'bg-white'
-  const borderCl = isDark ? 'border-gray-700' : 'border-gray-200'
-  const textCl = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
-  const activeStyles = isDark
-    ? 'border-[#14b8a6] bg-[#14b8a6]/20 ring-2 ring-[#14b8a6]/40'
-    : 'border-[#14b8a6] bg-[#14b8a6]/10 ring-2 ring-[#14b8a6]/30'
+  const btnBase =
+    'px-3 py-2 rounded-full text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 border'
+  const btnActive = 'bg-[#14b8a6] text-white border-[#14b8a6]'
+  const btnInactive = isDark
+    ? 'bg-transparent text-gray-300 border-gray-600 hover:border-gray-500 hover:text-[#E0E0E0]'
+    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:text-gray-900'
 
   return (
-    <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible scrollbar-hide">
+    <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
       {CATEGORIES.map((cat) => {
         const isActive = activeCategory === cat.id
         return (
@@ -28,12 +28,10 @@ export function CategorySelector({ activeCategory, onSelect, isDark = false }) {
             key={cat.id}
             type="button"
             onClick={() => onSelect(cat.id)}
-            className={`flex-shrink-0 w-14 md:w-16 flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all active:scale-95 ${isActive ? activeStyles : `${cardBg} ${borderCl}`}`}
+            className={`${btnBase} ${isActive ? btnActive : btnInactive}`}
           >
-            <span className={`text-lg w-8 h-8 flex items-center justify-center rounded-lg ${cat.color}`}>
-              {cat.icon}
-            </span>
-            <span className={`text-[10px] md:text-xs font-medium ${textCl}`}>{cat.label}</span>
+            <span>{cat.icon}</span>
+            <span>{cat.label}</span>
           </button>
         )
       })}

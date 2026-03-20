@@ -32,7 +32,7 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
 
   return (
     <div className="w-full">
-      <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${headingCl}`}>
+      <h3 className={`text-sm font-bold uppercase tracking-wider mb-2 ${headingCl}`}>
         Sectores Top
       </h3>
       <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible scrollbar-hide">
@@ -43,13 +43,13 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
             key={sector.id}
             type="button"
             onClick={() => onSelect(sector.id)}
-            className="flex-shrink-0 flex flex-col items-center gap-2 p-1 transition-all duration-200 ease-out active:scale-95 select-none"
+            className="flex-shrink-0 flex flex-col items-center gap-1 p-1 transition-all duration-200 ease-out active:scale-95 select-none"
             aria-pressed={isActive}
           >
             <span
-              className={`w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 transition-all duration-200 ${
+              className={`w-14 h-14 md:w-12 md:h-12 rounded-full overflow-hidden border-2 transition-all duration-200 ${
                 isActive
-                  ? 'border-[#14b8a6] shadow-lg shadow-[#14b8a6]/20'
+                  ? 'border-[#14b8a6] shadow-md shadow-[#14b8a6]/15'
                   : isDark
                     ? 'border-gray-600 hover:border-gray-500'
                     : 'border-gray-300 hover:border-gray-400'
@@ -72,7 +72,11 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
                 </span>
               )}
             </span>
-            <span className={`text-[10px] md:text-xs font-medium ${isActive ? 'text-[#14b8a6]' : textCl}`}>{sector.label}</span>
+            <span
+              className={`text-[10px] md:text-xs font-medium -translate-y-0.5 ${isActive ? 'text-[#14b8a6]' : textCl}`}
+            >
+              {sector.label}
+            </span>
           </button>
         )
       })}
