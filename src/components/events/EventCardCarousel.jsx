@@ -2,13 +2,15 @@
  * EventCardCarousel - Tarjeta tipo mockup: imagen, título, badge aforo, reloj+horario, pin+ubicación, precio
  * Mapeo Firestore: image_url → imageUrl, location → sector
  * Badges: ✨ Exclusivo, 👥 Social, 🔥 Masivo
+ * Imágenes optimizadas con w=600&q=80 para carga rápida en desktop
  */
+import { optimizeImageUrl } from '../../lib/index.js'
 const BADGE_CONFIG = {
-  INTIMATE: { label: 'Exclusivo', emoji: '✨', light: 'bg-amber-100 text-amber-800', dark: 'bg-amber-900/40 text-amber-200' },
-  EXCLUSIVE: { label: 'Exclusivo', emoji: '✨', light: 'bg-amber-100 text-amber-800', dark: 'bg-amber-900/40 text-amber-200' },
-  SOCIAL: { label: 'Social', emoji: '👥', light: 'bg-blue-100 text-blue-800', dark: 'bg-blue-900/40 text-blue-200' },
-  LARGE: { label: 'Social', emoji: '👥', light: 'bg-blue-100 text-blue-800', dark: 'bg-blue-900/40 text-blue-200' },
-  MASSIVE: { label: 'Masivo', emoji: '🔥', light: 'bg-red-100 text-red-800', dark: 'bg-red-900/40 text-red-200' },
+  INTIMATE: { label: 'Exclusivo', emoji: '🖼️', style: 'bg-[#14b8a6] text-white' },
+  EXCLUSIVE: { label: 'Exclusivo', emoji: '🖼️', style: 'bg-[#14b8a6] text-white' },
+  SOCIAL: { label: 'Social', emoji: '👥', style: 'bg-[#14b8a6] text-white' },
+  LARGE: { label: 'Social', emoji: '👥', style: 'bg-[#14b8a6] text-white' },
+  MASSIVE: { label: 'Masivo', emoji: '🔥', style: 'bg-[#14b8a6] text-white' },
 }
 
 function getBadge(level, capacity) {
@@ -46,20 +48,20 @@ export function EventCardCarousel({ event, isDark = false }) {
     >
       <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
         {imageUrl ? (
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+          <img src={optimizeImageUrl(imageUrl)} alt={title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl">📅</div>
         )}
         {badge && (
           <span
-            className={`absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-md border ${isDark ? badge.dark + ' border-gray-600' : badge.light + ' border-gray-200'}`}
+            className={`absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-md text-white ${badge.style}`}
           >
-            {badge.emoji} {badge.label}
+            {badge.emoji} {badge.label.toUpperCase()}
           </span>
         )}
       </div>
       <div className="p-4 relative">
-        <h3 className={`font-semibold text-base ${textCl} line-clamp-2 pr-14`}>
+        <h3 className={`font-bold text-base uppercase tracking-wide ${textCl} line-clamp-2 pr-14`}>
           {title ?? 'Evento sin título'}
         </h3>
         <div className="flex flex-col gap-1 mt-2">
@@ -76,9 +78,12 @@ export function EventCardCarousel({ event, isDark = false }) {
             </p>
           )}
         </div>
-        <p className={`absolute bottom-4 right-4 font-bold text-lg ${accentCl}`}>
-          {formatPrice(price)}
-        </p>
+        <div className={`flex items-center justify-between mt-3 pt-3 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+          <span className="text-lg" aria-hidden>🔥🔥🔥</span>
+          <p className={`font-bold text-lg ${accentCl}`}>
+            {formatPrice(price)}
+          </p>
+        </div>
       </div>
     </article>
   )

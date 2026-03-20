@@ -1,4 +1,5 @@
 export { EventCard } from './EventCard'
 export { CategoryFilter, CATEGORIES } from './CategoryFilter'
 export { CategorySelector, CATEGORIES as CATEGORIES_SELECTOR } from './CategorySelector'
+export { SectorSelector, SECTORS } from './SectorSelector'
 export { EventCardCarousel } from './EventCardCarousel'

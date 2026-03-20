@@ -1,33 +1,34 @@
 /**
- * BottomNav - Navegación inferior móvil: Home, Explore, Notificaciones, Perfil
+ * BottomNav - Navegación inferior móvil: Inicio, Explorar, Crear Plan, Perfil
  */
-export function BottomNav({ activeTab = 'home', onTabChange, hasNotifications = true }) {
+export function BottomNav({ activeTab = 'home', onTabChange }) {
   const accentCl = 'text-[#14b8a6]'
   const mutedCl = 'text-gray-400'
 
   const items = [
     { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
     { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
-    { id: 'notifications', label: 'Notificaciones', icon: BellIcon, active: activeTab === 'notifications', dot: hasNotifications },
+    { id: 'create', label: 'Crear Plan', icon: PlusIcon, active: activeTab === 'create' },
     { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
   ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 md:hidden">
       <div className="flex items-center justify-around py-2">
-        {items.map(({ id, label, icon: Icon, active, dot }) => (
+        {items.map(({ id, label, icon: Icon, active }) => (
           <button
             key={id}
             type="button"
             onClick={() => onTabChange?.(id)}
-            className="flex flex-col items-center gap-1 py-2 px-4"
+            className="flex flex-col items-center gap-1 py-2 px-3"
           >
-            <span className="relative">
+            {id === 'create' ? (
+              <span className={`w-10 h-10 rounded-full flex items-center justify-center ${active ? 'bg-[#14b8a6] text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
+                <Icon className="w-5 h-5" />
+              </span>
+            ) : (
               <Icon className={`w-6 h-6 ${active ? accentCl : mutedCl}`} />
-              {dot && (
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
-              )}
-            </span>
+            )}
             <span className={`text-xs ${active ? accentCl : mutedCl}`}>{label}</span>
           </button>
         ))}
@@ -40,6 +41,13 @@ function HomeIcon({ className }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M3 13h1v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7h1a1 1 0 00.707-1.707l-9-9a.999.999 0 00-1.414 0l-9 9A1 1 0 003 13z" />
+    </svg>
+  )
+}
+function PlusIcon({ className }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
     </svg>
   )
 }

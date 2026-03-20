@@ -2,9 +2,13 @@
  * FloatingButtons - FAB: Tema, Filter (teal), Gratis (white)
  * Solo móvil, esquina inferior
  */
-export function FloatingButtons({ onFilter, onGratis, onToggleTheme, isDark = false }) {
+export function FloatingButtons({ onFilter, onGratis, onToggleTheme, isDark = false, isGratisActive = false }) {
   const filterBg = 'bg-[#14b8a6] text-white'
-  const gratisBg = isDark ? 'bg-gray-800 text-[#E0E0E0]' : 'bg-white text-gray-900'
+  const gratisBg = isGratisActive
+    ? 'bg-[#14b8a6] text-white'
+    : isDark
+      ? 'bg-gray-800 text-[#E0E0E0]'
+      : 'bg-white text-gray-900'
   const themeBg = isDark ? 'bg-gray-800 text-[#E0E0E0]' : 'bg-white text-gray-900'
   const shadow = 'shadow-lg'
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
 
 /**
@@ -22,10 +22,23 @@ function mapDocToEvent(doc) {
   }
 }
 
+/** Campo en Firestore para zona: "sector" o "location" según tu colección */
+const SECTOR_FIELD = 'sector'
+
+/** Mapea id de sector a valor en Firestore (location/sector) */
+const SECTOR_TO_FIRESTORE = {
+  urdesa: 'Urdesa',
+  'las-penas': 'Las Peñas',
+  guayarte: 'Guayarte',
+  samanes: 'Samanes',
+}
+
 /**
  * Hook para obtener eventos desde Firestore (colección events)
+ * @param {string} [category] - Si es 'all' o vacío, trae todos. Si no, filtra por where("category", "==", category)
+ * @param {string} [sector] - Si es 'all' o vacío, no filtra. Si no, filtra por where("sector", "==", sector) o where("location", "==", sector)
  */
-export function useEvents() {
+export function useEvents(category = 'all', sector = 'all') {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -41,7 +54,23 @@ export function useEvents() {
     setLoading(true)
     setError(null)
 
-    getDocs(collection(db, 'events'))
+    const colRef = collection(db, 'events')
+    const firestoreCategory =
+      category && category !== 'all'
+        ? category.charAt(0).toUpperCase() + category.slice(1)
+        : null
+    const firestoreSector =
+      sector && sector !== 'all' ? SECTOR_TO_FIRESTORE[sector] ?? sector : null
+
+    let firestoreQuery = colRef
+    const constraints = []
+    if (firestoreCategory) constraints.push(where('category', '==', firestoreCategory))
+    if (firestoreSector) constraints.push(where(SECTOR_FIELD, '==', firestoreSector))
+    if (constraints.length > 0) {
+      firestoreQuery = query(colRef, ...constraints)
+    }
+
+    getDocs(firestoreQuery)
       .then((snapshot) => {
         if (cancelled) return
         const list = snapshot.docs.map(mapDocToEvent)
@@ -57,7 +86,7 @@ export function useEvents() {
       })
 
     return () => { cancelled = true }
-  }, [])
+  }, [category, sector])
 
   return { events, loading, error }
 }

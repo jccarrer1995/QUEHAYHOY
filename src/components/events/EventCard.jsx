@@ -1,12 +1,15 @@
 /**
  * EventCard - Tarjeta de evento con badges de aforo y soporte Dark Mode
  * QUEHAYHOY - Descubre eventos en Guayaquil
+ * Imágenes optimizadas con w=600&q=80 para carga rápida
  *
  * capacity_level:
  * - EXCLUSIVE (INTIMATE): <30 personas ✨ Exclusivo
  * - SOCIAL: 30-150 personas 👥 Social
  * - MASSIVE: >400 personas 🔥 Masivo
  */
+import { optimizeImageUrl } from '../../lib/index.js'
+
 export function EventCard({ event, isDark = false }) {
   const { title, description, capacity_level, capacity, sector, date, price, imageUrl } = event ?? {};
 
@@ -68,9 +71,10 @@ export function EventCard({ event, isDark = false }) {
       <div className="aspect-video bg-gray-200 dark:bg-gray-800 relative overflow-hidden">
         {imageUrl ? (
           <img
-            src={imageUrl}
+            src={optimizeImageUrl(imageUrl)}
             alt={title}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400">
