@@ -1,62 +1,89 @@
 /**
- * AdminEventForm - Formulario para publicar eventos en Firestore
- * Ruta: /wp-admin
- * Soporta eventos únicos (fecha Timestamp) y recurrentes (recurrence_day + active_until)
+ * Formulario admin: crear (/wp-admin/nuevo) o editar (/wp-admin/editar/:eventId)
  */
-import { useState } from 'react'
-import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
-import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { CATEGORIES } from '../components/events/CategorySelector'
 import { SECTORS } from '../components/events/SectorSelector'
-
-const SECTOR_TO_FIRESTORE = {
-  urdesa: 'Urdesa',
-  'las-penas': 'Las Peñas',
-  guayarte: 'Guayarte',
-  samanes: 'Samanes',
-}
-
-const CAPACITY_LEVELS = [
-  { value: 'INTIMATE', label: 'Exclusivo (<30)' },
-  { value: 'EXCLUSIVE', label: 'Exclusivo' },
-  { value: 'SOCIAL', label: 'Social (30-150)' },
-  { value: 'LARGE', label: 'Social (150-400)' },
-  { value: 'MASSIVE', label: 'Masivo (>400)' },
-]
-
-function getLastDayOfMonth(date) {
-  const d = new Date(date.getFullYear(), date.getMonth() + 1, 0)
-  d.setHours(23, 59, 59, 999)
-  return d
-}
-
-const initialForm = {
-  title: '',
-  description: '',
-  sector: 'urdesa',
-  category: 'bares',
-  price: '',
-  capacity: '',
-  capacity_level: '',
-  imageUrl: '',
-  address: '',
-  eventType: 'unique',
-  date: '',
-  time: '',
-  recurrence_day: '0',
-}
+import {
+  initialForm,
+  CAPACITY_LEVELS,
+  mapFirestoreDocToForm,
+  buildEventPayload,
+} from './admin/eventAdminUtils.js'
 
 export function AdminEventForm() {
+  const { eventId } = useParams()
+  const isEdit = Boolean(eventId)
+  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
   const labelCl = isDark ? 'text-gray-200' : 'text-gray-800'
   const mutedCl = isDark ? 'text-gray-400' : 'text-gray-600'
+
   const [form, setForm] = useState(initialForm)
   const [submitting, setSubmitting] = useState(false)
+  const [loadingDoc, setLoadingDoc] = useState(isEdit)
+  const [loadError, setLoadError] = useState(null)
   const [error, setError] = useState(null)
+  const [toastError, setToastError] = useState('')
+
+  const showError = (message) => {
+    setError(message)
+    setToastError(message)
+  }
+
+  function toDateTime(dateStr, timeStr, fallbackToEndOfDay = false) {
+    if (!dateStr) return null
+    const [year, month, day] = dateStr.split('-').map(Number)
+    if (!timeStr) {
+      const fallbackHour = fallbackToEndOfDay ? 23 : 0
+      const fallbackMin = fallbackToEndOfDay ? 59 : 0
+      const fallbackSec = fallbackToEndOfDay ? 59 : 0
+      const fallbackMs = fallbackToEndOfDay ? 999 : 0
+      return new Date(year, month - 1, day, fallbackHour, fallbackMin, fallbackSec, fallbackMs)
+    }
+    const [hour, min] = timeStr.split(':').map(Number)
+    return new Date(year, month - 1, day, hour, min, 0, 0)
+  }
+
+  useEffect(() => {
+    if (!isEdit || !eventId || !db) {
+      setLoadingDoc(false)
+      return
+    }
+    let cancelled = false
+    setLoadingDoc(true)
+    setLoadError(null)
+    ;(async () => {
+      try {
+        const snap = await getDoc(doc(db, 'events', eventId))
+        if (cancelled) return
+        if (!snap.exists()) {
+          setLoadError('Evento no encontrado')
+          return
+        }
+        setForm(mapFirestoreDocToForm(snap.data() ?? {}))
+      } catch (e) {
+        if (!cancelled) setLoadError(e?.message ?? 'Error al cargar')
+      } finally {
+        if (!cancelled) setLoadingDoc(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isEdit, eventId])
+
+  useEffect(() => {
+    if (!toastError) return
+    const t = window.setTimeout(() => setToastError(''), 4200)
+    return () => window.clearTimeout(t)
+  }, [toastError])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -70,83 +97,95 @@ export function AdminEventForm() {
     setSubmitting(true)
 
     if (!form.title?.trim()) {
-      setError('El título es obligatorio.')
+      showError('El título es obligatorio.')
+      setSubmitting(false)
+      return
+    }
+    if (form.title.trim().length > 50) {
+      showError('El título no puede superar 50 caracteres.')
+      setSubmitting(false)
+      return
+    }
+    if ((form.description || '').trim().length > 250) {
+      showError('La descripción no puede superar 250 caracteres.')
       setSubmitting(false)
       return
     }
 
     if (!db) {
-      setError('Firebase no está configurado.')
+      showError('Firebase no está configurado.')
       setSubmitting(false)
       return
     }
 
+    if (form.eventType === 'unique') {
+      if (!form.date) {
+        showError('La fecha de inicio es obligatoria para eventos únicos.')
+        setSubmitting(false)
+        return
+      }
+      if (!form.endDate) {
+        showError('La Fecha y Hora de Finalización es obligatoria para eventos únicos.')
+        setSubmitting(false)
+        return
+      }
+      const startAt = toDateTime(form.date, form.time, false)
+      const endAt = toDateTime(form.endDate, form.endTime, true)
+      if (startAt && endAt && endAt.getTime() < startAt.getTime()) {
+        showError('La fecha de fin no puede ser anterior a la fecha de inicio.')
+        setSubmitting(false)
+        return
+      }
+    }
+
     try {
-      const payload = {
-        title: form.title.trim(),
-        description: (form.description || '').trim(),
-        sector: form.sector ? (SECTOR_TO_FIRESTORE[form.sector] ?? form.sector) : '',
-        location: form.sector ? (SECTOR_TO_FIRESTORE[form.sector] ?? form.sector) : '',
-        category:
-          form.category && form.category !== 'all'
-            ? form.category.charAt(0).toUpperCase() + form.category.slice(1)
-            : 'All',
-        price: form.price !== '' ? (isNaN(Number(form.price)) ? 0 : Number(form.price)) : null,
-        capacity: form.capacity !== '' ? (isNaN(Number(form.capacity)) ? null : Number(form.capacity)) : null,
-        capacity_level: form.capacity_level || null,
-        image_url: (form.imageUrl || '').trim() || null,
-        address: (form.address || '').trim() || null,
-        createdAt: serverTimestamp(),
-      }
-
-      if (form.eventType === 'unique') {
-        payload.type = 'unique'
-        if (form.date && form.time) {
-          const [year, month, day] = form.date.split('-').map(Number)
-          const [hour, min] = form.time.split(':').map(Number)
-          const dateObj = new Date(year, month - 1, day, hour, min, 0, 0)
-          const ts = Timestamp.fromDate(dateObj)
-          payload.date = ts
-          payload.endDate = ts
-        } else if (form.date) {
-          const [year, month, day] = form.date.split('-').map(Number)
-          const start = new Date(year, month - 1, day, 0, 0, 0, 0)
-          const end = new Date(year, month - 1, day, 23, 59, 59, 999)
-          payload.date = Timestamp.fromDate(start)
-          payload.endDate = Timestamp.fromDate(end)
-        } else {
-          payload.date = ''
-        }
+      const payload = buildEventPayload(form, { isUpdate: isEdit })
+      if (isEdit && eventId) {
+        await updateDoc(doc(db, 'events', eventId), payload)
       } else {
-        payload.type = 'recurring'
-        payload.eventType = 'recurring'
-        payload.recurrence_day = parseInt(form.recurrence_day, 10)
-        const lastDay = getLastDayOfMonth(new Date())
-        payload.active_until = Timestamp.fromDate(lastDay)
-        payload.date = ''
+        await addDoc(collection(db, 'events'), payload)
       }
-
-      await addDoc(collection(db, 'events'), payload)
-      setForm(initialForm)
-      alert('Evento publicado correctamente.')
+      navigate('/wp-admin')
     } catch (err) {
-      setError(err.message ?? 'Error al guardar el evento.')
+      showError(err.message ?? 'Error al guardar el evento.')
     } finally {
       setSubmitting(false)
     }
   }
 
+  const headerBg = isDark ? 'border-gray-800 bg-[#121212]/95' : 'border-gray-200 bg-white/95'
+
+  if (loadingDoc) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
+        <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Cargando evento…</p>
+      </div>
+    )
+  }
+
+  if (isEdit && loadError) {
+    return (
+      <div className={`min-h-screen flex flex-col items-center justify-center px-6 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
+        <p className={`mb-4 text-center ${isDark ? 'text-red-400' : 'text-red-600'}`}>{loadError}</p>
+        <Link
+          to="/wp-admin"
+          className="rounded-xl bg-[#14b8a6] px-6 py-3 font-semibold text-white"
+        >
+          Volver al listado
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
-      <header className={`sticky top-0 z-10 border-b backdrop-blur ${
-        isDark ? 'border-gray-800 bg-[#121212]/95' : 'border-gray-200 bg-white/95'
-      }`}>
+      <header className={`sticky top-0 z-10 border-b backdrop-blur ${headerBg}`}>
         <div className="mx-auto max-w-2xl px-4 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <Link
-              to="/"
+              to="/wp-admin"
               className={`p-2 -ml-2 rounded-lg hover:opacity-80 transition-colors flex-shrink-0 ${isDark ? 'text-gray-300 hover:text-[#E0E0E0]' : 'text-gray-700 hover:text-gray-900'}`}
-              aria-label="Volver"
+              aria-label="Volver al listado"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
@@ -154,7 +193,7 @@ export function AdminEventForm() {
               className="text-lg font-bold truncate"
               style={{ color: isDark ? '#ffffff' : '#0a0a0a' }}
             >
-              Publicar evento
+              {isEdit ? 'Editar evento' : 'Nuevo evento'}
             </h1>
           </div>
           <button
@@ -189,6 +228,7 @@ export function AdminEventForm() {
               value={form.title}
               onChange={handleChange}
               placeholder="Ej: Noche de jazz en vivo"
+              maxLength={50}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none transition"
               required
             />
@@ -204,6 +244,7 @@ export function AdminEventForm() {
               value={form.description}
               onChange={handleChange}
               rows={3}
+              maxLength={250}
               placeholder="Descripción del evento..."
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none transition resize-none"
             />
@@ -332,10 +373,9 @@ export function AdminEventForm() {
             />
           </div>
 
-          {/* Tipo de evento: único o recurrente */}
           <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-4">
             <p className={`text-sm font-medium ${labelCl}`}>Tipo de evento</p>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -388,6 +428,33 @@ export function AdminEventForm() {
                     className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
                   />
                 </div>
+                <div>
+                  <label htmlFor="endDate" className={`block text-sm ${mutedCl} mb-1`}>
+                    Fecha de finalización
+                  </label>
+                  <input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    value={form.endDate}
+                    onChange={handleChange}
+                    required={form.eventType === 'unique'}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="endTime" className={`block text-sm ${mutedCl} mb-1`}>
+                    Hora de finalización
+                  </label>
+                  <input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    value={form.endTime}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+                  />
+                </div>
               </div>
             )}
 
@@ -420,10 +487,25 @@ export function AdminEventForm() {
             disabled={submitting}
             className="w-full py-4 px-6 rounded-xl bg-[#14b8a6] hover:bg-[#0d9488] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold text-base shadow-lg shadow-[#14b8a6]/25 transition-colors focus:ring-2 focus:ring-[#14b8a6] focus:ring-offset-2 outline-none"
           >
-            {submitting ? 'Publicando...' : 'Publicar Evento'}
+            {submitting ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Publicar evento'}
           </button>
         </form>
       </main>
+
+      {toastError ? (
+        <div
+          className={`fixed left-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            isDark
+              ? 'border-red-800 bg-[#2a1212] text-red-200'
+              : 'border-red-200 bg-red-50 text-red-800'
+          }`}
+          role="alert"
+          aria-live="assertive"
+        >
+          <p className="font-medium">No se pudo guardar</p>
+          <p className="mt-1">{toastError}</p>
+        </div>
+      ) : null}
     </div>
   )
 }

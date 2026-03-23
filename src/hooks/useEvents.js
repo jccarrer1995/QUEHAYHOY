@@ -174,11 +174,13 @@ export function useEvents(category = 'all', sector = 'all') {
       // Solo type + campo de rango por consulta (índices simples; sin category/sector en Firestore)
       const qUnique = query(
         colRef,
+        where('isVisible', '==', true),
         where('type', '==', 'unique'),
         where('endDate', '>=', now)
       )
       const qRecurring = query(
         colRef,
+        where('isVisible', '==', true),
         where('type', '==', 'recurring'),
         where('active_until', '>=', now)
       )
