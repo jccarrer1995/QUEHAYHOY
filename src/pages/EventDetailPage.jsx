@@ -111,6 +111,21 @@ export function EventDetailPage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`
   }, [locationText])
 
+  const whatsappShareUrl = useMemo(() => {
+    const eventUrl =
+      typeof window !== 'undefined'
+        ? window.location.href
+        : `https://quehayhoy.app/evento/${id ?? ''}`
+    const priceLabel = formatPriceValue(event?.price)
+    const sectorLabel = event?.sector?.trim() || 'Guayaquil'
+    const text = `¡Mira este plan en Guayaquil! 🔥
+📍 Evento: ${event?.title || 'Evento'}
+🏢 Sector: ${sectorLabel}
+💰 Precio: ${priceLabel}
+Chequea los detalles aquí: ${eventUrl}`
+    return `https://wa.me/?text=${encodeURIComponent(text)}`
+  }, [event?.title, event?.sector, event?.price, id])
+
   const dateDisplayLabel = useMemo(() => {
     if (!event) return null
     const isRecurring = event.type === 'recurring' || event.eventType === 'recurring'
@@ -260,14 +275,28 @@ export function EventDetailPage() {
           isDark ? 'border-gray-800 bg-[#121212]/95' : 'border-gray-200 bg-white/95'
         } backdrop-blur-md`}
       >
-        <a
-          href={googleMapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mx-auto flex max-w-lg items-center justify-center rounded-2xl bg-[#14b8a6] px-4 py-3.5 text-center text-base font-semibold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488]"
-        >
-          Abrir en Google Maps
-        </a>
+        <div className="mx-auto grid max-w-lg grid-cols-2 gap-2">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center rounded-2xl bg-[#14b8a6] px-3 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] md:text-base"
+          >
+            Abrir en Google Maps
+          </a>
+          <a
+            href={whatsappShareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center justify-center rounded-2xl px-3 py-3.5 text-center text-sm font-semibold transition md:text-base ${
+              isDark
+                ? 'bg-green-900/40 text-green-200 border border-green-700 hover:bg-green-900/60'
+                : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+            }`}
+          >
+            Enviar por WhatsApp
+          </a>
+        </div>
       </div>
     </div>
   )

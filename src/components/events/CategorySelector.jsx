@@ -13,7 +13,7 @@ export const CATEGORIES = [
 
 export function CategorySelector({ activeCategory, onSelect, isDark = false }) {
   const btnBase =
-    'px-3 py-2 rounded-full text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 border'
+    'px-3 py-2 rounded-full text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 border cursor-pointer'
   const btnActive = 'bg-[#14b8a6] text-white border-[#14b8a6]'
   const btnInactive = isDark
     ? 'bg-transparent text-gray-300 border-gray-600 hover:border-gray-500 hover:text-[#E0E0E0]'

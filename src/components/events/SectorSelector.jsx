@@ -43,7 +43,7 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
             key={sector.id}
             type="button"
             onClick={() => onSelect(sector.id)}
-            className="flex-shrink-0 flex flex-col items-center gap-1 p-1 transition-all duration-200 ease-out active:scale-95 select-none"
+            className="flex-shrink-0 flex flex-col items-center gap-1 p-1 transition-all duration-200 ease-out active:scale-95 select-none cursor-pointer"
             aria-pressed={isActive}
           >
             <span
