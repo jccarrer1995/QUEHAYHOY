@@ -1,37 +1,69 @@
 /**
  * BottomNav - Navegación inferior móvil: Inicio, Explorar, Crear Plan, Perfil
  */
+import { toast } from 'sonner'
+import { useTheme } from '../../contexts/ThemeContext'
+
 export function BottomNav({ activeTab = 'home', onTabChange }) {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const accentCl = 'text-[#14b8a6]'
   const mutedCl = 'text-gray-400'
 
   const items = [
     { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
     { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
-    { id: 'create', label: 'Crear Plan', icon: PlusIcon, active: activeTab === 'create' },
+    { id: 'create', label: 'Crear Plan', icon: PlanIcon, active: activeTab === 'create' },
     { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
   ]
+
+  function handleUnderConstruction(tabId) {
+    const messages = {
+      explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
+      create: 'Prepara tu evento, pronto podrás publicarlo directamente aquí. 🚀',
+      profile: 'Tu espacio personal en QUEHAYH🔥Y está en construcción. 👤',
+    }
+
+    const message = messages[tabId]
+    if (!message) return
+
+    toast(message, {
+      icon: '🛠️',
+      style: {
+        background: isDark ? '#121212' : '#ffffff',
+        border: `1px solid ${isDark ? '#374151' : '#d1fae5'}`,
+        color: isDark ? '#E0E0E0' : '#0f172a',
+      },
+      iconTheme: {
+        primary: '#10b981',
+        secondary: '#ffffff',
+      },
+    })
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 md:hidden">
       <div className="flex items-center justify-around py-2">
-        {items.map(({ id, label, icon: Icon, active }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onTabChange?.(id)}
-            className="flex flex-col items-center gap-1 py-2 px-3"
-          >
-            {id === 'create' ? (
-              <span className={`w-10 h-10 rounded-full flex items-center justify-center ${active ? 'bg-[#14b8a6] text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500'}`}>
-                <Icon className="w-5 h-5" />
-              </span>
-            ) : (
-              <Icon className={`w-6 h-6 ${active ? accentCl : mutedCl}`} />
-            )}
-            <span className={`text-xs ${active ? accentCl : mutedCl}`}>{label}</span>
-          </button>
-        ))}
+        {items.map((item) => {
+          const Icon = item.icon
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                if (item.id === 'home') {
+                  onTabChange?.(item.id)
+                  return
+                }
+                handleUnderConstruction(item.id)
+              }}
+              className="flex flex-col items-center gap-1 py-2 px-3"
+            >
+              <Icon className={`w-6 h-6 ${item.active ? accentCl : mutedCl}`} />
+              <span className={`text-xs ${item.active ? accentCl : mutedCl}`}>{item.label}</span>
+            </button>
+          )
+        })}
       </div>
     </nav>
   )
@@ -44,10 +76,12 @@ function HomeIcon({ className }) {
     </svg>
   )
 }
-function PlusIcon({ className }) {
+function PlanIcon({ className }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5h10a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V6a1 1 0 011-1z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 8H5a1 1 0 00-1 1v9a1 1 0 001 1h10" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 10h6M11 14h6" />
     </svg>
   )
 }

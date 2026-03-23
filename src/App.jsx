@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, FloatingButtons } from './components/layout'
@@ -6,6 +7,7 @@ import { EventCardCarousel, CategorySelector, SectorSelector, EventSkeleton } fr
 import './App.css'
 
 function App() {
+  const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeSector, setActiveSector] = useState('all')
@@ -27,6 +29,14 @@ function App() {
     }
     return list
   }, [events, searchQuery])
+
+  function handleSurpriseMe() {
+    if (filteredEvents.length === 0) return
+    const randomIndex = Math.floor(Math.random() * filteredEvents.length)
+    const picked = filteredEvents[randomIndex]
+    if (!picked?.id) return
+    navigate(`/evento/${picked.id}`)
+  }
 
   return (
     <div
@@ -112,6 +122,32 @@ function App() {
               )}
             </>
           )}
+        </section>
+
+        <section className="mb-10">
+          <div
+            className={`rounded-2xl border p-5 text-center ${
+              isDark ? 'bg-[#161616] border-gray-800' : 'bg-gray-50 border-gray-200'
+            }`}
+          >
+            <h3
+              className="text-lg font-bold"
+              style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+            >
+              ¿No sabes a dónde ir?
+            </h3>
+            <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Deja que te recomendemos un plan activo al azar.
+            </p>
+            <button
+              type="button"
+              onClick={handleSurpriseMe}
+              disabled={filteredEvents.length === 0}
+              className="mt-4 w-full sm:w-auto min-w-[220px] rounded-2xl bg-[#14b8a6] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ¡Sorpréndeme! 🔥
+            </button>
+          </div>
         </section>
       </main>
 

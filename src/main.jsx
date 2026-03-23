@@ -8,12 +8,14 @@ import { AdminDashboard } from './pages/AdminDashboard.jsx'
 import { EventDetailPage } from './pages/EventDetailPage.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { AppToaster } from './components/layout/AppToaster.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
+          <AppToaster />
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/evento/:id" element={<EventDetailPage />} />

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { doc, getDoc } from 'firebase/firestore'
+import { motion } from 'framer-motion'
 import { db } from '../config/firebaseConfig'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { ArrowLeft, Clock, MapPin, Ticket } from 'lucide-react'
@@ -145,6 +146,9 @@ Chequea los detalles aquí: ${eventUrl}`
   const panelBg = isDark ? 'bg-[#161616]' : 'bg-gray-50'
   const muted = isDark ? 'text-gray-400' : 'text-gray-600'
   const accent = 'text-[#14b8a6]'
+  const MotionDiv = motion.div
+  const MotionA = motion.a
+  const MotionButton = motion.button
 
   if (loading) {
     return <EventDetailPageSkeleton isDark={isDark} />
@@ -156,13 +160,14 @@ Chequea los detalles aquí: ${eventUrl}`
         <p className="text-center mb-6" style={{ color: isDark ? '#f87171' : '#dc2626' }}>
           {error ?? 'No se pudo cargar el evento.'}
         </p>
-        <button
+        <MotionButton
           type="button"
           onClick={() => navigate('/')}
+          whileTap={{ scale: 0.96 }}
           className="rounded-full bg-[#14b8a6] px-6 py-3 font-semibold text-white"
         >
           Volver al inicio
-        </button>
+        </MotionButton>
       </div>
     )
   }
@@ -171,7 +176,12 @@ Chequea los detalles aquí: ${eventUrl}`
     <div className={`min-h-screen ${pageBg} pb-28`}>
       {/* Cabecera: imagen a ancho completo */}
       <header className="relative w-full">
-        <div className="relative h-[42vh] min-h-[220px] w-full sm:h-[45vh] sm:min-h-[280px]">
+        <MotionDiv
+          className="relative h-[42vh] min-h-[220px] w-full sm:h-[45vh] sm:min-h-[280px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        >
           {event.imageUrl ? (
             <img
               src={optimizeImageUrl(event.imageUrl)}
@@ -186,20 +196,26 @@ Chequea los detalles aquí: ${eventUrl}`
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-        </div>
+        </MotionDiv>
 
-        <button
+        <MotionButton
           type="button"
           onClick={() => navigate('/')}
+          whileTap={{ scale: 0.94 }}
           className="absolute left-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
           aria-label="Volver al inicio"
         >
           <ArrowLeft className="h-5 w-5" />
-        </button>
+        </MotionButton>
       </header>
 
       {/* Cuerpo con overlap */}
-      <div className={`relative z-10 -mt-6 rounded-t-3xl px-4 pb-8 pt-6 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35)] ${panelBg}`}>
+      <MotionDiv
+        className={`relative z-10 -mt-6 rounded-t-3xl px-4 pb-8 pt-6 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35)] ${panelBg}`}
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+      >
         {categoryLabel ? (
           <span
             className={`inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${isDark ? 'bg-[#14b8a6]/20 text-[#5eead4]' : 'bg-teal-100 text-teal-800'}`}
@@ -263,11 +279,16 @@ Chequea los detalles aquí: ${eventUrl}`
 
         {event.description ? (
           <section className="mt-8">
-            <h2 className={`text-sm font-bold uppercase tracking-wide ${accent} mb-2`}>Sobre el evento</h2>
+            <h2
+              className="mb-2 text-sm font-extrabold uppercase tracking-wide"
+              style={{ color: isDark ? '#14b8a6' : '#111827' }}
+            >
+              Sobre el evento
+            </h2>
             <p className={`text-sm leading-relaxed whitespace-pre-wrap ${muted}`}>{event.description}</p>
           </section>
         ) : null}
-      </div>
+      </MotionDiv>
 
       {/* CTA fijo */}
       <div
@@ -276,18 +297,23 @@ Chequea los detalles aquí: ${eventUrl}`
         } backdrop-blur-md`}
       >
         <div className="mx-auto grid max-w-lg grid-cols-2 gap-2">
-          <a
+          <MotionA
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
+            whileTap={{ scale: 0.97 }}
             className="flex items-center justify-center rounded-2xl bg-[#14b8a6] px-3 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] md:text-base"
           >
             Abrir en Google Maps
-          </a>
-          <a
+          </MotionA>
+          <MotionA
             href={whatsappShareUrl}
             target="_blank"
             rel="noopener noreferrer"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, repeatType: 'loop', ease: 'easeInOut' }}
             className={`flex items-center justify-center rounded-2xl px-3 py-3.5 text-center text-sm font-semibold transition md:text-base ${
               isDark
                 ? 'bg-green-900/40 text-green-200 border border-green-700 hover:bg-green-900/60'
@@ -295,7 +321,7 @@ Chequea los detalles aquí: ${eventUrl}`
             }`}
           >
             Enviar por WhatsApp
-          </a>
+          </MotionA>
         </div>
       </div>
     </div>
