@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+  enableNetwork,
+} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
 import { getAnalytics } from 'firebase/analytics';
@@ -28,7 +33,16 @@ let analytics = null;
 
 if (hasValidConfig) {
   app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
+  db = initializeFirestore(app, {
+    // Single-tab evita avisos del SDK tipo "update time in the future" que suelen
+    // aparecer con multi-tab + IndexedDB cuando el reloj local y la caché difieren unos ms.
+    localCache: persistentLocalCache({
+      tabManager: persistentSingleTabManager(),
+    }),
+  });
+  enableNetwork(db).catch(() => {
+    // Red o permisos: la app sigue con datos en caché si existen
+  });
   auth = getAuth(app);
   functions = getFunctions(app);
   if (typeof window !== 'undefined') {

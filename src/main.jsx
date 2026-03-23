@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { AdminEventForm } from './pages/AdminEventForm.jsx'
+import { EventDetailPage } from './pages/EventDetailPage.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <Routes>
             <Route path="/" element={<App />} />
+            <Route path="/evento/:id" element={<EventDetailPage />} />
             <Route path="/wp-admin" element={<AdminEventForm />} />
           </Routes>
         </AuthProvider>

@@ -10,11 +10,36 @@
  * - MASSIVE: >400 personas 🔥 Masivo
  */
 import { useState, useEffect } from 'react'
-import { optimizeImageUrl } from '../../lib/index.js'
+import { useNavigate } from 'react-router-dom'
+import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
 import { Users, Megaphone, Sparkles } from 'lucide-react'
 
 export function EventCard({ event, isDark = false }) {
-  const { title, description, capacity_level, capacity, sector, date, price, imageUrl } = event ?? {};
+  const navigate = useNavigate()
+  const {
+    id,
+    title,
+    description,
+    capacity_level,
+    capacity,
+    sector,
+    date,
+    price,
+    imageUrl,
+    type: eventTypeField,
+    recurrence_day,
+  } = event ?? {}
+
+  function goToDetail() {
+    if (!id) return
+    navigate(`/evento/${id}`)
+  }
+  const isRecurring =
+    eventTypeField === 'recurring' || event?.eventType === 'recurring'
+  const dateLine =
+    isRecurring && recurrence_day != null && !Number.isNaN(Number(recurrence_day))
+      ? formatRecurrenceLabel(recurrence_day)
+      : date
   const capacityKey =
     typeof capacity_level === 'string' ? capacity_level.trim().toUpperCase() : capacity_level;
   const capacityLevelText =
@@ -76,9 +101,10 @@ export function EventCard({ event, isDark = false }) {
   const [isLoading, setIsLoading] = useState(!!imageUrl);
 
   useEffect(() => {
-    if (imageUrl) setIsLoading(true);
-    else setIsLoading(false);
-  }, [imageUrl]);
+    queueMicrotask(() => {
+      setIsLoading(!!imageUrl)
+    })
+  }, [imageUrl])
 
   const showUsersIcon = typeof capacityKey === 'string' ? capacityKey === 'SOCIAL' : false
   const showMegaphoneIcon =
@@ -95,7 +121,18 @@ export function EventCard({ event, isDark = false }) {
       className={`rounded-xl border ${borderColor} ${cardBg} overflow-hidden shadow-sm
         transition-all duration-300 ease-in-out
         md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
-        md:hover:border-b-2 md:hover:border-b-[#00C3BB]`}
+        md:hover:border-b-2 md:hover:border-b-[#00C3BB]
+        ${id ? 'cursor-pointer' : ''}`}
+      onClick={id ? goToDetail : undefined}
+      role={id ? 'button' : undefined}
+      tabIndex={id ? 0 : undefined}
+      onKeyDown={
+        id
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') goToDetail()
+            }
+          : undefined
+      }
     >
       {/* Imagen - aspect-ratio fijo evita Layout Shift */}
       <div
@@ -147,8 +184,8 @@ export function EventCard({ event, isDark = false }) {
             </span>
           )}
         </div>
-        {date && (
-          <p className={`text-xs md:text-sm ${textMuted} mt-0.5`}>{date}</p>
+        {dateLine && (
+          <p className={`text-xs md:text-sm ${textMuted} mt-0.5`}>{dateLine}</p>
         )}
         {description && (
           <p className={`text-xs md:text-sm ${textMuted} mt-1 line-clamp-2`}>

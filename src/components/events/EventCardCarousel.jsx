@@ -4,7 +4,8 @@
  * Badges: ✨ Exclusivo, 👥 Social, 🔥 Masivo
  * Imágenes optimizadas con w=600&q=80 para carga rápida en desktop
  */
-import { optimizeImageUrl } from '../../lib/index.js'
+import { useNavigate } from 'react-router-dom'
+import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
 import { Users, Megaphone, Sparkles } from 'lucide-react'
 const BADGE_CONFIG = {
   INTIMATE: { label: 'Exclusivo', emoji: '🖼️', style: 'bg-[#14b8a6] text-white' },
@@ -34,9 +35,15 @@ function getBadge(level, capacity) {
   return BADGE_CONFIG.SOCIAL
 }
 
-export function EventCardCarousel({ event, isDark = false, onSelect }) {
+export function EventCardCarousel({ event, isDark = false }) {
+  const navigate = useNavigate()
   const data = event ?? {}
-  const { title, sector, date, price, capacity_level, capacity } = data
+  const { title, sector, date, price, capacity_level, capacity, type: evType, recurrence_day } = data
+  const isRecurring = evType === 'recurring' || data.eventType === 'recurring'
+  const dateLine =
+    isRecurring && recurrence_day != null && !Number.isNaN(Number(recurrence_day))
+      ? formatRecurrenceLabel(recurrence_day)
+      : date
   const capacityKey =
     typeof capacity_level === 'string' ? capacity_level.trim().toUpperCase() : capacity_level
   const capacityLevelText =
@@ -62,18 +69,23 @@ export function EventCardCarousel({ event, isDark = false, onSelect }) {
     typeof capacityKey === 'string' ? capacityKey === 'EXCLUSIVO' || capacityKey === 'EXCLUSIVE' || capacityKey === 'INTIMATE' : false
   const showEmoji = !showUsersIcon && !showMegaphoneIcon && !showSparklesIcon && badge?.emoji
 
+  function goToDetail() {
+    const eventId = data?.id
+    if (!eventId) return
+    navigate(`/evento/${eventId}`)
+  }
+
   return (
     <article
       className={`flex-shrink-0 w-[280px] sm:w-[300px] md:flex-shrink md:w-full rounded-2xl border ${borderCl} ${cardBg} overflow-hidden shadow-sm
         transition-all duration-300 ease-in-out
         md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
-        md:hover:border-b-2 md:hover:border-b-[#00C3BB] ${onSelect ? 'cursor-pointer' : ''}`}
-      onClick={() => onSelect?.(data?.id)}
-      role={onSelect ? 'button' : undefined}
-      tabIndex={onSelect ? 0 : undefined}
+        md:hover:border-b-2 md:hover:border-b-[#00C3BB] cursor-pointer`}
+      onClick={goToDetail}
+      role="button"
+      tabIndex={0}
       onKeyDown={(e) => {
-        if (!onSelect) return
-        if (e.key === 'Enter' || e.key === ' ') onSelect?.(data?.id)
+        if (e.key === 'Enter' || e.key === ' ') goToDetail()
       }}
     >
       <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
@@ -99,10 +111,10 @@ export function EventCardCarousel({ event, isDark = false, onSelect }) {
           {title ?? 'Evento sin título'}
         </h3>
         <div className="flex flex-col gap-0.5 mt-1">
-          {date && (
+          {dateLine && (
             <p className={`flex items-center gap-2 text-xs md:text-sm ${mutedCl}`}>
               <span>🕐</span>
-              {date}
+              {dateLine}
             </p>
           )}
           {location && (

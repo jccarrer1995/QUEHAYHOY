@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, FloatingButtons } from './components/layout'
-import { EventCardCarousel, CategorySelector, SectorSelector, EventSkeleton, EventDetail } from './components/events'
+import { EventCardCarousel, CategorySelector, SectorSelector, EventSkeleton } from './components/events'
 import './App.css'
 
 function App() {
@@ -13,7 +13,6 @@ function App() {
   const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, activeSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
-  const [eventDetailId, setEventDetailId] = useState(null)
 
   const filteredEvents = useMemo(() => {
     let list = events
@@ -99,7 +98,6 @@ function App() {
                     key={event.id}
                     event={event}
                     isDark={isDark}
-                    onSelect={setEventDetailId}
                   />
                 ))}
               </div>
@@ -123,10 +121,6 @@ function App() {
       />
 
       <BottomNav activeTab={activeNavTab} onTabChange={setActiveNavTab} />
-
-      {eventDetailId ? (
-        <EventDetail eventId={eventDetailId} isDark={isDark} onClose={() => setEventDetailId(null)} />
-      ) : null}
     </div>
   )
 }

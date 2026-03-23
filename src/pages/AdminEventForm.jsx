@@ -100,23 +100,30 @@ export function AdminEventForm() {
       }
 
       if (form.eventType === 'unique') {
+        payload.type = 'unique'
         if (form.date && form.time) {
           const [year, month, day] = form.date.split('-').map(Number)
           const [hour, min] = form.time.split(':').map(Number)
           const dateObj = new Date(year, month - 1, day, hour, min, 0, 0)
-          payload.date = Timestamp.fromDate(dateObj)
+          const ts = Timestamp.fromDate(dateObj)
+          payload.date = ts
+          payload.endDate = ts
         } else if (form.date) {
           const [year, month, day] = form.date.split('-').map(Number)
-          payload.date = Timestamp.fromDate(new Date(year, month - 1, day, 0, 0, 0, 0))
+          const start = new Date(year, month - 1, day, 0, 0, 0, 0)
+          const end = new Date(year, month - 1, day, 23, 59, 59, 999)
+          payload.date = Timestamp.fromDate(start)
+          payload.endDate = Timestamp.fromDate(end)
         } else {
           payload.date = ''
         }
       } else {
+        payload.type = 'recurring'
         payload.eventType = 'recurring'
         payload.recurrence_day = parseInt(form.recurrence_day, 10)
         const lastDay = getLastDayOfMonth(new Date())
         payload.active_until = Timestamp.fromDate(lastDay)
-        payload.date = '' // Para que use recurrence_day en la lógica de la app
+        payload.date = ''
       }
 
       await addDoc(collection(db, 'events'), payload)
