@@ -28,13 +28,23 @@ export function EventDetail({ eventId, isDark = false, onClose }) {
 
   // Control de animación: entra desde abajo.
   const [isOpen, setIsOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const isClosingRef = useRef(false)
 
+  const ANIM_DURATION = 320
+
   useEffect(() => {
-    const t = window.setTimeout(() => setIsOpen(true), 20)
-    return () => window.clearTimeout(t)
+    const t1 = window.setTimeout(() => setIsOpen(true), 20)
+    return () => window.clearTimeout(t1)
   }, [])
+
+  // Mostrar contenido solo cuando la expansión termina.
+  useEffect(() => {
+    if (!isOpen || isClosing) return
+    const t = window.setTimeout(() => setIsExpanded(true), ANIM_DURATION)
+    return () => window.clearTimeout(t)
+  }, [isOpen, isClosing])
 
   useEffect(() => {
     isClosingRef.current = isClosing
@@ -108,8 +118,9 @@ export function EventDetail({ eventId, isDark = false, onClose }) {
     setIsClosing(true)
     isClosingRef.current = true
     setIsOpen(false)
-    if (closeTimerRef.t) window.clearTimeout(closeTimerRef.t)
-    closeTimerRef.current = window.setTimeout(() => onClose?.(), 250)
+    setIsExpanded(false)
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = window.setTimeout(() => onClose?.(), ANIM_DURATION)
   }
 
   const locationText = event?.address || event?.sector || 'Guayaquil'
@@ -133,105 +144,97 @@ export function EventDetail({ eventId, isDark = false, onClose }) {
 
       {/* sheet */}
       <div
-        className={`relative w-full ${
+        className={`relative w-full transition-transform ${
           isOpen && !isClosing ? 'translate-y-0' : 'translate-y-full'
-        } transition-transform duration-250 ease-out`}
+        }`}
+        style={{
+          transitionDuration: `${ANIM_DURATION}ms`,
+          transitionTimingFunction: 'cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
       >
         <div
-        className={`mx-auto w-full sm:max-w-3xl rounded-t-3xl border ${sheetPanelBorder} ${sheetPanelBg} overflow-hidden relative`}
+          className={`mx-auto w-full sm:max-w-3xl rounded-t-3xl border ${sheetPanelBorder} ${sheetPanelBg} overflow-hidden relative`}
           style={{ maxHeight: '92vh' }}
         >
-          <div className="relative">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="absolute top-3 right-3 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white"
-              aria-label="Cerrar"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-800">
-              {event?.imageUrl ? (
-                <img src={optimizeImageUrl(event.imageUrl)} alt={event?.title ?? 'Evento'} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400">🎟️</div>
-              )}
-            </div>
-          </div>
-
-          {/* Overlay de carga (fondo blanco casi transparente + logo palpitando) */}
-          {loading ? (
-            <div
-              className={`absolute inset-0 z-[10] flex items-center justify-center ${
-                isDark ? 'bg-white/5' : 'bg-white/75'
-              } backdrop-blur-sm pointer-events-none`}
-            >
-              <div className="flex items-center gap-1 font-bold tracking-tight text-2xl sm:text-3xl qe-logo-pulse">
-                <span className={isDark ? 'text-[#E0E0E0]' : 'text-gray-900'}>QUEHAY</span>
-                <span className="text-[#14b8a6]">H</span>
-                <span className={isDark ? 'text-[#14b8a6]' : 'text-[#14b8a6]'} aria-hidden>
-                  🔥
-                </span>
-                <span className="text-[#14b8a6]">HOY</span>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="p-4 pb-28 sm:pb-24 overflow-y-auto">
-            {error ? (
-              <p className="py-10 text-center" style={{ color: isDark ? '#ef4444' : '#dc2626' }}>
-                {error}
-              </p>
-            ) : !loading && event ? (
-              <>
-                <h2
-                  className="text-lg font-bold leading-snug line-clamp-2"
-                  style={{ color: isDark ? '#E0E0E0' : '#111827' }}
+          {isExpanded ? (
+            <>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="absolute top-3 right-3 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white z-10"
+                  aria-label="Cerrar"
                 >
-                  {event?.title}
-                </h2>
-
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className={`w-4 h-4 ${accent}`} />
-                    <span className={muted}>{formatDateValue(event?.date)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className={`w-4 h-4 ${accent}`} />
-                    <span className={muted}>{event?.sector}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Tag className={`w-4 h-4 ${accent}`} />
-                    <span className={muted}>{formatPriceValue(event?.price)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className={`w-4 h-4 ${accent}`} />
-                    <span className={muted}>
-                      {event?.capacity_level ? event.capacity_level : 'Sin aforo'}
-                      {event?.capacity != null ? ` (${event.capacity})` : ''}
-                    </span>
-                  </div>
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-800">
+                  {!loading && event?.imageUrl ? (
+                    <img src={optimizeImageUrl(event.imageUrl)} alt={event?.title ?? 'Evento'} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400">🎟️</div>
+                  )}
                 </div>
+              </div>
 
-                {event?.description ? (
-                  <p className={`mt-3 ${muted} text-sm leading-relaxed line-clamp-3`}>{event.description}</p>
+              <div className="p-4 pb-28 sm:pb-24 overflow-y-auto">
+                {error ? (
+                  <p className="py-10 text-center" style={{ color: isDark ? '#ef4444' : '#dc2626' }}>
+                    {error}
+                  </p>
+                ) : !loading && event ? (
+                  <>
+                    <h2
+                      className="text-lg font-bold leading-snug line-clamp-2"
+                      style={{ color: isDark ? '#E0E0E0' : '#111827' }}
+                    >
+                      {event?.title}
+                    </h2>
+
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className={`w-4 h-4 ${accent}`} />
+                        <span className={muted}>{formatDateValue(event?.date)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className={`w-4 h-4 ${accent}`} />
+                        <span className={muted}>{event?.sector}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Tag className={`w-4 h-4 ${accent}`} />
+                        <span className={muted}>{formatPriceValue(event?.price)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className={`w-4 h-4 ${accent}`} />
+                        <span className={muted}>
+                          {event?.capacity_level ? event.capacity_level : 'Sin aforo'}
+                          {event?.capacity != null ? ` (${event.capacity})` : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    {event?.description ? (
+                      <p className={`mt-3 ${muted} text-sm leading-relaxed line-clamp-3`}>{event.description}</p>
+                    ) : null}
+
+                    <div className="mt-4">
+                      <h3 className={`text-sm font-bold ${accent} mb-2`}>Mapa</h3>
+                      <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
+                        <iframe
+                          title="Mapa del evento"
+                          className="w-full h-40"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={mapEmbedSrc}
+                        />
+                      </div>
+                    </div>
+                  </>
                 ) : null}
-
-                <div className="mt-4">
-                  <h3 className={`text-sm font-bold ${accent} mb-2`}>Mapa</h3>
-                  <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
-                    <iframe
-                      title="Mapa del evento"
-                      className="w-full h-40"
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      src={mapEmbedSrc}
-                    />
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
+              </div>
+            </>
+          ) : (
+            <div className={`min-h-[85vh] sm:min-h-[80vh] ${sheetPanelBg}`} aria-hidden />
+          )}
         </div>
 
         {/* CTA fijo */}

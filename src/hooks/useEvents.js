@@ -3,6 +3,24 @@ import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
 
 /**
+ * Convierte date de Firestore (Timestamp, string, number) a string para renderizado
+ */
+function formatDateForDisplay(dateValue) {
+  if (dateValue == null || dateValue === '') return ''
+  if (typeof dateValue === 'string') return dateValue
+  if (typeof dateValue === 'number') return String(dateValue)
+  if (typeof dateValue === 'object' && typeof dateValue?.toDate === 'function') {
+    const d = dateValue.toDate()
+    return d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }
+  if (typeof dateValue === 'object' && 'seconds' in dateValue) {
+    const d = new Date(dateValue.seconds * 1000)
+    return d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }
+  return String(dateValue)
+}
+
+/**
  * Mapea documento Firestore al formato de la app
  * Firestore: title, location, date, capacity_level, price, image_url, category?
  */
@@ -12,7 +30,7 @@ function mapDocToEvent(doc) {
     id: doc.id,
     title: data.title ?? '',
     sector: data.location ?? data.sector ?? '',
-    date: data.date ?? '',
+    date: formatDateForDisplay(data.date),
     capacity_level: data.capacity_level ?? null,
     capacity: data.capacity ?? null,
     price: data.price ?? null,

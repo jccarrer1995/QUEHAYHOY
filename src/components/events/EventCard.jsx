@@ -2,12 +2,14 @@
  * EventCard - Tarjeta de evento con badges de aforo y soporte Dark Mode
  * QUEHAYHOY - Descubre eventos en Guayaquil
  * Imágenes optimizadas con w=600&q=80 para carga rápida
+ * Lazy loading con skeleton pulse y fade-in para evitar Layout Shift
  *
  * capacity_level:
  * - EXCLUSIVE (INTIMATE): <30 personas ✨ Exclusivo
  * - SOCIAL: 30-150 personas 👥 Social
  * - MASSIVE: >400 personas 🔥 Masivo
  */
+import { useState, useEffect } from 'react'
 import { optimizeImageUrl } from '../../lib/index.js'
 import { Users, Megaphone, Sparkles } from 'lucide-react'
 
@@ -71,6 +73,13 @@ export function EventCard({ event, isDark = false }) {
   };
 
   const badge = getBadgeByCapacity(capacityKey, capacity);
+  const [isLoading, setIsLoading] = useState(!!imageUrl);
+
+  useEffect(() => {
+    if (imageUrl) setIsLoading(true);
+    else setIsLoading(false);
+  }, [imageUrl]);
+
   const showUsersIcon = typeof capacityKey === 'string' ? capacityKey === 'SOCIAL' : false
   const showMegaphoneIcon =
     typeof capacityKey === 'string' ? capacityKey === 'MASIVO' || capacityKey === 'MASSIVE' : false
@@ -88,14 +97,19 @@ export function EventCard({ event, isDark = false }) {
         md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
         md:hover:border-b-2 md:hover:border-b-[#00C3BB]`}
     >
-      {/* Imagen */}
-      <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden">
+      {/* Imagen - aspect-ratio fijo evita Layout Shift */}
+      <div
+        className={`aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden ${isLoading ? 'animate-pulse' : ''}`}
+      >
         {imageUrl ? (
           <img
             src={optimizeImageUrl(imageUrl)}
             alt={title}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"
+            decoding="async"
+            onLoad={() => setIsLoading(false)}
+            onError={() => setIsLoading(false)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400">
