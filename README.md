@@ -80,6 +80,10 @@ VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
 VITE_FIREBASE_MEASUREMENT_ID=...
+
+# Cloudinary (subida de imágenes)
+VITE_CLOUDINARY_CLOUD_NAME=dfyp1q7tl
+VITE_CLOUDINARY_UPLOAD_PRESET=quehayhoy_images
 ```
 
 ---
@@ -148,6 +152,15 @@ src/
 ### 7) Librerías instaladas hoy
 - **`framer-motion`**: animaciones y microinteracciones (entradas suaves y feedback táctil).
 - **`sonner`**: sistema de toasts elegante y configurable por tema.
+
+### 8) Actualizaciones 18/03/2025
+- **Cloudinary**: Subida de imágenes desde admin; preset `quehayhoy_images`; fallback URL.
+- **Sectores**: Kennedy, Bellavista, Malecón del Salado, Centro, Alborada.
+- **Categoría**: Videojuegos 🎮
+- **Popularidad**: Sistema de fueguitos (1-3); secciones Destacados (pop 3), Gratis y Bacán, No te lo puedes perder.
+- **Badge conceptual**: MASIVO, FERIA, PROMO, SOCIAL con colores dinámicos.
+- **Precio**: Formato $5 para enteros, $26.50 para decimales.
+- Ver detalle completo en [`docs/ACTUALIZACIONES-2025-03-18.md`](docs/ACTUALIZACIONES-2025-03-18.md).
 
 ---
 

@@ -1,18 +1,24 @@
 /**
- * EventCard - Tarjeta de evento con badges de aforo y soporte Dark Mode
+ * EventCard - Tarjeta de evento con badge conceptual y soporte Dark Mode
  * QUEHAYHOY - Descubre eventos en Guayaquil
- * Imágenes optimizadas con w=600&q=80 para carga rápida
- * Lazy loading con skeleton pulse y fade-in para evitar Layout Shift
- *
- * capacity_level:
- * - EXCLUSIVE (INTIMATE): <30 personas ✨ Exclusivo
- * - SOCIAL: 30-150 personas 👥 Social
- * - MASSIVE: >400 personas 🔥 Masivo
+ * Badge: MASIVO (cian), FERIA (amarillo), PROMO (rojo), SOCIAL (morado)
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
-import { Users, Megaphone, Sparkles } from 'lucide-react'
+
+const BADGE_STYLES = {
+  MASIVO: { className: 'bg-cyan-500/30 text-cyan-700 border-cyan-500/50', darkClassName: 'dark:bg-cyan-500/25 dark:text-cyan-300 dark:border-cyan-400/50' },
+  FERIA: { className: 'bg-amber-500/30 text-amber-800 border-amber-500/50', darkClassName: 'dark:bg-amber-500/25 dark:text-amber-300 dark:border-amber-400/50' },
+  PROMO: { className: 'bg-red-500/30 text-red-700 border-red-500/50', darkClassName: 'dark:bg-red-500/25 dark:text-red-300 dark:border-red-400/50' },
+  SOCIAL: { className: 'bg-purple-500/30 text-purple-700 border-purple-500/50', darkClassName: 'dark:bg-purple-500/25 dark:text-purple-300 dark:border-purple-400/50' },
+}
+
+function getBadgeStyle(badgeLabel) {
+  const key = typeof badgeLabel === 'string' ? badgeLabel.trim().toUpperCase() : ''
+  if (key === 'MASIVO' || key === 'FERIA' || key === 'PROMO' || key === 'SOCIAL') return BADGE_STYLES[key]
+  return BADGE_STYLES.SOCIAL
+}
 
 export function EventCard({ event, isDark = false }) {
   const navigate = useNavigate()
@@ -20,13 +26,13 @@ export function EventCard({ event, isDark = false }) {
     id,
     title,
     description,
-    capacity_level,
     capacity,
     sector,
     date,
     price,
     imageUrl,
     popularidad,
+    badgeLabel,
     type: eventTypeField,
     recurrence_day,
   } = event ?? {}
@@ -41,64 +47,8 @@ export function EventCard({ event, isDark = false }) {
     isRecurring && recurrence_day != null && !Number.isNaN(Number(recurrence_day))
       ? formatRecurrenceLabel(recurrence_day)
       : date
-  const capacityKey =
-    typeof capacity_level === 'string' ? capacity_level.trim().toUpperCase() : capacity_level;
-  const capacityLevelText =
-    typeof capacity_level === 'string' && capacity_level.trim() ? capacity_level.trim() : null;
-
-  const badgeConfig = {
-    INTIMATE: {
-      label: 'Exclusivo',
-      emoji: '✨',
-      className: 'bg-amber-100 text-amber-800 border-amber-300',
-      darkClassName: 'dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-600',
-    },
-    EXCLUSIVE: {
-      label: 'Exclusivo',
-      emoji: '✨',
-      className: 'bg-amber-100 text-amber-800 border-amber-300',
-      darkClassName: 'dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-600',
-    },
-    SOCIAL: {
-      label: 'Social',
-      emoji: '👥',
-      className: 'bg-white text-[#14b8a6] border-[#14b8a6]',
-      darkClassName: 'dark:bg-white dark:text-[#14b8a6] dark:border-[#14b8a6]',
-    },
-    LARGE: {
-      label: 'Social',
-      emoji: '👥',
-      className: 'bg-white text-[#14b8a6] border-[#14b8a6]',
-      darkClassName: 'dark:bg-white dark:text-[#14b8a6] dark:border-[#14b8a6]',
-    },
-    MASSIVE: {
-      label: 'Masivo',
-      emoji: '🔥',
-      className: 'bg-red-100 text-red-800 border-red-300',
-      darkClassName: 'dark:bg-red-900/40 dark:text-red-200 dark:border-red-600',
-    },
-  };
-
-  const getBadgeByCapacity = (level, cap) => {
-    const normalizedLevel = typeof level === 'string' ? level.trim().toUpperCase() : level;
-    if (normalizedLevel) {
-      const v = String(normalizedLevel);
-      if (v.includes('SOCIAL') || v.includes('LARGE')) return badgeConfig.SOCIAL;
-      if (v.includes('INTIMATE')) return badgeConfig.INTIMATE;
-      if (v.includes('EXCLUSIVE')) return badgeConfig.EXCLUSIVE;
-      if (v.includes('MASSIVE')) return badgeConfig.MASSIVE;
-      return badgeConfig[normalizedLevel] ?? badgeConfig.SOCIAL;
-    }
-    if (typeof cap === 'number') {
-      if (cap < 30) return badgeConfig.INTIMATE;
-      if (cap <= 150) return badgeConfig.SOCIAL;
-      if (cap <= 400) return badgeConfig.LARGE;
-      return badgeConfig.MASSIVE;
-    }
-    return badgeConfig.SOCIAL;
-  };
-
-  const badge = getBadgeByCapacity(capacityKey, capacity);
+  const displayLabel = (badgeLabel || event?.capacity_level || 'SOCIAL').toString().trim().toUpperCase()
+  const badgeStyle = getBadgeStyle(badgeLabel || event?.capacity_level || 'SOCIAL')
   const [isLoading, setIsLoading] = useState(!!imageUrl);
 
   useEffect(() => {
@@ -107,11 +57,6 @@ export function EventCard({ event, isDark = false }) {
     })
   }, [imageUrl])
 
-  const showUsersIcon = typeof capacityKey === 'string' ? capacityKey === 'SOCIAL' : false
-  const showMegaphoneIcon =
-    typeof capacityKey === 'string' ? capacityKey === 'MASIVO' || capacityKey === 'MASSIVE' : false
-  const showSparklesIcon =
-    typeof capacityKey === 'string' ? capacityKey === 'EXCLUSIVO' || capacityKey === 'EXCLUSIVE' || capacityKey === 'INTIMATE' : false
   const cardBg = isDark ? 'bg-[#121212]' : 'bg-white';
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900';
   const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
@@ -154,21 +99,14 @@ export function EventCard({ event, isDark = false }) {
             📅
           </div>
         )}
-        {/* Badge de aforo */}
-        <span
-          className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-medium rounded-md border ${badge.className} ${badge.darkClassName} inline-flex items-center gap-1`}
-        >
-          {showUsersIcon && <Users className="w-4 h-4" aria-hidden="true" />}
-          {showMegaphoneIcon && <Megaphone className="w-4 h-4" aria-hidden="true" />}
-          {showSparklesIcon && <Sparkles className="w-4 h-4" aria-hidden="true" />}
-          {!showUsersIcon && !showMegaphoneIcon && !showSparklesIcon && badge.emoji && (
-            <span aria-hidden="true">{badge.emoji}</span>
-          )}
-          <span>{capacityLevelText ?? badge.label}</span>
-          {capacity != null && (
-            <span className="opacity-90">({capacity})</span>
-          )}
-        </span>
+        {/* Badge conceptual */}
+        {displayLabel && (
+          <span
+            className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-bold uppercase tracking-wide rounded-md border ${badgeStyle.className} ${badgeStyle.darkClassName}`}
+          >
+            {displayLabel}
+          </span>
+        )}
       </div>
 
       <div className="p-3">
