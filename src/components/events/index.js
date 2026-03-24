@@ -4,3 +4,4 @@ export { CategorySelector, CATEGORIES as CATEGORIES_SELECTOR } from './CategoryS
 export { SectorSelector, SECTORS } from './SectorSelector'
 export { EventCardCarousel } from './EventCardCarousel'
 export { EventSkeleton } from './EventSkeleton'
+export { EventDetailModal } from './EventDetailModal'

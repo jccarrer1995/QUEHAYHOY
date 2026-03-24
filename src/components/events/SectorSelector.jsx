@@ -1,3 +1,5 @@
+import { SectorRoundImage } from './SectorRoundImage.jsx'
+
 /**
  * SectorSelector - Carrusel de iconos redondos con imágenes por sector
  * SECTORES TOP: Urdesa, Samborondón, Vía a la Costa, Puerto Santa Ana, Centro, etc.
@@ -49,6 +51,13 @@ export const SECTORS = [
     label: 'Alborada',
     image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=200&h=200&fit=crop',
   },
+  {
+    id: 'la-joya',
+    label: 'La Joya',
+    // Edificios (Pexels — suele cargar bien; si falla, SectorRoundImage muestra ✨)
+    image:
+      'https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
+  },
 ]
 
 export function SectorSelector({ activeSector, onSelect, isDark = false }) {
@@ -81,12 +90,7 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
               }`}
             >
               {sector.image ? (
-                <img
-                  src={sector.image}
-                  alt={sector.label}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
+                <SectorRoundImage src={sector.image} label={sector.label} isDark={isDark} />
               ) : (
                 <span
                   className={`w-full h-full flex items-center justify-center text-lg ${

@@ -109,6 +109,7 @@ const SECTOR_TO_FIRESTORE = {
   'malecon-salado': 'Malecón del Salado',
   centro: 'Centro',
   alborada: 'Alborada',
+  'la-joya': 'La Joya',
 }
 
 /**

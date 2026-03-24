@@ -6,6 +6,19 @@ import { Navbar, BottomNav, FloatingButtons } from './components/layout'
 import { EventCardCarousel, CategorySelector, SectorSelector, EventSkeleton } from './components/events'
 import './App.css'
 
+/**
+ * Gratis para el Home: 0, "0", sin precio (null/undefined/"") o número 0.
+ * Así los eventos sin campo `price` en Firestore entran en «Gratis y Bacán».
+ * @param {{ price?: unknown }} e
+ */
+function isEventGratis(e) {
+  const p = e.price
+  if (p === 0 || p === '0') return true
+  if (p == null || p === '') return true
+  const n = typeof p === 'number' ? p : Number(p)
+  return !Number.isNaN(n) && n === 0
+}
+
 function App() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
@@ -31,7 +44,7 @@ function App() {
   }, [events, searchQuery])
 
   const freeEvents = useMemo(() => {
-    return filteredEvents.filter((e) => e.price === 0 || e.price === '0')
+    return filteredEvents.filter((e) => isEventGratis(e))
   }, [filteredEvents])
 
   const destacadosEvents = useMemo(() => {
@@ -46,6 +59,20 @@ function App() {
         return (pop === 1 || pop === 2) && !Number.isNaN(priceNum) && priceNum > 0
       })
       .sort((a, b) => (b.popularidad ?? 1) - (a.popularidad ?? 1))
+  }, [filteredEvents])
+
+  /**
+   * Eventos que no entraban en ninguna de las tres filas anteriores.
+   */
+  const otrosEventos = useMemo(() => {
+    return filteredEvents.filter((e) => {
+      const pop = e.popularidad ?? 1
+      const inDestacados = pop === 3
+      const inFree = isEventGratis(e)
+      const priceNum = typeof e.price === 'number' ? e.price : Number(e.price)
+      const inNtlp = (pop === 1 || pop === 2) && !Number.isNaN(priceNum) && priceNum > 0
+      return !inDestacados && !inFree && !inNtlp
+    })
   }, [filteredEvents])
 
   function handleSurpriseMe() {
@@ -84,42 +111,44 @@ function App() {
           />
         </section>
 
-        <section className="mb-8 pb-20 md:pb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2
-              className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
-              style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
-            >
-              <span>🔥</span>
-              Eventos Destacados
-            </h2>
-            <a
-              href="#"
-              className="text-sm font-medium text-[#14b8a6] hover:underline"
-            >
-              Ver todo
-            </a>
-          </div>
-
-          {eventsLoading ? (
-            <div
-              className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide"
-              aria-label="Cargando eventos"
-              aria-busy="true"
-            >
-              {[0, 1, 2, 3].map((i) => (
-                <EventSkeleton key={i} isDark={isDark} />
-              ))}
+        {(eventsLoading || eventsError || destacadosEvents.length > 0) && (
+          <section className="mb-8 pb-20 md:pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+              >
+                <span>🔥</span>
+                Eventos Destacados
+              </h2>
+              {destacadosEvents.length > 0 ? (
+                <a
+                  href="#"
+                  className="text-sm font-medium text-[#14b8a6] hover:underline"
+                >
+                  Ver todo
+                </a>
+              ) : null}
             </div>
-          ) : eventsError ? (
-            <p
-              className="text-center py-12"
-              style={{ color: isDark ? '#ef4444' : '#dc2626' }}
-            >
-              {eventsError}
-            </p>
-          ) : (
-            <>
+
+            {eventsLoading ? (
+              <div
+                className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide"
+                aria-label="Cargando eventos"
+                aria-busy="true"
+              >
+                {[0, 1, 2, 3].map((i) => (
+                  <EventSkeleton key={i} isDark={isDark} />
+                ))}
+              </div>
+            ) : eventsError ? (
+              <p
+                className="text-center py-12"
+                style={{ color: isDark ? '#ef4444' : '#dc2626' }}
+              >
+                {eventsError}
+              </p>
+            ) : (
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
                 {destacadosEvents.map((event) => (
                   <EventCardCarousel
@@ -129,18 +158,9 @@ function App() {
                   />
                 ))}
               </div>
-
-              {destacadosEvents.length === 0 && (
-                <p
-                  className="text-center py-12"
-                  style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
-                >
-                  No hay eventos destacados (popularidad 🔥🔥🔥) que coincidan.
-                </p>
-              )}
-            </>
-          )}
-        </section>
+            )}
+          </section>
+        )}
 
         {freeEvents.length > 0 && (
           <section className="mb-8 pb-20 md:pb-8">
@@ -188,6 +208,29 @@ function App() {
           </section>
         )}
 
+        {otrosEventos.length > 0 && (
+          <section className="mb-8 pb-20 md:pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+              >
+                <span>🎫</span>
+                Más eventos
+              </h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
+              {otrosEventos.map((event) => (
+                <EventCardCarousel
+                  key={event.id}
+                  event={event}
+                  isDark={isDark}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="mb-10">
           <div
             className={`rounded-2xl border p-5 text-center ${
@@ -213,6 +256,7 @@ function App() {
             </button>
           </div>
         </section>
+
       </main>
 
       <FloatingButtons

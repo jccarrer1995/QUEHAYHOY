@@ -162,6 +162,30 @@ src/
 - **Precio**: Formato $5 para enteros, $26.50 para decimales.
 - Ver detalle completo en [`docs/ACTUALIZACIONES-2025-03-18.md`](docs/ACTUALIZACIONES-2025-03-18.md).
 
+### 9) Actualizaciones recientes (notificaciones, sectores y Home)
+- **Campana funcional en `Navbar`**:
+  - Panel desplegable con título **“Nuevos Planes (Últimos 30m)”**.
+  - Badge dinámico con conteo de no leídos.
+  - Lista limitada de eventos recientes y tiempo relativo en español (**`date-fns`** + locale `es`).
+- **Lógica efímera en tiempo real**:
+  - Nuevo hook `useEphemeralNotifications` con `onSnapshot` a eventos recientes (`createdAt` en ventana de 30 min).
+  - Estado leído/no leído:
+    - Sin login: guardado en `sessionStorage`.
+    - Con login (cuando se active): preparado para `usuarios/{uid}.vistos`.
+- **Interacción de notificaciones**:
+  - Al hacer click en una notificación se marca como vista y se abre detalle en modal sin cambiar de ruta.
+  - Nuevo componente `EventDetailModal` con imagen, descripción, ubicación, precio, CTA de Maps y WhatsApp.
+- **Ajustes visuales de campana y dropdown**:
+  - Hover restaurado con fondo oscuro en modo dark.
+  - Contraste corregido en títulos de eventos dentro del panel para que no se pierdan sobre fondos claros/oscuros.
+- **Nuevo sector `La Joya`**:
+  - Añadido en `SectorSelector`, en mapeos de filtros (`useEvents`) y en utilidades de admin (`eventAdminUtils`).
+  - Imagen de sector actualizada y fallback visual si la URL externa falla (`SectorRoundImage`).
+- **Mejoras de visibilidad en Home**:
+  - Sección **Eventos Destacados** se oculta automáticamente si no hay eventos destacados (manteniendo loading/error).
+  - Se añadió sección **Más eventos** para no perder eventos que no entran en los 3 bloques principales.
+  - Criterio de **Gratis y Bacán** ampliado: ahora incluye precio `0`, `'0'`, vacío o `null`.
+
 ---
 
 ## Próximos pasos sugeridos
