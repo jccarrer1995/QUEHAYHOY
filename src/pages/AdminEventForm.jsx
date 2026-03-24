@@ -27,6 +27,7 @@ export function AdminEventForm() {
 
   const [form, setForm] = useState(initialForm)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [loadingDoc, setLoadingDoc] = useState(isEdit)
   const [loadError, setLoadError] = useState(null)
   const [error, setError] = useState(null)
@@ -85,6 +86,49 @@ export function AdminEventForm() {
     return () => window.clearTimeout(t)
   }, [toastError])
 
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dfyp1q7tl'
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'quehayhoy_images'
+
+  async function uploadImage(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', UPLOAD_PRESET)
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      const msg = err.error?.message || `Error al subir: ${res.status}`
+      if (msg.toLowerCase().includes('preset') && msg.toLowerCase().includes('not found')) {
+        throw new Error('Preset no encontrado. Ve a cloudinary.com/console → Settings → Upload → Add upload preset. Nombre: quehayhoy_images, Signing: Unsigned. O pega la URL abajo.')
+      }
+      throw new Error(msg)
+    }
+
+    const data = await res.json()
+    return data.secure_url
+  }
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    setError(null)
+    try {
+      const secureUrl = await uploadImage(file)
+      setForm((prev) => ({ ...prev, imageUrl: secureUrl }))
+    } catch (err) {
+      showError(err.message ?? 'Error al subir la imagen.')
+    } finally {
+      setUploadingImage(false)
+      e.target.value = ''
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
@@ -106,8 +150,8 @@ export function AdminEventForm() {
       setSubmitting(false)
       return
     }
-    if ((form.description || '').trim().length > 250) {
-      showError('La descripción no puede superar 250 caracteres.')
+    if ((form.description || '').trim().length > 500) {
+      showError('La descripción no puede superar 500 caracteres.')
       setSubmitting(false)
       return
     }
@@ -243,8 +287,8 @@ export function AdminEventForm() {
               name="description"
               value={form.description}
               onChange={handleChange}
-              rows={3}
-              maxLength={250}
+              rows={5}
+              maxLength={500}
               placeholder="Descripción del evento..."
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none transition resize-none"
             />
@@ -344,18 +388,57 @@ export function AdminEventForm() {
           </div>
 
           <div>
-            <label htmlFor="imageUrl" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
-              URL de imagen
+            <label htmlFor="popularidad" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
+              Popularidad (fueguitos 🔥)
+            </label>
+            <select
+              id="popularidad"
+              name="popularidad"
+              value={form.popularidad}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+            >
+              <option value="1">🔥</option>
+              <option value="2">🔥🔥</option>
+              <option value="3">🔥🔥🔥</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="imageFile" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
+              Imagen del evento
             </label>
             <input
-              id="imageUrl"
-              name="imageUrl"
+              id="imageFile"
+              name="imageFile"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={uploadingImage}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#14b8a6] file:text-white focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none disabled:opacity-60"
+            />
+            {uploadingImage && (
+              <p className={`mt-2 text-sm ${mutedCl}`}>Subiendo imagen…</p>
+            )}
+            <p className={`mt-2 text-xs ${mutedCl}`}>
+              O pega la URL de la imagen (si la subida falla):
+            </p>
+            <input
               type="url"
               value={form.imageUrl}
-              onChange={handleChange}
-              placeholder="https://..."
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+              onChange={(e) => setForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
+              placeholder="https://res.cloudinary.com/..."
+              className="mt-1 w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] text-sm placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
             />
+            {form.imageUrl && !uploadingImage && (
+              <div className="mt-3">
+                <img
+                  src={form.imageUrl}
+                  alt="Vista previa"
+                  className="w-full max-w-xs h-32 object-cover rounded-xl border border-gray-200 dark:border-gray-600"
+                />
+              </div>
+            )}
           </div>
 
           <div>

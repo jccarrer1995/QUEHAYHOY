@@ -9,6 +9,7 @@ export const CATEGORIES = [
   { id: 'comida', label: 'Comida', icon: '🍔', color: 'bg-orange-100 dark:bg-orange-900/30' },
   { id: 'cine', label: 'Cine', icon: '🎬', color: 'bg-purple-100 dark:bg-purple-900/30' },
   { id: 'ferias', label: 'Ferias', icon: '🎪', color: 'bg-emerald-100 dark:bg-emerald-900/30' },
+  { id: 'videojuegos', label: 'Videojuegos', icon: '🎮', color: 'bg-blue-100 dark:bg-blue-900/30' },
 ]
 
 export function CategorySelector({ activeCategory, onSelect, isDark = false }) {

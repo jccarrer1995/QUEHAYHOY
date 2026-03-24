@@ -5,6 +5,11 @@ export const SECTOR_TO_FIRESTORE = {
   'las-penas': 'Las Peñas',
   guayarte: 'Guayarte',
   samanes: 'Samanes',
+  kennedy: 'Kennedy',
+  bellavista: 'Bellavista',
+  'malecon-salado': 'Malecón del Salado',
+  centro: 'Centro',
+  alborada: 'Alborada',
 }
 
 export const CAPACITY_LEVELS = [
@@ -31,6 +36,7 @@ export const initialForm = {
   endDate: '',
   endTime: '',
   recurrence_day: '0',
+  popularidad: '1',
 }
 
 function getLastDayOfMonth(date) {
@@ -115,6 +121,7 @@ export function mapFirestoreDocToForm(data) {
     endDate: '',
     endTime: '',
     recurrence_day: '0',
+    popularidad: data.popularidad != null ? String(data.popularidad) : '1',
   }
 
   if (type === 'recurring') {
@@ -156,6 +163,7 @@ export function buildEventPayload(form, opts) {
     capacity_level: form.capacity_level || null,
     image_url: (form.imageUrl || '').trim() || null,
     address: (form.address || '').trim() || null,
+    popularidad: form.popularidad && form.popularidad !== '' ? Math.min(Math.max(Number(form.popularidad) || 1, 1), 3) : 1,
   }
 
   if (!isUpdate) {

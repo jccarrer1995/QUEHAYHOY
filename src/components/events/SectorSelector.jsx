@@ -24,6 +24,31 @@ export const SECTORS = [
     label: 'Samanes',
     image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=200&h=200&fit=crop',
   },
+  {
+    id: 'kennedy',
+    label: 'Kennedy',
+    image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&h=200&fit=crop',
+  },
+  {
+    id: 'bellavista',
+    label: 'Bellavista',
+    image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=200&h=200&fit=crop',
+  },
+  {
+    id: 'malecon-salado',
+    label: 'Malecón del Salado',
+    image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=200&h=200&fit=crop',
+  },
+  {
+    id: 'centro',
+    label: 'Centro',
+    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=200&h=200&fit=crop',
+  },
+  {
+    id: 'alborada',
+    label: 'Alborada',
+    image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=200&h=200&fit=crop',
+  },
 ]
 
 export function SectorSelector({ activeSector, onSelect, isDark = false }) {

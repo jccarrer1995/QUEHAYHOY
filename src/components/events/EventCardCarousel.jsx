@@ -57,9 +57,13 @@ export function EventCardCarousel({ event, isDark = false }) {
   const borderCl = isDark ? 'border-gray-700' : 'border-gray-200'
 
   const formatPrice = (p) => {
-    if (p === 0 || p == null) return 'Gratis'
-    return typeof p === 'number' ? `$${p}` : p
+    const num = typeof p === 'number' ? p : Number(p)
+    if (num === 0 || p == null || Number.isNaN(num)) return 'Gratis'
+    return num % 1 === 0 ? `$${num}` : `$${Number(num).toFixed(2)}`
   }
+
+  const popularityCount = Math.min(Math.max(data.popularidad || 1, 1), 3)
+  const fueguitos = '🔥'.repeat(popularityCount)
 
   const location = sector ?? data.location
   const showUsersIcon = typeof capacityKey === 'string' ? capacityKey === 'SOCIAL' : false
@@ -125,7 +129,7 @@ export function EventCardCarousel({ event, isDark = false }) {
           )}
         </div>
         <div className={`flex items-center justify-between mt-2 pt-2 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
-          <span className="text-base" aria-hidden>🔥🔥🔥</span>
+          <span className="flex gap-1 text-orange-500 font-bold text-base" aria-hidden>{fueguitos}</span>
           <p className={`font-bold text-base ${accentCl}`}>
             {formatPrice(price)}
           </p>

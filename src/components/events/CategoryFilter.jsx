@@ -7,6 +7,7 @@ export const CATEGORIES = [
   { id: 'bares', label: 'Bares' },
   { id: 'ferias', label: 'Ferias' },
   { id: 'conciertos', label: 'Conciertos' },
+  { id: 'videojuegos', label: 'Videojuegos' },
 ]
 
 export function CategoryFilter({ activeCategory, onSelect, isDark = false }) {

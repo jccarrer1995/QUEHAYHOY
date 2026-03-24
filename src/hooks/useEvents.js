@@ -93,6 +93,7 @@ function mapDocToEvent(doc) {
     imageUrl: data.image_url ?? data.imageUrl ?? null,
     category: data.category ?? 'all',
     description: data.description ?? '',
+    popularidad: data.popularidad != null ? Number(data.popularidad) : 1,
   }
 }
 
@@ -102,6 +103,11 @@ const SECTOR_TO_FIRESTORE = {
   'las-penas': 'Las Peñas',
   guayarte: 'Guayarte',
   samanes: 'Samanes',
+  kennedy: 'Kennedy',
+  bellavista: 'Bellavista',
+  'malecon-salado': 'Malecón del Salado',
+  centro: 'Centro',
+  alborada: 'Alborada',
 }
 
 /**

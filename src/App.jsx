@@ -30,6 +30,24 @@ function App() {
     return list
   }, [events, searchQuery])
 
+  const freeEvents = useMemo(() => {
+    return filteredEvents.filter((e) => e.price === 0 || e.price === '0')
+  }, [filteredEvents])
+
+  const destacadosEvents = useMemo(() => {
+    return filteredEvents.filter((e) => (e.popularidad ?? 1) === 3)
+  }, [filteredEvents])
+
+  const noTeLoPuedesPerderEvents = useMemo(() => {
+    return filteredEvents
+      .filter((e) => {
+        const pop = e.popularidad ?? 1
+        const priceNum = typeof e.price === 'number' ? e.price : Number(e.price)
+        return (pop === 1 || pop === 2) && !Number.isNaN(priceNum) && priceNum > 0
+      })
+      .sort((a, b) => (b.popularidad ?? 1) - (a.popularidad ?? 1))
+  }, [filteredEvents])
+
   function handleSurpriseMe() {
     if (filteredEvents.length === 0) return
     const randomIndex = Math.floor(Math.random() * filteredEvents.length)
@@ -103,7 +121,7 @@ function App() {
           ) : (
             <>
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
-                {filteredEvents.map((event) => (
+                {destacadosEvents.map((event) => (
                   <EventCardCarousel
                     key={event.id}
                     event={event}
@@ -112,17 +130,63 @@ function App() {
                 ))}
               </div>
 
-              {filteredEvents.length === 0 && (
+              {destacadosEvents.length === 0 && (
                 <p
                   className="text-center py-12"
                   style={{ color: isDark ? '#9ca3af' : '#6b7280' }}
                 >
-                  No hay eventos que coincidan con tu búsqueda o filtro.
+                  No hay eventos destacados (popularidad 🔥🔥🔥) que coincidan.
                 </p>
               )}
             </>
           )}
         </section>
+
+        {freeEvents.length > 0 && (
+          <section className="mb-8 pb-20 md:pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+              >
+                <span>✨</span>
+                Gratis y Bacán
+              </h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
+              {freeEvents.map((event) => (
+                <EventCardCarousel
+                  key={event.id}
+                  event={event}
+                  isDark={isDark}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {noTeLoPuedesPerderEvents.length > 0 && (
+          <section className="mb-8 pb-20 md:pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+              >
+                <span>📍</span>
+                No te lo puedes perder
+              </h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
+              {noTeLoPuedesPerderEvents.map((event) => (
+                <EventCardCarousel
+                  key={event.id}
+                  event={event}
+                  isDark={isDark}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mb-10">
           <div

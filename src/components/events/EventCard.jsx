@@ -26,6 +26,7 @@ export function EventCard({ event, isDark = false }) {
     date,
     price,
     imageUrl,
+    popularidad,
     type: eventTypeField,
     recurrence_day,
   } = event ?? {}
@@ -175,12 +176,17 @@ export function EventCard({ event, isDark = false }) {
           {title ?? 'Evento sin título'}
         </h3>
         <div className="flex flex-wrap items-center gap-2 mt-1">
+          <span className="flex gap-1 text-orange-500 font-bold text-sm" aria-hidden>
+            {'🔥'.repeat(Math.min(Math.max(popularidad || 1, 1), 3))}
+          </span>
           {sector && (
             <span className={`text-xs md:text-sm ${textMuted}`}>{sector}</span>
           )}
           {price != null && (
-            <span className={`text-xs md:text-sm font-medium ${isDark ? 'text-[#14b8a6]' : 'text-teal-600'}`}>
-              {typeof price === 'number' ? `$${price}` : price}
+            <span className={`text-xs md:text-sm font-bold ${isDark ? 'text-[#14b8a6]' : 'text-teal-600'}`}>
+              {Number(price) > 0
+                ? (Number(price) % 1 === 0 ? `$${Number(price)}` : `$${Number(price).toFixed(2)}`)
+                : 'Gratis'}
             </span>
           )}
         </div>

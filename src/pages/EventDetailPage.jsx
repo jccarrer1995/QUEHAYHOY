@@ -27,8 +27,9 @@ function formatDateValue(dateValue) {
 
 function formatPriceValue(price) {
   if (price === 0 || price == null) return 'Gratis'
-  if (typeof price === 'number') return `$${price}`
-  return String(price)
+  const num = typeof price === 'number' ? price : Number(price)
+  if (Number.isNaN(num)) return String(price)
+  return num % 1 === 0 ? `$${num}` : `$${Number(num).toFixed(2)}`
 }
 
 export function EventDetailPage() {
