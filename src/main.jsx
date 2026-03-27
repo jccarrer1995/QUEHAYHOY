@@ -6,6 +6,7 @@ import App from './App.jsx'
 import { AdminEventForm } from './pages/AdminEventForm.jsx'
 import { AdminDashboard } from './pages/AdminDashboard.jsx'
 import { EventDetailPage } from './pages/EventDetailPage.jsx'
+import { CollectionPage } from './pages/CollectionPage.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { AppToaster } from './components/layout/AppToaster.jsx'
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')).render(
           <AppToaster />
           <Routes>
             <Route path="/" element={<App />} />
+            <Route path="/coleccion/:id" element={<CollectionPage />} />
             <Route path="/evento/:id" element={<EventDetailPage />} />
             <Route path="/wp-admin" element={<AdminDashboard />} />
             <Route path="/wp-admin/nuevo" element={<AdminEventForm />} />

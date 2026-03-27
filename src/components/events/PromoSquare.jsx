@@ -2,17 +2,19 @@ import { useNavigate } from 'react-router-dom'
 
 /**
  * @param {{
+ *   id: string
  *   title: string
+ *   dateLabel?: string
  *   badge: 'FERIADO' | 'ESPECIAL'
  *   imageUrl?: string
  *   isDark?: boolean
  * }} props
  */
-export function PromoSquare({ title, badge, imageUrl = '', isDark = false }) {
+export function PromoSquare({ id, title, dateLabel = '', badge, imageUrl = '', isDark = false }) {
   const navigate = useNavigate()
 
   function handleOpenCollection() {
-    navigate(`/?collection=${encodeURIComponent(title)}`)
+    navigate(`/coleccion/${id}`)
   }
 
   return (
@@ -43,9 +45,16 @@ export function PromoSquare({ title, badge, imageUrl = '', isDark = false }) {
         {badge}
       </span>
 
-      <h3 className="absolute bottom-2 left-2 right-2 text-sm font-black leading-tight text-white line-clamp-2">
-        {title}
-      </h3>
+      <div className="absolute bottom-2 left-2 right-2">
+        <h3 className="text-sm font-black leading-tight text-white line-clamp-2">
+          {title}
+        </h3>
+        {dateLabel ? (
+          <p className="mt-0.5 text-[10px] font-medium leading-tight text-white/90">
+            {dateLabel}
+          </p>
+        ) : null}
+      </div>
     </article>
   )
 }

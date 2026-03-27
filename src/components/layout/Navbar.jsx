@@ -140,6 +140,15 @@ export function Navbar({ searchValue = '', onSearchChange }) {
 
           {/* Derecha: campana, tema */}
           <div className="flex items-center gap-1 md:flex-shrink-0">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 md:p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label={isDark ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
+
             <div className="relative" ref={bellWrapRef}>
               <button
                 type="button"
@@ -181,7 +190,7 @@ export function Navbar({ searchValue = '', onSearchChange }) {
                     className={`border-b px-4 py-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}
                   >
                     <p className={`text-sm font-bold ${isDark ? 'text-[#E0E0E0]' : 'text-gray-900'}`}>
-                      Nuevos Planes (Últimos 30m)
+                      Nuevos Planes (Últimas 24h)
                     </p>
                     <p className={`mt-0.5 text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                       Eventos recientes que aún no has abierto.
@@ -262,15 +271,6 @@ export function Navbar({ searchValue = '', onSearchChange }) {
                 </div>
               ) : null}
             </div>
-
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="hidden sm:block p-1.5 md:p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label={isDark ? 'Modo claro' : 'Modo oscuro'}
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
           </div>
         </div>
 

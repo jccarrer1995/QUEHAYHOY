@@ -62,6 +62,7 @@ function mapDocToEvent(doc) {
   const type = resolveEventType(data)
   const endTs = type === 'unique' ? data.endDate ?? data.date : null
   const endDateMs = type === 'unique' ? timestampToMs(endTs) : null
+  const dateMs = type === 'unique' ? timestampToMs(data.date) : null
 
   let dateDisplay = ''
   if (type === 'recurring') {
@@ -86,6 +87,7 @@ function mapDocToEvent(doc) {
       data.recurrence_day == null || data.recurrence_day === ''
         ? null
         : Number(data.recurrence_day),
+    dateMs,
     endDateMs,
     capacity_level: data.capacity_level ?? null,
     capacity: data.capacity ?? null,

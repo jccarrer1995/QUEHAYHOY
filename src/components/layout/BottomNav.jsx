@@ -1,5 +1,5 @@
 /**
- * BottomNav - Navegación inferior móvil: Inicio, Explorar, Crear Plan, Perfil
+ * BottomNav - Navegación inferior móvil: Inicio, Explorar, Favoritos, Perfil
  */
 import { toast } from 'sonner'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -13,14 +13,14 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
   const items = [
     { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
     { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
-    { id: 'create', label: 'Crear Plan', icon: PlanIcon, active: activeTab === 'create' },
+    { id: 'create', label: 'Favoritos', icon: PlanIcon, active: activeTab === 'create' },
     { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
   ]
 
   function handleUnderConstruction(tabId) {
     const messages = {
       explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
-      create: 'Prepara tu evento, pronto podrás publicarlo directamente aquí. 🚀',
+      create: 'Tu lista de favoritos estará disponible aquí muy pronto. ⭐',
       profile: 'Tu espacio personal en QUEHAYH🔥Y está en construcción. 👤',
     }
 
@@ -42,7 +42,11 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#121212] border-t border-gray-200 dark:border-gray-800 md:hidden">
+    <nav
+      className={`fixed bottom-0 left-0 right-0 z-50 border-t md:hidden ${
+        isDark ? 'bg-[#121212] border-gray-800' : 'bg-white border-gray-200'
+      }`}
+    >
       <div className="flex items-center justify-around py-2">
         {items.map((item) => {
           const Icon = item.icon

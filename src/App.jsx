@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useEvents } from './hooks/useEvents'
-import { Navbar, BottomNav, FloatingButtons } from './components/layout'
+import { Navbar, BottomNav } from './components/layout'
 import {
   EventCardCarousel,
   CategorySelector,
@@ -10,6 +10,7 @@ import {
   EventSkeleton,
   TodaySection,
   SpecialCollections,
+  HorizontalEventRow,
 } from './components/events'
 import './App.css'
 
@@ -28,7 +29,6 @@ function isEventGratis(e) {
 
 function App() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeSector, setActiveSector] = useState('all')
@@ -37,10 +37,6 @@ function App() {
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
   const sectionDividerCls = isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'
-  const activeCollection = useMemo(() => {
-    const params = new URLSearchParams(location.search)
-    return params.get('collection')
-  }, [location.search])
 
   const filteredEvents = useMemo(() => {
     let list = events
@@ -136,14 +132,7 @@ function App() {
                 <span>🔥</span>
                 Eventos Destacados
               </h2>
-              {destacadosEvents.length > 0 ? (
-                <a
-                  href="#"
-                  className="text-sm font-medium text-[#14b8a6] hover:underline"
-                >
-                  Ver todo
-                </a>
-              ) : null}
+
             </div>
 
             {eventsLoading ? (
@@ -164,15 +153,7 @@ function App() {
                 {eventsError}
               </p>
             ) : (
-              <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
-                {destacadosEvents.map((event) => (
-                  <EventCardCarousel
-                    key={event.id}
-                    event={event}
-                    isDark={isDark}
-                  />
-                ))}
-              </div>
+              <HorizontalEventRow events={destacadosEvents} isDark={isDark} />
             )}
           </section>
         )}
@@ -188,27 +169,11 @@ function App() {
                 Gratis y Bacán
               </h2>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
-              {freeEvents.map((event) => (
-                <EventCardCarousel
-                  key={event.id}
-                  event={event}
-                  isDark={isDark}
-                />
-              ))}
-            </div>
+            <HorizontalEventRow events={freeEvents} isDark={isDark} />
           </section>
         )}
 
         <SpecialCollections isDark={isDark} />
-
-        {activeCollection ? (
-          <section className="mb-4">
-            <p className={`text-sm font-semibold ${isDark ? 'text-[#E0E0E0]' : 'text-[#0a0a0a]'}`}>
-              Explorando: {activeCollection}
-            </p>
-          </section>
-        ) : null}
 
         {noTeLoPuedesPerderEvents.length > 0 && (
           <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
@@ -221,15 +186,7 @@ function App() {
                 No te lo puedes perder
               </h2>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
-              {noTeLoPuedesPerderEvents.map((event) => (
-                <EventCardCarousel
-                  key={event.id}
-                  event={event}
-                  isDark={isDark}
-                />
-              ))}
-            </div>
+            <HorizontalEventRow events={noTeLoPuedesPerderEvents} isDark={isDark} />
           </section>
         )}
 
@@ -244,15 +201,7 @@ function App() {
                 Más eventos
               </h2>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 md:overflow-visible scrollbar-hide">
-              {otrosEventos.map((event) => (
-                <EventCardCarousel
-                  key={event.id}
-                  event={event}
-                  isDark={isDark}
-                />
-              ))}
-            </div>
+            <HorizontalEventRow events={otrosEventos} isDark={isDark} />
           </section>
         )}
 
@@ -283,11 +232,6 @@ function App() {
         </section>
 
       </main>
-
-      <FloatingButtons
-        onToggleTheme={toggleTheme}
-        isDark={isDark}
-      />
 
       <BottomNav activeTab={activeNavTab} onTabChange={setActiveNavTab} />
     </div>

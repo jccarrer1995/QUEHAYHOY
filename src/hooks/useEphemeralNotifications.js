@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
 
-const WINDOW_MS = 30 * 60 * 1000
+const WINDOW_MS = 24 * 60 * 60 * 1000
 const MAX_ITEMS = 10
 const GUEST_VISTOS_KEY = 'quehayhoy_vistos_guest'
 
@@ -64,7 +64,7 @@ function mapRecentDoc(d) {
 }
 
 /**
- * Notificaciones efímeras: eventos con `createdAt` en la ventana de 30 minutos.
+ * Notificaciones efímeras: eventos con `createdAt` en la ventana de 24 horas.
  *
  * **Sin login (`userId` vacío):** los “vistos” solo se guardan en `sessionStorage`
  * (`quehayhoy_vistos_guest`). No se lee ni escribe `usuarios/{uid}` en Firestore,
@@ -81,13 +81,13 @@ export function useEphemeralNotifications(userId) {
   const [eventsError, setEventsError] = useState(null)
   const [vistosFirestore, setVistosFirestore] = useState([])
   const [guestVistos, setGuestVistos] = useState(() => readGuestVistosFromStorage())
-  const [thirtyMinAgo, setThirtyMinAgo] = useState(() =>
+  const [oneDayAgo, setOneDayAgo] = useState(() =>
     Timestamp.fromMillis(Date.now() - WINDOW_MS)
   )
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      setThirtyMinAgo(Timestamp.fromMillis(Date.now() - WINDOW_MS))
+      setOneDayAgo(Timestamp.fromMillis(Date.now() - WINDOW_MS))
     }, 60_000)
     return () => window.clearInterval(id)
   }, [])
@@ -110,7 +110,7 @@ export function useEphemeralNotifications(userId) {
     const qRecent = query(
       colRef,
       where('isVisible', '==', true),
-      where('createdAt', '>=', thirtyMinAgo),
+      where('createdAt', '>=', oneDayAgo),
       orderBy('createdAt', 'desc'),
       limit(MAX_ITEMS)
     )
@@ -135,7 +135,7 @@ export function useEphemeralNotifications(userId) {
     )
 
     return () => unsub()
-  }, [thirtyMinAgo])
+  }, [oneDayAgo])
 
   useEffect(() => {
     if (!db || !userId) {
