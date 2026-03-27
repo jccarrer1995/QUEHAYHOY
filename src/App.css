@@ -236,3 +236,32 @@
 .qe-logo-pulse {
   animation: qe-logo-pulse 1.2s ease-in-out infinite;
 }
+
+@keyframes shine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes soft-blink {
+  0% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+
+.animate-shine {
+  animation: shine 3s linear infinite;
+}
+
+.animate-soft-blink {
+  animation: soft-blink 1.5s ease-in-out infinite;
+}

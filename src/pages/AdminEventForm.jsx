@@ -368,18 +368,18 @@ export function AdminEventForm() {
           </div>
 
           <div>
-            <label htmlFor="badgeLabel" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
+            <label htmlFor="badgeType" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
               Badge conceptual
             </label>
             <select
-              id="badgeLabel"
-              name="badgeLabel"
-              value={form.badgeLabel}
+              id="badgeType"
+              name="badgeType"
+              value={form.badgeType}
               onChange={handleChange}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
             >
               {BADGE_LABELS.map((l) => (
-                <option key={l.value} value={l.value}>
+                <option key={l.value === '' ? 'none' : l.value} value={l.value}>
                   {l.label}
                 </option>
               ))}

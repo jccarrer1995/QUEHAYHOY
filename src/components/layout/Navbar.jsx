@@ -87,8 +87,10 @@ export function Navbar({ searchValue = '', onSearchChange }) {
     <header className={`sticky top-0 z-50 border-b ${borderColor} ${bgColor}`}>
       <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-3 md:py-0">
         <div className="flex items-center justify-between gap-3 md:h-[50px] md:min-h-[50px]">
-          {/* Logo - móvil centrado | desktop: esquina izquierda, compacto */}
-          <h1 className={`flex-1 md:flex-none md:min-w-[90px] text-left md:text-left font-bold tracking-tight flex items-center gap-0.5 text-xl md:text-sm md:leading-normal`}>
+          {/* Desktop: logo compacto. En móvil se oculta para priorizar buscador + campana */}
+          <h1
+            className={`hidden md:flex md:flex-none md:min-w-[90px] text-left md:text-left font-bold tracking-tight items-center gap-0.5 text-xl md:text-sm md:leading-normal`}
+          >
             <span className={textColor}>QUEHAY</span>
             <span className={ACCENT}>H</span>
             <span className="text-base md:text-xs" aria-hidden>
@@ -96,6 +98,30 @@ export function Navbar({ searchValue = '', onSearchChange }) {
             </span>
             <span className={ACCENT}>Y</span>
           </h1>
+
+          {/* Móvil: buscador en la cabecera para ahorrar espacio vertical */}
+          <div className="flex flex-1 md:hidden">
+            <div className="relative w-full">
+              <input
+                type="search"
+                placeholder=""
+                value={searchValue}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                className={searchInputCls.replace('py-2.5 md:py-2', 'py-2.5')}
+                aria-label="Buscar"
+              />
+              {!searchValue ? (
+                <span
+                  className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 ${
+                    isDark ? 'text-gray-400' : 'text-gray-500'
+                  }`}
+                >
+                  <span>QUEHAYHOY</span> en GYE?
+                </span>
+              ) : null}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            </div>
+          </div>
 
           {/* Desktop: búsqueda centrada */}
           <div className="hidden md:flex md:flex-[2] md:justify-center md:items-center md:px-4">
@@ -248,20 +274,6 @@ export function Navbar({ searchValue = '', onSearchChange }) {
           </div>
         </div>
 
-        {/* Buscador móvil - debajo del header */}
-        <div className="mt-0 md:hidden">
-          <div className="relative">
-            <input
-              type="search"
-              placeholder="¿Qué buscas hoy en GYE? 🔥"
-              value={searchValue}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className={searchInputCls.replace('py-2.5 md:py-2', 'py-3')}
-              aria-label="Buscar"
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-          </div>
-        </div>
       </div>
 
       <EventDetailModal

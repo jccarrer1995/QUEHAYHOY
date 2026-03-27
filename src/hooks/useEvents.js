@@ -94,6 +94,7 @@ function mapDocToEvent(doc) {
     category: data.category ?? 'all',
     description: data.description ?? '',
     popularidad: data.popularidad != null ? Number(data.popularidad) : 1,
+    badgeType: data.badgeType ?? null,
     badgeLabel: data.badgeLabel ?? data.capacity_level ?? null,
   }
 }

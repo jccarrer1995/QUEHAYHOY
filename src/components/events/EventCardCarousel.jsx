@@ -1,35 +1,22 @@
 /**
- * EventCardCarousel - Tarjeta con badge conceptual
- * Badge: MASIVO (cian), FERIA (amarillo), PROMO (rojo), SOCIAL (morado)
+ * EventCardCarousel - Tarjeta Home (carrusel)
+ * Badge: Firestore `badgeType` — mismo sistema que EventCard
  */
 import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
-
-const BADGE_STYLES = {
-  MASIVO: 'bg-cyan-500/30 text-cyan-700 border-cyan-500/50 dark:bg-cyan-500/25 dark:text-cyan-300 dark:border-cyan-400/50',
-  FERIA: 'bg-amber-500/30 text-amber-800 border-amber-500/50 dark:bg-amber-500/25 dark:text-amber-300 dark:border-amber-400/50',
-  PROMO: 'bg-red-500/30 text-red-700 border-red-500/50 dark:bg-red-500/25 dark:text-red-300 dark:border-red-400/50',
-  SOCIAL: 'bg-purple-500/30 text-purple-700 border-purple-500/50 dark:bg-purple-500/25 dark:text-purple-300 dark:border-purple-400/50',
-}
-
-function getBadgeStyle(badgeLabel) {
-  const key = typeof badgeLabel === 'string' ? badgeLabel.trim().toUpperCase() : ''
-  if (key === 'MASIVO' || key === 'FERIA' || key === 'PROMO' || key === 'SOCIAL') return BADGE_STYLES[key]
-  return BADGE_STYLES.SOCIAL
-}
+import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
+import { EventBadge } from './EventBadge.jsx'
 
 export function EventCardCarousel({ event, isDark = false }) {
   const navigate = useNavigate()
   const data = event ?? {}
-  const { title, sector, date, price, badgeLabel, type: evType, recurrence_day } = data
+  const { title, sector, date, price, type: evType, recurrence_day } = data
   const isRecurring = evType === 'recurring' || data.eventType === 'recurring'
   const dateLine =
     isRecurring && recurrence_day != null && !Number.isNaN(Number(recurrence_day))
       ? formatRecurrenceLabel(recurrence_day)
       : date
   const imageUrl = data.imageUrl ?? data.image_url
-  const displayLabel = (badgeLabel || data.capacity_level || 'SOCIAL').toString().trim().toUpperCase()
-  const badgeClass = getBadgeStyle(badgeLabel || data.capacity_level || 'SOCIAL')
   const textCl = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const mutedCl = isDark ? 'text-gray-400' : 'text-gray-500'
   const accentCl = 'text-[#14b8a6]'
@@ -72,13 +59,7 @@ export function EventCardCarousel({ event, isDark = false }) {
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">📅</div>
         )}
-        {displayLabel && (
-          <span
-            className={`absolute top-3 right-3 px-2 py-0.5 text-xs font-bold uppercase tracking-wide rounded-md border ${badgeClass}`}
-          >
-            {displayLabel}
-          </span>
-        )}
+        <EventBadge badgeType={resolveEventBadgeTypeFromDoc(data)} />
       </div>
       <div className="p-3 relative">
         <h3 className={`font-bold text-sm uppercase tracking-wide ${textCl} line-clamp-2 pr-12`}>

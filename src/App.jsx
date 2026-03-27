@@ -1,9 +1,16 @@
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, FloatingButtons } from './components/layout'
-import { EventCardCarousel, CategorySelector, SectorSelector, EventSkeleton } from './components/events'
+import {
+  EventCardCarousel,
+  CategorySelector,
+  SectorSelector,
+  EventSkeleton,
+  TodaySection,
+  SpecialCollections,
+} from './components/events'
 import './App.css'
 
 /**
@@ -21,6 +28,7 @@ function isEventGratis(e) {
 
 function App() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeSector, setActiveSector] = useState('all')
@@ -28,6 +36,11 @@ function App() {
   const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, activeSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
+  const sectionDividerCls = isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'
+  const activeCollection = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return params.get('collection')
+  }, [location.search])
 
   const filteredEvents = useMemo(() => {
     let list = events
@@ -111,8 +124,10 @@ function App() {
           />
         </section>
 
+        <TodaySection isDark={isDark} />
+
         {(eventsLoading || eventsError || destacadosEvents.length > 0) && (
-          <section className="mb-8 pb-20 md:pb-8">
+          <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
@@ -163,7 +178,7 @@ function App() {
         )}
 
         {freeEvents.length > 0 && (
-          <section className="mb-8 pb-20 md:pb-8">
+          <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
@@ -185,8 +200,18 @@ function App() {
           </section>
         )}
 
+        <SpecialCollections isDark={isDark} />
+
+        {activeCollection ? (
+          <section className="mb-4">
+            <p className={`text-sm font-semibold ${isDark ? 'text-[#E0E0E0]' : 'text-[#0a0a0a]'}`}>
+              Explorando: {activeCollection}
+            </p>
+          </section>
+        ) : null}
+
         {noTeLoPuedesPerderEvents.length > 0 && (
-          <section className="mb-8 pb-20 md:pb-8">
+          <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
@@ -209,7 +234,7 @@ function App() {
         )}
 
         {otrosEventos.length > 0 && (
-          <section className="mb-8 pb-20 md:pb-8">
+          <section className={`mt-0 pt-2 md:mt-0.5 md:pt-3 mb-5 pb-20 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
                 className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
@@ -231,7 +256,7 @@ function App() {
           </section>
         )}
 
-        <section className="mb-10">
+        <section className="mt-0.5 pt-3 mb-6">
           <div
             className={`rounded-2xl border p-5 text-center ${
               isDark ? 'bg-[#161616] border-gray-800' : 'bg-gray-50 border-gray-200'

@@ -1,4 +1,12 @@
 import { deleteField, serverTimestamp, Timestamp } from 'firebase/firestore'
+import {
+  BADGE_FORM_OPTIONS,
+  badgeTypeToFormValue,
+  legacyBadgeLabelToFormValue,
+} from '../../lib/eventBadges.js'
+
+/** Opciones del select «Badge conceptual» (alias para el admin) */
+export const BADGE_LABELS = BADGE_FORM_OPTIONS
 
 export const SECTOR_TO_FIRESTORE = {
   urdesa: 'Urdesa',
@@ -13,13 +21,6 @@ export const SECTOR_TO_FIRESTORE = {
   'la-joya': 'La Joya',
 }
 
-export const BADGE_LABELS = [
-  { value: 'MASIVO', label: 'MASIVO' },
-  { value: 'FERIA', label: 'FERIA' },
-  { value: 'PROMO', label: 'PROMO' },
-  { value: 'SOCIAL', label: 'SOCIAL' },
-]
-
 export const initialForm = {
   title: '',
   description: '',
@@ -28,7 +29,7 @@ export const initialForm = {
   price: '',
   capacity: '',
   capacity_level: '',
-  badgeLabel: 'SOCIAL',
+  badgeType: '',
   imageUrl: '',
   address: '',
   eventType: 'unique',
@@ -54,18 +55,6 @@ export function firestoreSectorToFormId(firestoreSector) {
   if (!firestoreSector) return 'urdesa'
   const found = Object.entries(SECTOR_TO_FIRESTORE).find(([, v]) => v === firestoreSector)
   return found ? found[0] : 'urdesa'
-}
-
-/**
- * @param {string} badge
- * @returns {string}
- */
-export function firestoreBadgeToFormId(badge) {
-  if (!badge) return 'SOCIAL'
-  const v = String(badge).trim().toUpperCase()
-  if (v === 'MASIVO' || v === 'FERIA' || v === 'PROMO' || v === 'SOCIAL') return v
-  if (v.includes('MASSIVE')) return 'MASIVO'
-  return 'SOCIAL'
 }
 
 /**
@@ -126,7 +115,11 @@ export function mapFirestoreDocToForm(data) {
     price: data.price != null && data.price !== '' ? String(data.price) : '',
     capacity: data.capacity != null && data.capacity !== '' ? String(data.capacity) : '',
     capacity_level: typeof data.capacity_level === 'string' ? data.capacity_level : '',
-    badgeLabel: firestoreBadgeToFormId(data.badgeLabel || data.capacity_level || ''),
+    badgeType: (() => {
+      const fromNew = badgeTypeToFormValue(data.badgeType)
+      if (fromNew) return fromNew
+      return legacyBadgeLabelToFormValue(data.badgeLabel || data.capacity_level || '')
+    })(),
     imageUrl: typeof data.image_url === 'string' ? data.image_url : '',
     address: typeof data.address === 'string' ? data.address : '',
     eventType: type === 'recurring' ? 'recurring' : 'unique',
@@ -175,7 +168,7 @@ export function buildEventPayload(form, opts) {
     price: form.price !== '' ? (Number.isNaN(Number(form.price)) ? 0 : Number(form.price)) : null,
     capacity: form.capacity !== '' ? (Number.isNaN(Number(form.capacity)) ? null : Number(form.capacity)) : null,
     capacity_level: form.capacity_level || null,
-    badgeLabel: form.badgeLabel || null,
+    badgeType: form.badgeType && form.badgeType !== '' ? form.badgeType : null,
     image_url: (form.imageUrl || '').trim() || null,
     address: (form.address || '').trim() || null,
     popularidad: form.popularidad && form.popularidad !== '' ? Math.min(Math.max(Number(form.popularidad) || 1, 1), 3) : 1,
@@ -186,6 +179,7 @@ export function buildEventPayload(form, opts) {
     payload.isVisible = true
   } else {
     payload.updatedAt = serverTimestamp()
+    payload.badgeLabel = deleteField()
   }
 
   if (form.eventType === 'unique') {

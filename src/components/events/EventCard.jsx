@@ -1,24 +1,12 @@
 /**
- * EventCard - Tarjeta de evento con badge conceptual y soporte Dark Mode
- * QUEHAYHOY - Descubre eventos en Guayaquil
- * Badge: MASIVO (cian), FERIA (amarillo), PROMO (rojo), SOCIAL (morado)
+ * EventCard - Tarjeta de evento (QUEHAYHOY)
+ * Badge: `badgeType` en Firestore → EventBadge (colores por tipo, texto blanco, sin iconos)
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
-
-const BADGE_STYLES = {
-  MASIVO: { className: 'bg-cyan-500/30 text-cyan-700 border-cyan-500/50', darkClassName: 'dark:bg-cyan-500/25 dark:text-cyan-300 dark:border-cyan-400/50' },
-  FERIA: { className: 'bg-amber-500/30 text-amber-800 border-amber-500/50', darkClassName: 'dark:bg-amber-500/25 dark:text-amber-300 dark:border-amber-400/50' },
-  PROMO: { className: 'bg-red-500/30 text-red-700 border-red-500/50', darkClassName: 'dark:bg-red-500/25 dark:text-red-300 dark:border-red-400/50' },
-  SOCIAL: { className: 'bg-purple-500/30 text-purple-700 border-purple-500/50', darkClassName: 'dark:bg-purple-500/25 dark:text-purple-300 dark:border-purple-400/50' },
-}
-
-function getBadgeStyle(badgeLabel) {
-  const key = typeof badgeLabel === 'string' ? badgeLabel.trim().toUpperCase() : ''
-  if (key === 'MASIVO' || key === 'FERIA' || key === 'PROMO' || key === 'SOCIAL') return BADGE_STYLES[key]
-  return BADGE_STYLES.SOCIAL
-}
+import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
+import { EventBadge } from './EventBadge.jsx'
 
 export function EventCard({ event, isDark = false }) {
   const navigate = useNavigate()
@@ -26,13 +14,11 @@ export function EventCard({ event, isDark = false }) {
     id,
     title,
     description,
-    capacity,
     sector,
     date,
     price,
     imageUrl,
     popularidad,
-    badgeLabel,
     type: eventTypeField,
     recurrence_day,
   } = event ?? {}
@@ -47,9 +33,8 @@ export function EventCard({ event, isDark = false }) {
     isRecurring && recurrence_day != null && !Number.isNaN(Number(recurrence_day))
       ? formatRecurrenceLabel(recurrence_day)
       : date
-  const displayLabel = (badgeLabel || event?.capacity_level || 'SOCIAL').toString().trim().toUpperCase()
-  const badgeStyle = getBadgeStyle(badgeLabel || event?.capacity_level || 'SOCIAL')
-  const [isLoading, setIsLoading] = useState(!!imageUrl);
+
+  const [isLoading, setIsLoading] = useState(!!imageUrl)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -57,10 +42,10 @@ export function EventCard({ event, isDark = false }) {
     })
   }, [imageUrl])
 
-  const cardBg = isDark ? 'bg-[#121212]' : 'bg-white';
-  const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900';
-  const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
-  const borderColor = isDark ? 'border-gray-800' : 'border-gray-200';
+  const cardBg = isDark ? 'bg-[#121212]' : 'bg-white'
+  const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
+  const textMuted = isDark ? 'text-gray-400' : 'text-gray-500'
+  const borderColor = isDark ? 'border-gray-800' : 'border-gray-200'
 
   return (
     <article
@@ -80,7 +65,6 @@ export function EventCard({ event, isDark = false }) {
           : undefined
       }
     >
-      {/* Imagen - aspect-ratio fijo evita Layout Shift */}
       <div
         className={`aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden ${isLoading ? 'animate-pulse' : ''}`}
       >
@@ -99,14 +83,7 @@ export function EventCard({ event, isDark = false }) {
             📅
           </div>
         )}
-        {/* Badge conceptual */}
-        {displayLabel && (
-          <span
-            className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-bold uppercase tracking-wide rounded-md border ${badgeStyle.className} ${badgeStyle.darkClassName}`}
-          >
-            {displayLabel}
-          </span>
-        )}
+        <EventBadge badgeType={resolveEventBadgeTypeFromDoc(event)} />
       </div>
 
       <div className="p-3">
@@ -138,7 +115,7 @@ export function EventCard({ event, isDark = false }) {
         )}
       </div>
     </article>
-  );
+  )
 }
 
-export default EventCard;
+export default EventCard
