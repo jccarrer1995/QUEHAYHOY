@@ -2,9 +2,11 @@
  * BottomNav - Navegación inferior móvil: Inicio, Explorar, Favoritos, Perfil
  */
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../contexts/ThemeContext'
 
 export function BottomNav({ activeTab = 'home', onTabChange }) {
+  const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const accentCl = 'text-[#14b8a6]'
@@ -21,7 +23,6 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
     const messages = {
       explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
       create: 'Tu lista de favoritos estará disponible aquí muy pronto. ⭐',
-      profile: 'Tu espacio personal en QUEHAYH🔥Y está en construcción. 👤',
     }
 
     const message = messages[tabId]
@@ -56,6 +57,12 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
               type="button"
               onClick={() => {
                 if (item.id === 'home') {
+                  navigate('/')
+                  onTabChange?.(item.id)
+                  return
+                }
+                if (item.id === 'profile') {
+                  navigate('/perfil')
                   onTabChange?.(item.id)
                   return
                 }

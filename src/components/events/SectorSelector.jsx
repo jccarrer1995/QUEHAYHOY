@@ -1,66 +1,18 @@
 import { SectorRoundImage } from './SectorRoundImage.jsx'
+import { useSectorVisibility } from '../../contexts/SectorVisibilityContext.jsx'
+import { SECTORS } from '../../lib/topSectors.js'
+
+export { SECTORS }
 
 /**
  * SectorSelector - Carrusel de iconos redondos con imágenes por sector
- * SECTORES TOP: Urdesa, Samborondón, Vía a la Costa, Puerto Santa Ana, Centro, etc.
+ * SECTORES TOP: Urdesa, Samborondón, Puerto Santa Ana, Centro, etc.
  */
-export const SECTORS = [
-  { id: 'all', label: 'Todo', image: null },
-  {
-    id: 'urdesa',
-    label: 'Urdesa',
-    image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'las-penas',
-    label: 'Las Peñas',
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'guayarte',
-    label: 'Guayarte',
-    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'samanes',
-    label: 'Samanes',
-    image: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'kennedy',
-    label: 'Kennedy',
-    image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'bellavista',
-    label: 'Bellavista',
-    image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'malecon-salado',
-    label: 'Malecón del Salado',
-    image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'centro',
-    label: 'Centro',
-    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'alborada',
-    label: 'Alborada',
-    image: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=200&h=200&fit=crop',
-  },
-  {
-    id: 'la-joya',
-    label: 'La Joya',
-    // Edificios (Pexels — suele cargar bien; si falla, SectorRoundImage muestra ✨)
-    image:
-      'https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
-  },
-]
-
 export function SectorSelector({ activeSector, onSelect, isDark = false }) {
+  const { isSectorVisible } = useSectorVisibility()
+  const visibleSectors = SECTORS.filter(
+    (sector) => sector.id === 'all' || isSectorVisible(sector.id)
+  )
   const textCl = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const headingCl = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
 
@@ -70,7 +22,7 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
         Sectores Top
       </h3>
       <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible scrollbar-hide">
-      {SECTORS.map((sector) => {
+      {visibleSectors.map((sector) => {
         const isActive = activeSector === sector.id
         return (
           <button

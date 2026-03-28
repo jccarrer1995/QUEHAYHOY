@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from './contexts/ThemeContext.jsx'
+import { useSectorVisibility } from './contexts/SectorVisibilityContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav } from './components/layout'
 import {
@@ -30,10 +31,17 @@ function isEventGratis(e) {
 function App() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
+  const { isSectorVisible } = useSectorVisibility()
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeSector, setActiveSector] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, activeSector)
+
+  const effectiveSector = useMemo(() => {
+    if (activeSector === 'all') return 'all'
+    return isSectorVisible(activeSector) ? activeSector : 'all'
+  }, [activeSector, isSectorVisible])
+
+  const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, effectiveSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
   const sectionDividerCls = isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'
@@ -114,7 +122,7 @@ function App() {
         </section>
         <section className="mb-4">
           <SectorSelector
-            activeSector={activeSector}
+            activeSector={effectiveSector}
             onSelect={setActiveSector}
             isDark={isDark}
           />

@@ -8,7 +8,7 @@
 
 - **Frontend:** React 19 + Vite 8 + Tailwind CSS 4
 - **Backend:** Firebase (Firestore, Auth, Analytics)
-- **Estado:** ThemeContext, AuthContext
+- **Estado:** ThemeContext, AuthContext, SectorVisibilityContext (visibilidad de sectores en `localStorage`)
 - **UX/Animaciones:** Framer Motion
 - **Notificaciones:** Sonner (toasts)
 
@@ -32,11 +32,11 @@
 - PWA: `manifest.json` y metadatos HTML para instalación en iPhone/Android
 
 ### 4. Componentes
-- **Navbar:** Logo QUEHAY/HOY, buscador ("¿Qué quieres hacer hoy en Guayaquil?"), campana, login
+- **Navbar:** Logo QUEHAY/HOY, buscador, campana (planes recientes), tema; acceso a perfil vía **BottomNav** (`/perfil`)
 - **CategorySelector:** Bares, Conciertos, Comida, Cine, Ferias (tarjetas con iconos)
 - **EventCardCarousel:** Imagen, título, badge de aforo (✨ Exclusivo, 👥 Social, 🔥 Masivo), fecha, ubicación, precio
 - **FloatingButtons:** Tema (☀️/🌙), Filter, Gratis — solo móvil
-- **BottomNav:** Inicio, Explorar, Notificaciones, Perfil
+- **BottomNav:** Inicio, Explorar, Favoritos (en construcción), **Perfil** → `/perfil`
 
 ### 5. Badges de Aforo
 - **✨ Exclusivo:** &lt;30 personas (dorado)
@@ -84,6 +84,9 @@ VITE_FIREBASE_MEASUREMENT_ID=...
 # Cloudinary (subida de imágenes)
 VITE_CLOUDINARY_CLOUD_NAME=dfyp1q7tl
 VITE_CLOUDINARY_UPLOAD_PRESET=quehayhoy_images
+
+# Opcional: versión mostrada en «Acerca de» (por defecto en código: V0.0.2 en appVersion.js)
+# VITE_APP_VERSION=V0.0.2
 ```
 
 ---
@@ -93,13 +96,26 @@ VITE_CLOUDINARY_UPLOAD_PRESET=quehayhoy_images
 ```
 src/
 ├── components/
-│   ├── layout/     # Navbar, BottomNav, FloatingButtons
-│   └── events/     # EventCardCarousel, CategorySelector
+│   ├── layout/     # Navbar, BottomNav, AppToaster
+│   ├── events/     # carruseles, CategorySelector, SectorSelector, TodaySection…
+│   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig
-├── contexts/       # ThemeContext, AuthContext
-├── hooks/          # useEvents
+├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext
+├── hooks/          # useEvents, useEphemeralNotifications…
+├── lib/            # topSectors, appVersion, utilidades compartidas
+├── pages/          # App (home vía ruta /), ProfilePage, FavoriteSectorsPage, EventDetailPage…
 └── ...
 ```
+
+### Rutas útiles (usuario)
+
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Home (eventos, categorías, sectores) |
+| `/perfil` | Cuenta, Google, configuración y legales |
+| `/perfil/sectores` | Sectores favoritos: mostrar/ocultar en el carrusel del inicio |
+| `/evento/:id` | Detalle de evento |
+| `/coleccion/:id` | Página de colección especial |
 
 ---
 
@@ -186,13 +202,20 @@ src/
   - Se añadió sección **Más eventos** para no perder eventos que no entran en los 3 bloques principales.
   - Criterio de **Gratis y Bacán** ampliado: ahora incluye precio `0`, `'0'`, vacío o `null`.
 
+### 10) Perfil, legales y sectores favoritos (28/03/2026)
+
+- **Perfil (`/perfil`)**: diseño alineado al tema claro/oscuro del home; inicio de sesión con Google; secciones CONFIGURACIÓN y LEGAL; versión de app (**`V0.0.2`**) abajo a la izquierda (`src/lib/appVersion.js`).
+- **Texto bajo el botón de Google**: copy de acceso con `text-xs` / `text-gray-400`.
+- **Bottom sheets legales** (`src/components/legal/`): Términos, Política de privacidad y Acerca de; cierre con X, arrastre hacia abajo y overlay; contenido en `legalSheetContent.js` (revisión legal recomendada).
+- **Sectores favoritos (`/perfil/sectores`)**: pantalla con animación desde la derecha; interruptores por sector; preferencias en **`localStorage`** (`quehayhoy-sector-visibility-v1`); lista canónica en **`src/lib/topSectors.js`**; el carrusel «Sectores Top» en home solo muestra sectores activados.
+- Documentación detallada: [`docs/ACTUALIZACIONES-2026-03-28.md`](docs/ACTUALIZACIONES-2026-03-28.md).
+
 ---
 
 ## Próximos pasos sugeridos
 
 - [ ] Autenticación con Apple
 - [ ] Guardar planes/favoritos (requiere login)
-- [ ] Filtros por sector (Urdesa, Samborondón, Puerto Santa Ana)
 - [ ] Mapa interactivo
 - [ ] Notificaciones Push (FCM)
 - [ ] Integración completa con Firestore para categorías y tags

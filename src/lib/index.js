@@ -1,4 +1,6 @@
 // Utilidades compartidas
+export { APP_VERSION } from './appVersion.js'
+
 export const SECTORS = ['Urdesa', 'Samborondón', 'Puerto Santa Ana']
 
 /** Nombres en plural para texto "Todos los [día]" (recurrence_day: 0=dom … 6=sáb) */
