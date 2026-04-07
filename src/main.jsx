@@ -7,6 +7,7 @@ import { AdminEventForm } from './pages/AdminEventForm.jsx'
 import { AdminDashboard } from './pages/AdminDashboard.jsx'
 import { EventDetailPage } from './pages/EventDetailPage.jsx'
 import { CollectionPage } from './pages/CollectionPage.jsx'
+import { LegalPage } from './pages/LegalPage.jsx'
 import { ProfilePage } from './pages/ProfilePage.jsx'
 import { FavoriteSectorsPage } from './pages/FavoriteSectorsPage.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
@@ -24,8 +25,10 @@ createRoot(document.getElementById('root')).render(
             <Routes>
               <Route path="/" element={<App />} />
               <Route path="/coleccion/:id" element={<CollectionPage />} />
+              <Route path="/legal/:slug" element={<LegalPage />} />
               <Route path="/perfil" element={<ProfilePage />} />
               <Route path="/perfil/sectores" element={<FavoriteSectorsPage />} />
+              <Route path="/evento/:categoria/:slug" element={<EventDetailPage />} />
               <Route path="/evento/:id" element={<EventDetailPage />} />
               <Route path="/wp-admin" element={<AdminDashboard />} />
               <Route path="/wp-admin/nuevo" element={<AdminEventForm />} />

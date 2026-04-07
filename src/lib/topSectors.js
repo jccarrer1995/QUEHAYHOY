@@ -56,3 +56,49 @@ export const SECTORS = [
       'https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
   },
 ]
+
+/**
+ * Si el texto de sector del evento coincide con un sector «top», devuelve su id estable.
+ * Si no coincide con ninguno (p. ej. otro barrio), devuelve `null` y el evento no se oculta por preferencias.
+ *
+ * @param {string | undefined | null} sectorLabel - `location` / `sector` en Firestore
+ * @returns {string | null}
+ */
+export function topSectorIdFromEventLabel(sectorLabel) {
+  const t = (sectorLabel ?? '').trim()
+  if (!t) return null
+  for (const s of SECTORS) {
+    if (s.id === 'all') continue
+    if (s.label === t) return s.id
+  }
+  return null
+}
+
+/**
+ * Quita eventos cuyo sector top está desactivado en «Sectores favoritos».
+ *
+ * @param {Array<{ sector?: string }>} events
+ * @param {(sectorId: string) => boolean} isSectorVisible - `useSectorVisibility().isSectorVisible`
+ * @returns {typeof events}
+ */
+export function filterEventsBySectorVisibility(events, isSectorVisible) {
+  return events.filter((ev) => {
+    const id = topSectorIdFromEventLabel(ev.sector)
+    if (id === null) return true
+    return isSectorVisible(id)
+  })
+}
+
+/**
+ * Filtro del chip «Sectores top» del home (misma lógica que `useEvents` con sector ≠ all).
+ *
+ * @param {{ sector?: string }} event
+ * @param {string} sectorId - id del chip (`all`, `urdesa`, …)
+ * @returns {boolean}
+ */
+export function eventMatchesSectorChip(event, sectorId) {
+  if (!sectorId || sectorId === 'all') return true
+  const entry = SECTORS.find((s) => s.id === sectorId)
+  if (!entry || entry.id === 'all') return true
+  return (event.sector ?? '').trim() === entry.label
+}

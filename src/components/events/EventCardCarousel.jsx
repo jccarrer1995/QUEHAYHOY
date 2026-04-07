@@ -2,8 +2,10 @@
  * EventCardCarousel - Tarjeta Home (carrusel)
  * Badge: Firestore `badgeType` — mismo sistema que EventCard
  */
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
+import { getEventDetailPath } from '../../lib/slug.js'
 import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
 import { EventBadge } from './EventBadge.jsx'
 
@@ -33,11 +35,16 @@ export function EventCardCarousel({ event, isDark = false }) {
   const fueguitos = '🔥'.repeat(popularityCount)
 
   const location = sector ?? data.location
+  const detailPath = getEventDetailPath(data)
+  const [hasImageError, setHasImageError] = useState(false)
+
+  useEffect(() => {
+    setHasImageError(false)
+  }, [imageUrl])
 
   function goToDetail() {
-    const eventId = data?.id
-    if (!eventId) return
-    navigate(`/evento/${eventId}`)
+    if (!detailPath) return
+    navigate(detailPath)
   }
 
   return (
@@ -45,17 +52,27 @@ export function EventCardCarousel({ event, isDark = false }) {
       className={`flex-shrink-0 w-[280px] sm:w-[300px] md:w-[300px] lg:w-[320px] rounded-2xl border ${borderCl} ${cardBg} overflow-hidden shadow-sm
         transition-all duration-300 ease-in-out
         md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
-        md:hover:border-b-2 md:hover:border-b-[#00C3BB] cursor-pointer`}
-      onClick={goToDetail}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') goToDetail()
-      }}
+        md:hover:border-b-2 md:hover:border-b-[#00C3BB] ${detailPath ? 'cursor-pointer' : 'cursor-default'}`}
+      onClick={detailPath ? goToDetail : undefined}
+      role={detailPath ? 'button' : undefined}
+      tabIndex={detailPath ? 0 : undefined}
+      onKeyDown={
+        detailPath
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') goToDetail()
+            }
+          : undefined
+      }
     >
       <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
-        {imageUrl ? (
-          <img src={optimizeImageUrl(imageUrl)} alt={title} className="w-full h-full object-cover" loading="lazy" />
+        {imageUrl && !hasImageError ? (
+          <img
+            src={optimizeImageUrl(imageUrl)}
+            alt={title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={() => setHasImageError(true)}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">📅</div>
         )}

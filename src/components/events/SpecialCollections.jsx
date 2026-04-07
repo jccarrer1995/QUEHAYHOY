@@ -71,8 +71,8 @@ export function SpecialCollections({ isDark = false }) {
               onClick={() => scrollByAmount(-1)}
               className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${
                 isDark
-                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222]'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222] cursor-pointer'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'
               }`}
               aria-label="Desplazar colecciones a la izquierda"
             >
@@ -85,8 +85,8 @@ export function SpecialCollections({ isDark = false }) {
               onClick={() => scrollByAmount(1)}
               className={`h-8 w-8 rounded-full border flex items-center justify-center transition ${
                 isDark
-                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222]'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222] cursor-pointer'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'
               }`}
               aria-label="Desplazar colecciones a la derecha"
             >

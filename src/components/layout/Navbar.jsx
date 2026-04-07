@@ -4,13 +4,16 @@
  * QuickFilters (pills) debajo del buscador
  */
 import { useEffect, useId, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { Menu } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useEphemeralNotifications } from '../../hooks/useEphemeralNotifications.js'
 import { EventDetailModal } from '../events'
+import { DesktopProfileMenuContent } from './DesktopProfileMenuContent.jsx'
 
 const ACCENT = 'text-[#14b8a6] dark:text-[#14b8a6]'
 
@@ -18,9 +21,11 @@ const ACCENT = 'text-[#14b8a6] dark:text-[#14b8a6]'
  * @param {{ searchValue?: string, onSearchChange?: (v: string) => void }} props
  */
 export function Navbar({ searchValue = '', onSearchChange }) {
+  const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const { user } = useAuth()
   const isDark = theme === 'dark'
+  const showDesktopProfileMenu = !location.pathname.startsWith('/perfil')
 
   const {
     recentEvents,
@@ -32,6 +37,7 @@ export function Navbar({ searchValue = '', onSearchChange }) {
   } = useEphemeralNotifications(user?.uid ?? null)
 
   const [panelOpen, setPanelOpen] = useState(false)
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalEventId, setModalEventId] = useState(null)
 
@@ -66,6 +72,34 @@ export function Navbar({ searchValue = '', onSearchChange }) {
     }
   }, [panelOpen])
 
+  useEffect(() => {
+    if (!profileDrawerOpen) return undefined
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [profileDrawerOpen])
+
+  useEffect(() => {
+    if (!profileDrawerOpen) return undefined
+    function onKey(e) {
+      if (e.key === 'Escape') setProfileDrawerOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [profileDrawerOpen])
+
+  useEffect(() => {
+    if (!profileDrawerOpen) return undefined
+    const mq = window.matchMedia('(min-width: 768px)')
+    function onMq() {
+      if (!mq.matches) setProfileDrawerOpen(false)
+    }
+    mq.addEventListener('change', onMq)
+    return () => mq.removeEventListener('change', onMq)
+  }, [profileDrawerOpen])
+
   /**
    * @param {string} eventId
    */
@@ -87,17 +121,31 @@ export function Navbar({ searchValue = '', onSearchChange }) {
     <header className={`sticky top-0 z-50 border-b ${borderColor} ${bgColor}`}>
       <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-3 md:py-0">
         <div className="flex items-center justify-between gap-3 md:h-[50px] md:min-h-[50px]">
-          {/* Desktop: logo compacto. En móvil se oculta para priorizar buscador + campana */}
-          <h1
-            className={`hidden md:flex md:flex-none md:min-w-[90px] text-left md:text-left font-bold tracking-tight items-center gap-0.5 text-xl md:text-sm md:leading-normal`}
-          >
-            <span className={textColor}>QUEHAY</span>
-            <span className={ACCENT}>H</span>
-            <span className="text-base md:text-xs" aria-hidden>
-              🔥
-            </span>
-            <span className={ACCENT}>Y</span>
-          </h1>
+          {/* Desktop: menú cuenta + logo. Móvil: sin hamburguesa (perfil en barra inferior). */}
+          <div className="hidden md:flex md:flex-none md:items-center md:gap-2">
+            {showDesktopProfileMenu ? (
+              <button
+                type="button"
+                onClick={() => setProfileDrawerOpen(true)}
+                className="group rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Abrir menú de cuenta"
+                aria-expanded={profileDrawerOpen}
+                aria-controls="desktop-profile-drawer"
+              >
+                <Menu className={`h-6 w-6 ${textColor} dark:group-hover:text-white`} strokeWidth={2} />
+              </button>
+            ) : null}
+            <h1
+              className={`flex flex-none min-w-[90px] text-left font-bold tracking-tight items-center gap-0.5 text-sm leading-normal`}
+            >
+              <span className={textColor}>QUEHAY</span>
+              <span className={ACCENT}>H</span>
+              <span className="text-xs" aria-hidden>
+                🔥
+              </span>
+              <span className={ACCENT}>Y</span>
+            </h1>
+          </div>
 
           {/* Móvil: buscador en la cabecera para ahorrar espacio vertical */}
           <div className="flex flex-1 md:hidden">
@@ -275,6 +323,28 @@ export function Navbar({ searchValue = '', onSearchChange }) {
         </div>
 
       </div>
+
+      {profileDrawerOpen ? (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[85] hidden cursor-default bg-black/50 md:block"
+            aria-label="Cerrar menú"
+            onClick={() => setProfileDrawerOpen(false)}
+          />
+          <aside
+            id="desktop-profile-drawer"
+            className={`fixed inset-y-0 left-0 z-[90] hidden h-[100dvh] w-[min(100vw,400px)] max-w-[100vw] flex-col border-r shadow-2xl md:flex md:flex-col ${
+              isDark ? 'border-gray-800 bg-[#121212]' : 'border-gray-200 bg-white'
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menú de cuenta"
+          >
+            <DesktopProfileMenuContent onClose={() => setProfileDrawerOpen(false)} />
+          </aside>
+        </>
+      ) : null}
 
       <EventDetailModal
         eventId={modalEventId}

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
  *   id: string
  *   title: string
  *   dateLabel?: string
- *   badge: 'FERIADO' | 'ESPECIAL'
+ *   badge: 'Feriado' | 'Especial'
  *   imageUrl?: string
  *   isDark?: boolean
  * }} props

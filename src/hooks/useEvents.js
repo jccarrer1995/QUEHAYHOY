@@ -79,6 +79,7 @@ function mapDocToEvent(doc) {
 
   return {
     id: doc.id,
+    slug: typeof data.slug === 'string' ? data.slug : null,
     title: data.title ?? '',
     sector: data.location ?? data.sector ?? '',
     date: dateDisplay,

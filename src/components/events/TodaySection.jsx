@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../../config/firebaseConfig'
+import { useSectorVisibility } from '../../contexts/SectorVisibilityContext.jsx'
+import { filterEventsByHomeSearch } from '../../lib/homeSearchFilter.js'
+import { filterEventsBySectorVisibility, eventMatchesSectorChip } from '../../lib/topSectors.js'
 import { EventCardCarousel } from './EventCardCarousel'
 
 /**
@@ -54,6 +57,7 @@ function mapDocToEvent(doc) {
   const data = doc.data()
   return {
     id: doc.id,
+    slug: typeof data.slug === 'string' ? data.slug : null,
     title: data.title ?? '',
     sector: data.location ?? data.sector ?? '',
     date: formatDateForDisplay(data.date),
@@ -76,10 +80,12 @@ function mapDocToEvent(doc) {
 }
 
 /**
- * @param {{ isDark?: boolean }} props
+ * @param {{ isDark?: boolean, activeSector?: string, searchQuery?: string }} props
  */
-export function TodaySection({ isDark = false }) {
-  const [events, setEvents] = useState([])
+export function TodaySection({ isDark = false, activeSector = 'all', searchQuery = '' }) {
+  const { isSectorVisible } = useSectorVisibility()
+  /** Eventos de hoy desde Firestore (sin filtro de sectores favoritos) */
+  const [rawTodayEvents, setRawTodayEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
@@ -123,10 +129,8 @@ export function TodaySection({ isDark = false }) {
             return dateMs >= startOfDay.getTime() && dateMs < endOfDay.getTime()
           })
           .map(({ id, data }) => mapDocToEvent({ id, data: () => data }))
-          .sort((a, b) => (a.createdAtMs ?? 0) - (b.createdAtMs ?? 0))
-          .slice(0, 3)
 
-        setEvents(filtered)
+        setRawTodayEvents(filtered)
         setLoading(false)
       },
       (err) => {
@@ -139,6 +143,15 @@ export function TodaySection({ isDark = false }) {
       unsubVisible()
     }
   }, [])
+
+  const events = useMemo(() => {
+    let list = filterEventsBySectorVisibility(rawTodayEvents, isSectorVisible)
+    list = list.filter((e) => eventMatchesSectorChip(e, activeSector))
+    list = filterEventsByHomeSearch(list, searchQuery)
+    return list
+      .sort((a, b) => (a.createdAtMs ?? 0) - (b.createdAtMs ?? 0))
+      .slice(0, 3)
+  }, [rawTodayEvents, isSectorVisible, activeSector, searchQuery])
 
   const emptyTextColor = isDark ? 'text-gray-400' : 'text-gray-600'
 
@@ -193,9 +206,6 @@ export function TodaySection({ isDark = false }) {
     >
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="animate-soft-blink text-lg" aria-hidden>
-            ⚡
-          </span>
           <h2
             className="text-xl font-extrabold tracking-wide animate-shine inline-block"
             style={{
@@ -209,6 +219,9 @@ export function TodaySection({ isDark = false }) {
           >
             ¡Pilas Hoy!
           </h2>
+          <span className="animate-soft-blink text-lg" aria-hidden>
+            ⚡
+          </span>
         </div>
 
         <div className="hidden md:flex items-center gap-2">
@@ -222,8 +235,8 @@ export function TodaySection({ isDark = false }) {
                   ? 'border-gray-800 bg-[#1a1a1a] text-gray-600 cursor-not-allowed'
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                 : isDark
-                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222]'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222] cursor-pointer'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'
             }`}
             aria-label="Desplazar Pilas Hoy a la izquierda"
           >
@@ -240,8 +253,8 @@ export function TodaySection({ isDark = false }) {
                   ? 'border-gray-800 bg-[#1a1a1a] text-gray-600 cursor-not-allowed'
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                 : isDark
-                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222]'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222] cursor-pointer'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'
             }`}
             aria-label="Desplazar Pilas Hoy a la derecha"
           >

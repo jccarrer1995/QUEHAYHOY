@@ -1,3 +1,6 @@
 export { Navbar } from './Navbar'
 export { BottomNav } from './BottomNav'
+export { DesktopProfileMenuContent } from './DesktopProfileMenuContent.jsx'
 export { FloatingButtons } from './FloatingButtons'
+export { Footer } from './Footer.jsx'
+export { ProfileMenuContent } from './ProfileMenuContent.jsx'

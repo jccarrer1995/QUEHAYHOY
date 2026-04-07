@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { doc, getDoc } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
 import { motion } from 'framer-motion'
 import { db } from '../config/firebaseConfig'
 import { useTheme } from '../contexts/ThemeContext.jsx'
@@ -33,7 +33,10 @@ function formatPriceValue(price) {
 }
 
 export function EventDetailPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const categoria = params.categoria
+  const slug = params.slug
+  const legacyId = params.id
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
@@ -44,10 +47,11 @@ export function EventDetailPage() {
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  }, [id])
+  }, [categoria, slug, legacyId])
 
   useEffect(() => {
-    if (!id) {
+    const isSlugRoute = Boolean(categoria && slug)
+    if (!isSlugRoute && !legacyId) {
       setError('Evento no especificado')
       setLoading(false)
       return
@@ -61,8 +65,21 @@ export function EventDetailPage() {
     const run = async () => {
       try {
         if (!db) throw new Error('Firebase no configurado')
-        const snap = await getDoc(doc(db, 'events', id))
-        if (!snap.exists()) throw new Error('Evento no encontrado')
+
+        let snap = null
+        if (isSlugRoute) {
+          const fullSlug = `${categoria}/${slug}`
+          const q = query(collection(db, 'events'), where('slug', '==', fullSlug), limit(1))
+          const list = await getDocs(q)
+          if (list.empty) throw new Error('Evento no encontrado')
+          snap = list.docs[0]
+        } else if (legacyId) {
+          const d = await getDoc(doc(db, 'events', legacyId))
+          if (!d.exists()) throw new Error('Evento no encontrado')
+          snap = d
+        }
+
+        if (!snap) throw new Error('Evento no encontrado')
         const data = snap.data() ?? {}
         if (cancelled) return
 
@@ -75,6 +92,7 @@ export function EventDetailPage() {
 
         setEvent({
           id: snap.id,
+          slug: typeof data.slug === 'string' ? data.slug : null,
           title: data.title ?? '',
           sector: data.location ?? data.sector ?? '',
           category: data.category ?? '',
@@ -103,7 +121,7 @@ export function EventDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [categoria, slug, legacyId])
 
   const locationText = useMemo(() => {
     return event?.address?.trim() || event?.sector?.trim() || 'Guayaquil'
@@ -117,7 +135,11 @@ export function EventDetailPage() {
     const eventUrl =
       typeof window !== 'undefined'
         ? window.location.href
-        : `https://quehayhoy.app/evento/${id ?? ''}`
+        : categoria && slug
+          ? `https://quehayhoy.app/evento/${encodeURIComponent(categoria)}/${encodeURIComponent(slug)}`
+          : legacyId
+            ? `https://quehayhoy.app/evento/${legacyId}`
+            : ''
     const priceLabel = formatPriceValue(event?.price)
     const sectorLabel = event?.sector?.trim() || 'Guayaquil'
     const text = `¡Mira este plan en Guayaquil! 🔥
@@ -126,7 +148,7 @@ export function EventDetailPage() {
 💰 Precio: ${priceLabel}
 Chequea los detalles aquí: ${eventUrl}`
     return `https://wa.me/?text=${encodeURIComponent(text)}`
-  }, [event?.title, event?.sector, event?.price, id])
+  }, [event?.title, event?.sector, event?.price, categoria, slug, legacyId])
 
   const dateDisplayLabel = useMemo(() => {
     if (!event) return null

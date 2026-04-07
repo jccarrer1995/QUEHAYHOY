@@ -80,8 +80,8 @@ export function HorizontalEventRow({ events, isDark = false }) {
                 ? 'border-gray-800 bg-[#1a1a1a] text-gray-600 cursor-not-allowed'
                 : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               : isDark
-                ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222]'
-                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222] cursor-pointer'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'
           }`}
           aria-label="Desplazar a la izquierda"
         >
@@ -97,8 +97,8 @@ export function HorizontalEventRow({ events, isDark = false }) {
                 ? 'border-gray-800 bg-[#1a1a1a] text-gray-600 cursor-not-allowed'
                 : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               : isDark
-                ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222]'
-                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                ? 'border-gray-700 bg-[#1b1b1b] text-gray-200 hover:bg-[#222] cursor-pointer'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'
           }`}
           aria-label="Desplazar a la derecha"
         >

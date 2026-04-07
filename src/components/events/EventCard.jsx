@@ -2,9 +2,10 @@
  * EventCard - Tarjeta de evento (QUEHAYHOY)
  * Badge: `badgeType` en Firestore → EventBadge (colores por tipo, texto blanco, sin iconos)
  */
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
+import { getEventDetailPath } from '../../lib/slug.js'
 import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
 import { EventBadge } from './EventBadge.jsx'
 
@@ -23,9 +24,13 @@ export function EventCard({ event, isDark = false }) {
     recurrence_day,
   } = event ?? {}
 
+  const detailPath = getEventDetailPath(event)
+  const imageSrc = imageUrl ?? event?.image_url ?? null
+  const imageRef = useRef(null)
+
   function goToDetail() {
-    if (!id) return
-    navigate(`/evento/${id}`)
+    if (!detailPath) return
+    navigate(detailPath)
   }
   const isRecurring =
     eventTypeField === 'recurring' || event?.eventType === 'recurring'
@@ -34,13 +39,21 @@ export function EventCard({ event, isDark = false }) {
       ? formatRecurrenceLabel(recurrence_day)
       : date
 
-  const [isLoading, setIsLoading] = useState(!!imageUrl)
+  const [isLoading, setIsLoading] = useState(!!imageSrc)
+  const [hasImageError, setHasImageError] = useState(false)
 
   useEffect(() => {
-    queueMicrotask(() => {
-      setIsLoading(!!imageUrl)
-    })
-  }, [imageUrl])
+    setIsLoading(!!imageSrc)
+    setHasImageError(false)
+  }, [imageSrc])
+
+  useEffect(() => {
+    if (!imageSrc || hasImageError) return
+    const img = imageRef.current
+    if (img?.complete && img.naturalWidth > 0) {
+      setIsLoading(false)
+    }
+  }, [imageSrc, hasImageError])
 
   const cardBg = isDark ? 'bg-[#121212]' : 'bg-white'
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
@@ -53,12 +66,12 @@ export function EventCard({ event, isDark = false }) {
         transition-all duration-300 ease-in-out
         md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
         md:hover:border-b-2 md:hover:border-b-[#00C3BB]
-        ${id ? 'cursor-pointer' : ''}`}
-      onClick={id ? goToDetail : undefined}
-      role={id ? 'button' : undefined}
-      tabIndex={id ? 0 : undefined}
+        ${detailPath ? 'cursor-pointer' : ''}`}
+      onClick={detailPath ? goToDetail : undefined}
+      role={detailPath ? 'button' : undefined}
+      tabIndex={detailPath ? 0 : undefined}
       onKeyDown={
-        id
+        detailPath
           ? (e) => {
               if (e.key === 'Enter' || e.key === ' ') goToDetail()
             }
@@ -68,15 +81,19 @@ export function EventCard({ event, isDark = false }) {
       <div
         className={`aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden ${isLoading ? 'animate-pulse' : ''}`}
       >
-        {imageUrl ? (
+        {imageSrc && !hasImageError ? (
           <img
-            src={optimizeImageUrl(imageUrl)}
+            ref={imageRef}
+            src={optimizeImageUrl(imageSrc)}
             alt={title}
             className={`w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"
             decoding="async"
             onLoad={() => setIsLoading(false)}
-            onError={() => setIsLoading(false)}
+            onError={() => {
+              setIsLoading(false)
+              setHasImageError(true)
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400">

@@ -6,6 +6,7 @@ import { db } from '../../config/firebaseConfig'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { Clock, MapPin, Ticket, X } from 'lucide-react'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
+import { buildPublicEventUrl } from '../../lib/slug.js'
 
 function formatDateValue(dateValue) {
   if (!dateValue) return null
@@ -74,6 +75,7 @@ export function EventDetailModal({ eventId, open, onClose }) {
 
         setEvent({
           id: snap.id,
+          slug: typeof data.slug === 'string' ? data.slug : null,
           title: data.title ?? '',
           sector: data.location ?? data.sector ?? '',
           category: data.category ?? '',
@@ -113,12 +115,7 @@ export function EventDetailModal({ eventId, open, onClose }) {
   }, [locationText])
 
   const whatsappShareUrl = useMemo(() => {
-    const base = import.meta.env.BASE_URL || '/'
-    const normalized = base.endsWith('/') ? base : `${base}/`
-    const eventUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}${normalized}evento/${eventId ?? ''}`
-        : ''
+    const eventUrl = buildPublicEventUrl(event, eventId)
     const priceLabel = formatPriceValue(event?.price)
     const sectorLabel = event?.sector?.trim() || 'Guayaquil'
     const text = `¡Mira este plan en Guayaquil! 🔥
@@ -127,7 +124,7 @@ export function EventDetailModal({ eventId, open, onClose }) {
 💰 Precio: ${priceLabel}
 Chequea los detalles aquí: ${eventUrl}`
     return `https://wa.me/?text=${encodeURIComponent(text)}`
-  }, [event?.title, event?.sector, event?.price, eventId])
+  }, [event?.title, event?.sector, event?.price, event?.slug, eventId])
 
   const dateDisplayLabel = useMemo(() => {
     if (!event) return null

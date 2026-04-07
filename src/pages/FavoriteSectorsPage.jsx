@@ -45,7 +45,6 @@ export function FavoriteSectorsPage() {
 
   const pageCls = isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-white text-gray-900'
   const borderCls = isDark ? 'border-gray-800' : 'border-gray-200'
-  const mutedCls = isDark ? 'text-gray-400' : 'text-gray-600'
 
   useEffect(() => {
     if (!slideOut) return undefined
@@ -65,23 +64,31 @@ export function FavoriteSectorsPage() {
       transition={{ type: 'tween', duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
     >
       <header
-        className={`flex shrink-0 items-center gap-2 border-b px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] ${borderCls}`}
+        className={`flex shrink-0 items-center gap-2 border-b px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] ${borderCls} ${
+          isDark ? '!text-[#E0E0E0]' : '!text-gray-900'
+        }`}
       >
         <button
           type="button"
           onClick={handleBack}
           className={`flex h-11 w-11 items-center justify-center rounded-full transition active:scale-95 ${
-            isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+            isDark ? 'hover:bg-white/10 !text-gray-200' : 'hover:bg-black/5 !text-gray-900'
           }`}
           aria-label="Volver"
         >
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="h-6 w-6" strokeWidth={2} />
         </button>
-        <h1 className="text-lg font-bold">Sectores favoritos</h1>
+        <h1
+          className={`text-lg font-bold ${isDark ? '!text-[#E0E0E0]' : '!text-gray-900'}`}
+        >
+          Sectores favoritos
+        </h1>
       </header>
 
       <p
-        className={`shrink-0 py-3 pl-5 pr-[max(1.25rem,env(safe-area-inset-right,0px))] text-sm ${mutedCls}`}
+        className={`shrink-0 py-3 pl-5 pr-[max(1.25rem,env(safe-area-inset-right,0px))] text-sm ${
+          isDark ? '!text-gray-400' : '!text-gray-600'
+        }`}
       >
         Activa o desactiva cada sector para mostrarlo u ocultarlo en el carrusel del inicio.
       </p>
@@ -94,7 +101,13 @@ export function FavoriteSectorsPage() {
               key={sector.id}
               className={`flex min-w-0 items-center justify-between gap-3 border-b py-4 first:pt-0 ${borderCls}`}
             >
-              <span className="min-w-0 flex-1 text-base font-medium">{sector.label}</span>
+              <span
+                className={`min-w-0 flex-1 text-base font-medium ${
+                  isDark ? '!text-[#E0E0E0]' : '!text-gray-900'
+                }`}
+              >
+                {sector.label}
+              </span>
               <SectorVisibilitySwitch
                 enabled={enabled}
                 isDark={isDark}

@@ -143,20 +143,29 @@ export function LegalBottomSheet({ open, type, onClose }) {
             </div>
 
             <div
-              className={`flex shrink-0 items-center justify-between gap-3 border-b px-4 pb-3 pt-0 ${borderCls}`}
+              className={`flex shrink-0 items-center justify-between gap-3 border-b px-4 pb-3 pt-0 ${borderCls} ${
+                isDark ? '!text-[#E0E0E0]' : '!text-gray-900'
+              }`}
               onPointerDown={startDrag}
             >
-              <h2 id="legal-sheet-title" className="min-w-0 flex-1 text-lg font-bold leading-tight">
+              <h2
+                id="legal-sheet-title"
+                className={`min-w-0 flex-1 text-lg font-bold leading-tight ${
+                  isDark ? '!text-[#E0E0E0]' : '!text-gray-900'
+                }`}
+              >
                 {title}
               </h2>
               <button
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={requestClose}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${closeHoverCls}`}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${closeHoverCls} ${
+                  isDark ? '!text-gray-300' : '!text-gray-800'
+                }`}
                 aria-label="Cerrar"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" strokeWidth={2} />
               </button>
             </div>
 
@@ -168,12 +177,14 @@ export function LegalBottomSheet({ open, type, onClose }) {
               onTouchMove={onScrollAreaTouchMove}
               onTouchEnd={onScrollAreaTouchEnd}
             >
-              <div className={`space-y-4 text-sm leading-relaxed ${isDark ? 'text-[#cfcfcf]' : 'text-gray-700'}`}>
+              <div
+                className={`space-y-4 text-sm leading-relaxed ${isDark ? '!text-[#cfcfcf]' : '!text-gray-700'}`}
+              >
                 {meta.blocks.map((block, index) => (
                   <section key={`${block.heading}-${index}`}>
                     <h3
                       className={`mb-2 text-xs font-bold uppercase tracking-wide ${
-                        isDark ? 'text-white' : 'text-black'
+                        isDark ? '!text-gray-100' : '!text-gray-900'
                       }`}
                     >
                       {sectionEnumeration(index)}. {block.heading.toUpperCase()}

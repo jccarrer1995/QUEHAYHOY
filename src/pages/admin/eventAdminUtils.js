@@ -151,11 +151,11 @@ export function mapFirestoreDocToForm(data) {
 
 /**
  * @param {typeof initialForm} form
- * @param {{ isUpdate: boolean }} opts
+ * @param {{ isUpdate: boolean, slug?: string }} opts
  * @returns {Record<string, unknown>}
  */
 export function buildEventPayload(form, opts) {
-  const { isUpdate } = opts
+  const { isUpdate, slug } = opts
   const payload = {
     title: form.title.trim(),
     description: (form.description || '').trim(),
@@ -172,6 +172,10 @@ export function buildEventPayload(form, opts) {
     image_url: (form.imageUrl || '').trim() || null,
     address: (form.address || '').trim() || null,
     popularidad: form.popularidad && form.popularidad !== '' ? Math.min(Math.max(Number(form.popularidad) || 1, 1), 3) : 1,
+  }
+
+  if (typeof slug === 'string' && slug.trim() !== '') {
+    payload.slug = slug.trim()
   }
 
   if (!isUpdate) {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useSectorVisibility } from './contexts/SectorVisibilityContext.jsx'
 import { useEvents } from './hooks/useEvents'
-import { Navbar, BottomNav } from './components/layout'
+import { Navbar, BottomNav, Footer } from './components/layout'
 import {
   EventCardCarousel,
   CategorySelector,
@@ -14,6 +14,9 @@ import {
   HorizontalEventRow,
 } from './components/events'
 import './App.css'
+import { getEventDetailPath } from './lib/slug.js'
+import { filterEventsBySectorVisibility } from './lib/topSectors.js'
+import { filterEventsByHomeSearch } from './lib/homeSearchFilter.js'
 
 /**
  * Gratis para el Home: 0, "0", sin precio (null/undefined/"") o número 0.
@@ -30,7 +33,7 @@ function isEventGratis(e) {
 
 function App() {
   const navigate = useNavigate()
-  const { theme, toggleTheme } = useTheme()
+  const { theme } = useTheme()
   const { isSectorVisible } = useSectorVisibility()
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeSector, setActiveSector] = useState('all')
@@ -47,18 +50,10 @@ function App() {
   const sectionDividerCls = isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'
 
   const filteredEvents = useMemo(() => {
-    let list = events
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      list = list.filter(
-        (e) =>
-          e.title?.toLowerCase().includes(q) ||
-          e.sector?.toLowerCase().includes(q) ||
-          e.description?.toLowerCase().includes(q)
-      )
-    }
+    let list = filterEventsBySectorVisibility(events, isSectorVisible)
+    list = filterEventsByHomeSearch(list, searchQuery)
     return list
-  }, [events, searchQuery])
+  }, [events, searchQuery, isSectorVisible])
 
   const freeEvents = useMemo(() => {
     return filteredEvents.filter((e) => isEventGratis(e))
@@ -96,13 +91,14 @@ function App() {
     if (filteredEvents.length === 0) return
     const randomIndex = Math.floor(Math.random() * filteredEvents.length)
     const picked = filteredEvents[randomIndex]
-    if (!picked?.id) return
-    navigate(`/evento/${picked.id}`)
+    const path = getEventDetailPath(picked)
+    if (!path) return
+    navigate(path)
   }
 
   return (
     <div
-      className={`min-h-screen transition-colors pb-20 md:pb-8 ${
+      className={`min-h-screen transition-colors pb-20 md:pb-0 flex flex-col ${
         isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-white text-gray-900'
       }`}
     >
@@ -111,7 +107,7 @@ function App() {
         onSearchChange={setSearchQuery}
       />
 
-      <main className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-4 md:py-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 md:py-6 lg:max-w-7xl">
         {/* Categoría y sectores arriba - móvil y desktop */}
         <section className="mb-3">
           <CategorySelector
@@ -128,17 +124,17 @@ function App() {
           />
         </section>
 
-        <TodaySection isDark={isDark} />
+        <TodaySection isDark={isDark} activeSector={effectiveSector} searchQuery={searchQuery} />
 
         {(eventsLoading || eventsError || destacadosEvents.length > 0) && (
           <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
-                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                className="text-xl font-bold tracking-wide flex items-center gap-2"
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
-                <span>🔥</span>
                 Eventos Destacados
+                <span>🔥</span>
               </h2>
 
             </div>
@@ -170,11 +166,11 @@ function App() {
           <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
-                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                className="text-xl font-bold tracking-wide flex items-center gap-2"
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
-                <span>✨</span>
                 Gratis y Bacán
+                <span>✨</span>
               </h2>
             </div>
             <HorizontalEventRow events={freeEvents} isDark={isDark} />
@@ -187,11 +183,11 @@ function App() {
           <section className={`mt-0 pt-5 md:mt-0.5 md:pt-3 mb-5 pb-10 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
-                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                className="text-xl font-bold tracking-wide flex items-center gap-2"
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
-                <span>📍</span>
                 No te lo puedes perder
+                <span>📍</span>
               </h2>
             </div>
             <HorizontalEventRow events={noTeLoPuedesPerderEvents} isDark={isDark} />
@@ -202,7 +198,7 @@ function App() {
           <section className={`mt-0 pt-2 md:mt-0.5 md:pt-3 mb-5 pb-20 md:pb-8 ${sectionDividerCls}`}>
             <div className="flex items-center justify-between mb-4">
               <h2
-                className="text-xl font-bold uppercase tracking-wide flex items-center gap-2"
+                className="text-xl font-bold tracking-wide flex items-center gap-2"
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
                 <span>🎫</span>
@@ -232,7 +228,7 @@ function App() {
               type="button"
               onClick={handleSurpriseMe}
               disabled={filteredEvents.length === 0}
-              className="mt-4 w-full sm:w-auto min-w-[220px] rounded-2xl bg-[#14b8a6] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 w-full sm:w-auto min-w-[220px] rounded-2xl bg-[#14b8a6] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] enabled:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ¡Sorpréndeme! 🔥
             </button>
@@ -241,6 +237,7 @@ function App() {
 
       </main>
 
+      <Footer />
       <BottomNav activeTab={activeNavTab} onTabChange={setActiveNavTab} />
     </div>
   )

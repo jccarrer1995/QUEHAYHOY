@@ -18,7 +18,7 @@ export function SectorSelector({ activeSector, onSelect, isDark = false }) {
 
   return (
     <div className="w-full">
-      <h3 className={`text-sm font-bold uppercase tracking-wider mb-2 ${headingCl}`}>
+      <h3 className={`text-sm font-bold tracking-wider mb-2 ${headingCl}`}>
         Sectores Top
       </h3>
       <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible scrollbar-hide">

@@ -15,6 +15,7 @@ import {
   mapFirestoreDocToForm,
   buildEventPayload,
 } from './admin/eventAdminUtils.js'
+import { ensureUniqueEventSlug } from '../lib/slug.js'
 
 export function AdminEventForm() {
   const { eventId } = useParams()
@@ -183,7 +184,8 @@ export function AdminEventForm() {
     }
 
     try {
-      const payload = buildEventPayload(form, { isUpdate: isEdit })
+      const slug = await ensureUniqueEventSlug(db, form, isEdit ? eventId : null)
+      const payload = buildEventPayload(form, { isUpdate: isEdit, slug })
       if (isEdit && eventId) {
         await updateDoc(doc(db, 'events', eventId), payload)
       } else {
