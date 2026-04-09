@@ -1,9 +1,11 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Share2 } from 'lucide-react'
+import { useCategoryVisibility } from '../contexts/CategoryVisibilityContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { useSectorVisibility } from '../contexts/SectorVisibilityContext.jsx'
 import { useEvents } from '../hooks/useEvents.js'
+import { filterEventsByCategoryVisibility } from '../lib/favoriteCategories.js'
 import { filterEventsBySectorVisibility } from '../lib/topSectors.js'
 import { EventCard } from '../components/events'
 import { Footer } from '../components/layout'
@@ -24,6 +26,7 @@ export function CollectionPage() {
   const location = useLocation()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
+  const { isCategoryVisible } = useCategoryVisibility()
   const { isSectorVisible } = useSectorVisibility()
   const { events, loading, error } = useEvents('all', 'all')
   const [showCompactHeader, setShowCompactHeader] = useState(false)
@@ -32,9 +35,10 @@ export function CollectionPage() {
 
   const filteredEvents = useMemo(() => {
     if (!collection) return []
-    const visible = filterEventsBySectorVisibility(events, isSectorVisible)
+    const visibleByCategory = filterEventsByCategoryVisibility(events, isCategoryVisible)
+    const visible = filterEventsBySectorVisibility(visibleByCategory, isSectorVisible)
     return visible.filter((ev) => matchesCollectionDate(ev, collection))
-  }, [collection, events, isSectorVisible])
+  }, [collection, events, isCategoryVisible, isSectorVisible])
 
   const whatsappShareUrl = useMemo(() => {
     const collectionUrl =

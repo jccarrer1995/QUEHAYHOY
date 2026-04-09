@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from '../../config/firebaseConfig'
+import { useCategoryVisibility } from '../../contexts/CategoryVisibilityContext.jsx'
 import { useSectorVisibility } from '../../contexts/SectorVisibilityContext.jsx'
+import { filterEventsByCategoryVisibility } from '../../lib/favoriteCategories.js'
 import { filterEventsByHomeSearch } from '../../lib/homeSearchFilter.js'
 import { filterEventsBySectorVisibility, eventMatchesSectorChip } from '../../lib/topSectors.js'
 import { EventCardCarousel } from './EventCardCarousel'
@@ -83,6 +85,7 @@ function mapDocToEvent(doc) {
  * @param {{ isDark?: boolean, activeSector?: string, searchQuery?: string }} props
  */
 export function TodaySection({ isDark = false, activeSector = 'all', searchQuery = '' }) {
+  const { isCategoryVisible } = useCategoryVisibility()
   const { isSectorVisible } = useSectorVisibility()
   /** Eventos de hoy desde Firestore (sin filtro de sectores favoritos) */
   const [rawTodayEvents, setRawTodayEvents] = useState([])
@@ -145,13 +148,14 @@ export function TodaySection({ isDark = false, activeSector = 'all', searchQuery
   }, [])
 
   const events = useMemo(() => {
-    let list = filterEventsBySectorVisibility(rawTodayEvents, isSectorVisible)
+    let list = filterEventsByCategoryVisibility(rawTodayEvents, isCategoryVisible)
+    list = filterEventsBySectorVisibility(list, isSectorVisible)
     list = list.filter((e) => eventMatchesSectorChip(e, activeSector))
     list = filterEventsByHomeSearch(list, searchQuery)
     return list
       .sort((a, b) => (a.createdAtMs ?? 0) - (b.createdAtMs ?? 0))
       .slice(0, 3)
-  }, [rawTodayEvents, isSectorVisible, activeSector, searchQuery])
+  }, [rawTodayEvents, isCategoryVisible, isSectorVisible, activeSector, searchQuery])
 
   const emptyTextColor = isDark ? 'text-gray-400' : 'text-gray-600'
 

@@ -8,8 +8,12 @@ import { AdminDashboard } from './pages/AdminDashboard.jsx'
 import { EventDetailPage } from './pages/EventDetailPage.jsx'
 import { CollectionPage } from './pages/CollectionPage.jsx'
 import { LegalPage } from './pages/LegalPage.jsx'
+import { FavoriteEventsPage } from './pages/FavoriteEventsPage.jsx'
 import { ProfilePage } from './pages/ProfilePage.jsx'
 import { FavoriteSectorsPage } from './pages/FavoriteSectorsPage.jsx'
+import { FavoriteCategoriesPage } from './pages/FavoriteCategoriesPage.jsx'
+import { CategoryVisibilityProvider } from './contexts/CategoryVisibilityContext.jsx'
+import { FavoriteEventsProvider } from './contexts/FavoriteEventsContext.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { SectorVisibilityProvider } from './contexts/SectorVisibilityContext.jsx'
@@ -20,21 +24,27 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <ThemeProvider>
         <AuthProvider>
-          <SectorVisibilityProvider>
-            <AppToaster />
-            <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="/coleccion/:id" element={<CollectionPage />} />
-              <Route path="/legal/:slug" element={<LegalPage />} />
-              <Route path="/perfil" element={<ProfilePage />} />
-              <Route path="/perfil/sectores" element={<FavoriteSectorsPage />} />
-              <Route path="/evento/:categoria/:slug" element={<EventDetailPage />} />
-              <Route path="/evento/:id" element={<EventDetailPage />} />
-              <Route path="/wp-admin" element={<AdminDashboard />} />
-              <Route path="/wp-admin/nuevo" element={<AdminEventForm />} />
-              <Route path="/wp-admin/editar/:eventId" element={<AdminEventForm />} />
-            </Routes>
-          </SectorVisibilityProvider>
+          <CategoryVisibilityProvider>
+            <FavoriteEventsProvider>
+              <SectorVisibilityProvider>
+                <AppToaster />
+                <Routes>
+                  <Route path="/" element={<App />} />
+                  <Route path="/favoritos" element={<FavoriteEventsPage />} />
+                  <Route path="/coleccion/:id" element={<CollectionPage />} />
+                  <Route path="/legal/:slug" element={<LegalPage />} />
+                  <Route path="/perfil" element={<ProfilePage />} />
+                  <Route path="/perfil/sectores" element={<FavoriteSectorsPage />} />
+                  <Route path="/perfil/categorias" element={<FavoriteCategoriesPage />} />
+                  <Route path="/evento/:categoria/:slug" element={<EventDetailPage />} />
+                  <Route path="/evento/:id" element={<EventDetailPage />} />
+                  <Route path="/wp-admin" element={<AdminDashboard />} />
+                  <Route path="/wp-admin/nuevo" element={<AdminEventForm />} />
+                  <Route path="/wp-admin/editar/:eventId" element={<AdminEventForm />} />
+                </Routes>
+              </SectorVisibilityProvider>
+            </FavoriteEventsProvider>
+          </CategoryVisibilityProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

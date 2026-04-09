@@ -1,3 +1,5 @@
+import { useCategoryVisibility } from '../../contexts/CategoryVisibilityContext.jsx'
+
 /**
  * CategorySelector - Tarjetas verticales con iconos (Bares, Conciertos, Comida, Cine)
  * Horizontal scroll móvil | Grid desktop
@@ -13,6 +15,10 @@ export const CATEGORIES = [
 ]
 
 export function CategorySelector({ activeCategory, onSelect, isDark = false }) {
+  const { isCategoryVisible } = useCategoryVisibility()
+  const visibleCategories = CATEGORIES.filter(
+    (category) => category.id === 'all' || isCategoryVisible(category.id)
+  )
   const btnBase =
     'px-3 py-2 rounded-full text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 border cursor-pointer'
   const btnActive = 'bg-[#14b8a6] text-white border-[#14b8a6]'
@@ -22,7 +28,7 @@ export function CategorySelector({ activeCategory, onSelect, isDark = false }) {
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-      {CATEGORIES.map((cat) => {
+      {visibleCategories.map((cat) => {
         const isActive = activeCategory === cat.id
         return (
           <button

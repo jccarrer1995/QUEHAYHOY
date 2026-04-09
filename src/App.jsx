@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCategoryVisibility } from './contexts/CategoryVisibilityContext.jsx'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useSectorVisibility } from './contexts/SectorVisibilityContext.jsx'
 import { useEvents } from './hooks/useEvents'
@@ -14,6 +15,7 @@ import {
   HorizontalEventRow,
 } from './components/events'
 import './App.css'
+import { filterEventsByCategoryVisibility } from './lib/favoriteCategories.js'
 import { getEventDetailPath } from './lib/slug.js'
 import { filterEventsBySectorVisibility } from './lib/topSectors.js'
 import { filterEventsByHomeSearch } from './lib/homeSearchFilter.js'
@@ -34,26 +36,33 @@ function isEventGratis(e) {
 function App() {
   const navigate = useNavigate()
   const { theme } = useTheme()
+  const { isCategoryVisible } = useCategoryVisibility()
   const { isSectorVisible } = useSectorVisibility()
   const [activeCategory, setActiveCategory] = useState('all')
   const [activeSector, setActiveSector] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+
+  const effectiveCategory = useMemo(() => {
+    if (activeCategory === 'all') return 'all'
+    return isCategoryVisible(activeCategory) ? activeCategory : 'all'
+  }, [activeCategory, isCategoryVisible])
 
   const effectiveSector = useMemo(() => {
     if (activeSector === 'all') return 'all'
     return isSectorVisible(activeSector) ? activeSector : 'all'
   }, [activeSector, isSectorVisible])
 
-  const { events, loading: eventsLoading, error: eventsError } = useEvents(activeCategory, effectiveSector)
+  const { events, loading: eventsLoading, error: eventsError } = useEvents(effectiveCategory, effectiveSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
   const sectionDividerCls = isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'
 
   const filteredEvents = useMemo(() => {
-    let list = filterEventsBySectorVisibility(events, isSectorVisible)
+    let list = filterEventsByCategoryVisibility(events, isCategoryVisible)
+    list = filterEventsBySectorVisibility(list, isSectorVisible)
     list = filterEventsByHomeSearch(list, searchQuery)
     return list
-  }, [events, searchQuery, isSectorVisible])
+  }, [events, searchQuery, isCategoryVisible, isSectorVisible])
 
   const freeEvents = useMemo(() => {
     return filteredEvents.filter((e) => isEventGratis(e))
@@ -111,7 +120,7 @@ function App() {
         {/* Categoría y sectores arriba - móvil y desktop */}
         <section className="mb-3">
           <CategorySelector
-            activeCategory={activeCategory}
+            activeCategory={effectiveCategory}
             onSelect={setActiveCategory}
             isDark={isDark}
           />

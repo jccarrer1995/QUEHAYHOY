@@ -8,6 +8,7 @@ import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
 import { getEventDetailPath } from '../../lib/slug.js'
 import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
 import { EventBadge } from './EventBadge.jsx'
+import { FavoriteToggleButton } from './FavoriteToggleButton.jsx'
 
 export function EventCardCarousel({ event, isDark = false }) {
   const navigate = useNavigate()
@@ -65,6 +66,7 @@ export function EventCardCarousel({ event, isDark = false }) {
       }
     >
       <div className="aspect-[16/9] bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+        <FavoriteToggleButton eventId={data.id} />
         {imageUrl && !hasImageError ? (
           <img
             src={optimizeImageUrl(imageUrl)}

@@ -19,7 +19,7 @@
 
 ### 1. Proyecto base
 - Clonado del repositorio e instalación de React con Vite
-- Configuración de Node.js 24 LTS
+- Configuración de Node.js LTS para desarrollo local
 
 ### 2. Reglas y estándares
 - Reglas de Cursor (`.cursor/rules/coding-standards.mdc`)
@@ -68,7 +68,14 @@
 
 ---
 
-## Comandos
+## Requisitos del entorno
+
+- **Node.js:** `20.19+` o `22.12+`
+- **npm:** versión incluida con una instalación reciente de Node LTS
+
+> Importante: el proyecto usa `Vite 8`, así que con `Node 20.17.0` o inferiores el comando `npm run build` puede fallar por incompatibilidad de versión.
+
+## Instalación y ejecución
 
 ```bash
 npm install
@@ -76,6 +83,12 @@ npm run dev
 npm run build
 npm run preview
 ```
+
+## Mantenimiento de dependencias
+
+- Ejecuta `npm audit` para revisar vulnerabilidades conocidas.
+- Si aparecen dependencias vulnerables con arreglo disponible, puedes probar `npm audit fix`.
+- Después de actualizar dependencias, valida siempre con `npm run build`.
 
 ---
 
@@ -111,10 +124,10 @@ src/
 │   ├── events/     # carruseles, CategorySelector, SectorSelector, TodaySection…
 │   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig
-├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext
+├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext, CategoryVisibilityContext, FavoriteEventsContext
 ├── hooks/          # useEvents, useEphemeralNotifications…
 ├── lib/            # topSectors, appVersion, utilidades compartidas
-├── pages/          # App (home vía ruta /), ProfilePage, FavoriteSectorsPage, EventDetailPage…
+├── pages/          # App (home vía ruta /), ProfilePage, FavoriteSectorsPage, FavoriteCategoriesPage, FavoriteEventsPage, EventDetailPage…
 └── ...
 ```
 
@@ -123,8 +136,10 @@ src/
 | Ruta | Descripción |
 |------|-------------|
 | `/` | Home (eventos, categorías, sectores) |
+| `/favoritos` | Página de eventos guardados localmente desde el corazón de las cards |
 | `/perfil` | Cuenta, Google, configuración y legales |
 | `/perfil/sectores` | Sectores favoritos: mostrar/ocultar en el carrusel del inicio |
+| `/perfil/categorias` | Categorías favoritas: mostrar/ocultar categorías y eventos relacionados en Home |
 | `/evento/:categoria/:slug` | Detalle público de evento con URL amigable |
 | `/evento/:id` | Compatibilidad con eventos legacy |
 | `/coleccion/:id` | Página de colección especial |
@@ -136,7 +151,17 @@ src/
 
 ## Actualizaciones recientes
 
-### 1) Ajustes del 06/04/2026
+### 1) Favoritos locales, categorías favoritas y navegación (08/04/2026)
+- **Favoritos locales**: se añadió un sistema de favoritos en cliente con `localStorage` usando la clave `favoritos_qhhy`, sin requerir autenticación.
+- **Cards de eventos**: `EventCard` y `EventCardCarousel` ahora muestran un corazón en la esquina superior derecha con estado `outline`/relleno, color de acento y micro-interacción al presionarlo.
+- **Nueva página `/favoritos`**: se creó `FavoriteEventsPage` para listar eventos guardados localmente; en móvil mantiene `BottomNav` visible y activa el tab de favoritos.
+- **Bottom navigation**: el item **Favoritos** del menú inferior ahora abre una vista real y usa icono de corazón.
+- **Menú de perfil**: se añadió **Categorías Favoritas** en móvil y desktop, y **Favoritos** del menú desktop también navega a la nueva página.
+- **Categorías favoritas**: se añadió `CategoryVisibilityContext` y la ruta `/perfil/categorias`; las categorías arrancan activadas por defecto y, al desactivarlas, desaparecen sus chips y eventos del Home, `Pilas Hoy` y colecciones.
+- **Sectores favoritos**: se refinó la cabecera de la pantalla para una experiencia más compacta y con comportamiento de título dinámico al hacer scroll.
+- **Documentación de entorno**: se actualizó el README con requisitos de Node para la versión actual de Vite y notas de mantenimiento de dependencias.
+
+### 2) Ajustes del 06/04/2026
 - **Slugs para eventos**: se implementó `src/lib/slug.js` para generar slugs únicos, construir rutas amigables y compartir URLs públicas consistentes.
 - **Rutas nuevas**: el detalle de evento ya soporta `/evento/:categoria/:slug` y mantiene fallback por ID para eventos antiguos.
 - **Admin**: al crear o editar eventos desde `AdminEventForm`, ahora también se genera y persiste el campo `slug`.
@@ -149,21 +174,26 @@ src/
 - **Imágenes**: se mejoró la carga y fallback de imágenes en cards y colecciones especiales.
 - Documentación detallada: [`docs/ACTUALIZACIONES-2026-04-06.md`](docs/ACTUALIZACIONES-2026-04-06.md).
 
-### 2) Detalle de evento por ruta dinámica
+### 3) Dependencias y seguridad
+- Se actualizaron dependencias transitivas vulnerables detectadas por `npm audit`.
+- Estado validado: `0 vulnerabilities` tras la actualización del lockfile.
+- Requisito de entorno confirmado para compilar con la versión actual de Vite: `Node 20.19+` o `22.12+`.
+
+### 4) Detalle de evento por ruta dinámica
 - Se migró de modal a página dedicada de detalle: `\/evento\/:id`.
 - Nueva página `EventDetailPage` con carga de un solo documento (`getDoc`) y estados de loading/error.
 - Mejoras de UI mobile-first: imagen de cabecera, panel superpuesto, bloque de información, CTA fijo y contraste optimizado de textos.
 
-### 3) Acciones en detalle
+### 5) Acciones en detalle
 - Botón **Abrir en Google Maps** con dirección del evento.
 - Botón **Enviar por WhatsApp** con mensaje persuasivo (evento, sector, precio y URL actual), codificado con `encodeURIComponent`.
 - Feedback táctil con `whileTap` en botones de acción y navegación.
 
-### 4) Home y descubrimiento
+### 6) Home y descubrimiento
 - Se añadió sección final **“¿No sabes a dónde ir?”** con CTA **“¡Sorpréndeme! 🔥”**.
 - Al hacer click, se selecciona un evento activo aleatorio y se abre su detalle.
 
-### 5) Firestore, estructura de datos y rendimiento
+### 7) Firestore, estructura de datos y rendimiento
 - Consulta de eventos adaptada al modelo **unique / recurring**:
   - `type == 'unique'` con `endDate >= now`
   - `type == 'recurring'` con `active_until >= now`
@@ -172,7 +202,7 @@ src/
 - Se añadió `firestore.indexes.json` para soportar consultas con campos de visibilidad/tipo/fecha.
 - Firestore configurado con `persistentLocalCache` y soporte multi-tab para cache offline consistente.
 
-### 6) Admin completo (CRUD)
+### 8) Admin completo (CRUD)
 - Se creó dashboard admin con tabla paginada de eventos (`/wp-admin`).
 - Acciones disponibles:
   - Crear (`/wp-admin/nuevo`)
@@ -188,16 +218,16 @@ src/
   - `endDate` en eventos únicos (Timestamp) y validación de fecha fin >= fecha inicio
   - Notifier inferior para mostrar errores sin perder contexto.
 
-### 7) Navegación móvil y estados “En desarrollo”
+### 9) Navegación móvil y estados “En desarrollo”
 - Se ajustó visualmente el icono de **Crear Plan** para que sea consistente con el resto.
 - Para botones sin página (Explorar, Crear Plan, Perfil), se agregaron toasts de **En Desarrollo** con mensajes personalizados.
 - Se añadió `AppToaster` global con estilos adaptados a modo claro/oscuro y acento esmeralda.
 
-### 8) Librerías instaladas hoy
+### 10) Librerías instaladas hoy
 - **`framer-motion`**: animaciones y microinteracciones (entradas suaves y feedback táctil).
 - **`sonner`**: sistema de toasts elegante y configurable por tema.
 
-### 9) Actualizaciones 18/03/2025
+### 11) Actualizaciones 18/03/2025
 - **Cloudinary**: Subida de imágenes desde admin; preset `quehayhoy_images`; fallback URL.
 - **Sectores**: Kennedy, Bellavista, Malecón del Salado, Centro, Alborada.
 - **Categoría**: Videojuegos 🎮
@@ -206,7 +236,7 @@ src/
 - **Precio**: Formato $5 para enteros, $26.50 para decimales.
 - Ver detalle completo en [`docs/ACTUALIZACIONES-2025-03-18.md`](docs/ACTUALIZACIONES-2025-03-18.md).
 
-### 10) Actualizaciones recientes (notificaciones, sectores y Home)
+### 12) Actualizaciones recientes (notificaciones, sectores y Home)
 - **Campana funcional en `Navbar`**:
   - Panel desplegable con título **“Nuevos Planes (Últimos 30m)”**.
   - Badge dinámico con conteo de no leídos.
@@ -230,7 +260,7 @@ src/
   - Se añadió sección **Más eventos** para no perder eventos que no entran en los 3 bloques principales.
   - Criterio de **Gratis y Bacán** ampliado: ahora incluye precio `0`, `'0'`, vacío o `null`.
 
-### 11) Perfil, legales y sectores favoritos (28/03/2026)
+### 13) Perfil, legales y sectores favoritos (28/03/2026)
 
 - **Perfil (`/perfil`)**: diseño alineado al tema claro/oscuro del home; inicio de sesión con Google; secciones CONFIGURACIÓN y LEGAL; versión de app (**`V0.0.2`**) abajo a la izquierda (`src/lib/appVersion.js`).
 - **Texto bajo el botón de Google**: copy de acceso con `text-xs` / `text-gray-400`.

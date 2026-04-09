@@ -1,6 +1,7 @@
 /**
  * BottomNav - Navegación inferior móvil: Inicio, Explorar, Favoritos, Perfil
  */
+import { Heart as HeartIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -15,14 +16,13 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
   const items = [
     { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
     { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
-    { id: 'create', label: 'Favoritos', icon: PlanIcon, active: activeTab === 'create' },
+    { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
     { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
   ]
 
   function handleUnderConstruction(tabId) {
     const messages = {
       explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
-      create: 'Tu lista de favoritos estará disponible aquí muy pronto. ⭐',
     }
 
     const message = messages[tabId]
@@ -66,6 +66,11 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
                   onTabChange?.(item.id)
                   return
                 }
+                if (item.id === 'favorites') {
+                  navigate('/favoritos')
+                  onTabChange?.(item.id)
+                  return
+                }
                 handleUnderConstruction(item.id)
               }}
               className="flex flex-col items-center gap-1 py-2 px-3"
@@ -84,15 +89,6 @@ function HomeIcon({ className }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
       <path d="M3 13h1v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7h1a1 1 0 00.707-1.707l-9-9a.999.999 0 00-1.414 0l-9 9A1 1 0 003 13z" />
-    </svg>
-  )
-}
-function PlanIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5h10a1 1 0 011 1v12a1 1 0 01-1 1H9a1 1 0 01-1-1V6a1 1 0 011-1z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 8H5a1 1 0 00-1 1v9a1 1 0 001 1h10" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 10h6M11 14h6" />
     </svg>
   )
 }

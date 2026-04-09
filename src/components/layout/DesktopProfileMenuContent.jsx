@@ -2,7 +2,7 @@
  * Menú de cuenta exclusivo para desktop (drawer del botón hamburguesa).
  * Intencionalmente separado de `ProfileMenuContent` para desacoplar desktop de `/perfil`.
  */
-import { Compass, Heart, MapPin, X } from 'lucide-react'
+import { Compass, Heart, MapPin, Tags, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext.jsx'
@@ -90,14 +90,23 @@ export function DesktopProfileMenuContent({ onClose }) {
     onClose?.()
   }
 
+  function goCategorias() {
+    navigate('/perfil/categorias')
+    onClose?.()
+  }
+
+  function goFavoritos() {
+    navigate('/favoritos')
+    onClose?.()
+  }
+
   function showComingSoon(kind) {
     const messages = {
       explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
-      favorites: 'Tu lista de favoritos estará disponible aquí muy pronto. ⭐',
     }
 
     toast(messages[kind], {
-      icon: kind === 'explore' ? '🧭' : '⭐',
+      icon: '🧭',
       style: {
         background: isDark ? '#121212' : '#ffffff',
         border: `1px solid ${isDark ? '#374151' : '#d1fae5'}`,
@@ -148,8 +157,15 @@ export function DesktopProfileMenuContent({ onClose }) {
 
         <section className="mt-0">
           <SettingsRow isDark={isDark} icon={Compass} label="Explorar" onClick={() => showComingSoon('explore')} />
-          <SettingsRow isDark={isDark} icon={Heart} label="Favoritos" onClick={() => showComingSoon('favorites')} />
-          <SettingsRow isDark={isDark} icon={MapPin} label="Sectores Favoritos" onClick={goSectores} withBorder={false} />
+          <SettingsRow isDark={isDark} icon={Heart} label="Favoritos" onClick={goFavoritos} />
+          <SettingsRow isDark={isDark} icon={MapPin} label="Sectores Favoritos" onClick={goSectores} />
+          <SettingsRow
+            isDark={isDark}
+            icon={Tags}
+            label="Categorías Favoritas"
+            onClick={goCategorias}
+            withBorder={false}
+          />
         </section>
         </div>
 

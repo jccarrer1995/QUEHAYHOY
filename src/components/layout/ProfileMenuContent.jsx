@@ -1,7 +1,7 @@
 /**
  * Contenido de cuenta / perfil para la página `/perfil`.
  */
-import { MapPin, ChevronRight, FileText, Lock, Info } from 'lucide-react'
+import { MapPin, Tags, ChevronRight, FileText, Lock, Info } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LegalBottomSheet } from '../legal'
@@ -95,6 +95,10 @@ export function ProfileMenuContent({ className = '' }) {
     navigate('/perfil/sectores')
   }
 
+  function goCategorias() {
+    navigate('/perfil/categorias')
+  }
+
   const body = (
     <>
       <header className="flex flex-col items-center pt-6 md:pt-4">
@@ -122,6 +126,7 @@ export function ProfileMenuContent({ className = '' }) {
       <section className="mt-0">
         <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
         <SettingsRow isDark={isDark} icon={MapPin} label="Sectores Favoritos" onClick={goSectores} />
+        <SettingsRow isDark={isDark} icon={Tags} label="Categorías Favoritas" onClick={goCategorias} />
       </section>
 
       <section className="mt-8">
