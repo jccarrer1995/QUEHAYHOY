@@ -12,6 +12,7 @@ import { FavoriteEventsPage } from './pages/FavoriteEventsPage.jsx'
 import { ProfilePage } from './pages/ProfilePage.jsx'
 import { FavoriteSectorsPage } from './pages/FavoriteSectorsPage.jsx'
 import { FavoriteCategoriesPage } from './pages/FavoriteCategoriesPage.jsx'
+import { ExplorePage } from './pages/ExplorePage.jsx'
 import { CategoryVisibilityProvider } from './contexts/CategoryVisibilityContext.jsx'
 import { FavoriteEventsProvider } from './contexts/FavoriteEventsContext.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')).render(
                 <Routes>
                   <Route path="/" element={<App />} />
                   <Route path="/favoritos" element={<FavoriteEventsPage />} />
+                  <Route path="/explorar" element={<ExplorePage />} />
                   <Route path="/coleccion/:id" element={<CollectionPage />} />
                   <Route path="/legal/:slug" element={<LegalPage />} />
                   <Route path="/perfil" element={<ProfilePage />} />

@@ -2,7 +2,6 @@
  * BottomNav - Navegación inferior móvil: Inicio, Explorar, Favoritos, Perfil
  */
 import { Heart as HeartIcon } from 'lucide-react'
-import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../../contexts/ThemeContext'
 
@@ -19,28 +18,6 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
     { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
     { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
   ]
-
-  function handleUnderConstruction(tabId) {
-    const messages = {
-      explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
-    }
-
-    const message = messages[tabId]
-    if (!message) return
-
-    toast(message, {
-      icon: '🛠️',
-      style: {
-        background: isDark ? '#121212' : '#ffffff',
-        border: `1px solid ${isDark ? '#374151' : '#d1fae5'}`,
-        color: isDark ? '#E0E0E0' : '#0f172a',
-      },
-      iconTheme: {
-        primary: '#10b981',
-        secondary: '#ffffff',
-      },
-    })
-  }
 
   return (
     <nav
@@ -71,7 +48,11 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
                   onTabChange?.(item.id)
                   return
                 }
-                handleUnderConstruction(item.id)
+                if (item.id === 'explore') {
+                  navigate('/explorar')
+                  onTabChange?.(item.id)
+                  return
+                }
               }}
               className="flex flex-col items-center gap-1 py-2 px-3"
             >

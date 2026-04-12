@@ -4,7 +4,6 @@
  */
 import { Compass, Heart, MapPin, Tags, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
@@ -100,19 +99,9 @@ export function DesktopProfileMenuContent({ onClose }) {
     onClose?.()
   }
 
-  function showComingSoon(kind) {
-    const messages = {
-      explore: 'Estamos mapeando los mejores rincones de GYE para ti. ¡Muy pronto! 📍',
-    }
-
-    toast(messages[kind], {
-      icon: '🧭',
-      style: {
-        background: isDark ? '#121212' : '#ffffff',
-        border: `1px solid ${isDark ? '#374151' : '#d1fae5'}`,
-        color: isDark ? '#E0E0E0' : '#0f172a',
-      },
-    })
+  function goExplorar() {
+    navigate('/explorar')
+    onClose?.()
   }
 
   return (
@@ -156,7 +145,7 @@ export function DesktopProfileMenuContent({ onClose }) {
         </header>
 
         <section className="mt-0">
-          <SettingsRow isDark={isDark} icon={Compass} label="Explorar" onClick={() => showComingSoon('explore')} />
+          <SettingsRow isDark={isDark} icon={Compass} label="Explorar" onClick={goExplorar} />
           <SettingsRow isDark={isDark} icon={Heart} label="Favoritos" onClick={goFavoritos} />
           <SettingsRow isDark={isDark} icon={MapPin} label="Sectores Favoritos" onClick={goSectores} />
           <SettingsRow

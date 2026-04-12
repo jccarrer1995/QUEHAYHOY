@@ -64,6 +64,23 @@ function mapDocToEvent(doc) {
   const endDateMs = type === 'unique' ? timestampToMs(endTs) : null
   const dateMs = type === 'unique' ? timestampToMs(data.date) : null
 
+  const rawLat = data.latitude ?? data.lat
+  const rawLng = data.longitude ?? data.lng
+  const latitude =
+    typeof rawLat === 'number'
+      ? rawLat
+      : rawLat != null && rawLat !== ''
+        ? Number(rawLat)
+        : null
+  const longitude =
+    typeof rawLng === 'number'
+      ? rawLng
+      : rawLng != null && rawLng !== ''
+        ? Number(rawLng)
+        : null
+  const latOk = latitude != null && !Number.isNaN(latitude)
+  const lngOk = longitude != null && !Number.isNaN(longitude)
+
   let dateDisplay = ''
   if (type === 'recurring') {
     const rd = data.recurrence_day
@@ -99,6 +116,8 @@ function mapDocToEvent(doc) {
     popularidad: data.popularidad != null ? Number(data.popularidad) : 1,
     badgeType: data.badgeType ?? null,
     badgeLabel: data.badgeLabel ?? data.capacity_level ?? null,
+    latitude: latOk ? latitude : null,
+    longitude: lngOk ? longitude : null,
   }
 }
 

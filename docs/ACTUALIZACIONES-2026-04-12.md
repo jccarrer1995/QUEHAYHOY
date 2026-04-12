@@ -1,6 +1,6 @@
 # Actualizaciones del 12 de abril de 2026
 
-Documentación de los ajustes de **cabecera unificada** en pantallas de favoritos y categorías: mismo patrón visual y de comportamiento que **Sectores favoritos** (`FavoriteSectorsPage.jsx`).
+Documentación de: (1) **cabecera unificada** en favoritos y categorías; (2) pantalla **Explorar** con mapa Google, búsqueda flotante, chips y mini-card de evento.
 
 ---
 
@@ -65,4 +65,59 @@ Patrón de referencia compartido (sectores): `src/pages/FavoriteSectorsPage.jsx`
 | `src/pages/FavoriteCategoriesPage.jsx` | Header + scroll + hero como sectores |
 | `src/pages/FavoriteEventsPage.jsx` | Header fijo + compact title + hero; listeners `window` |
 
-No se modificaron rutas ni contextos en estos ajustes.
+En este bloque de cabeceras no se añadieron rutas nuevas; la ruta `/explorar` figura en las secciones 6 y 7.
+
+---
+
+## 6. Pantalla Explorar (`/explorar`)
+
+### Objetivo
+- Vista **mapa a pantalla completa** (`100dvh`) para descubrir eventos en Guayaquil.
+- **Google Maps JavaScript API** vía `@react-google-maps/api` (`useJsApiLoader`, `GoogleMap`, `Marker`).
+- **Header flotante**: búsqueda + carrusel horizontal de categorías (mismos chips que el home: `CATEGORIES` + `useCategoryVisibility`).
+- **Marcadores**: icono generado en canvas (PNG data URL) con el **emoji de la categoría** (ej. 🍺 bares); si no aplica categoría conocida, icono **🔥** como marca por defecto.
+- **Mini-card** inferior al pulsar un pin: imagen, título, fecha · sector, **Ver más** (`getEventDetailPath`) y **Cerrar**; animación con Framer Motion.
+
+### Configuración
+- Variable de entorno **`VITE_GOOGLE_MAPS_API_KEY`** (documentada en `.env.example`).
+- Sin clave: mensaje en pantalla y enlace “Volver al inicio”; no se carga el script de Google.
+- En Google Cloud: activar **Maps JavaScript API** y restringir la clave por referrer cuando corresponda.
+
+### Posicionamiento de pins (`src/lib/exploreGeo.js`)
+- Si el documento en Firestore incluye **`latitude` / `longitude`** (también se aceptan alias `lat` / `lng` leídos en `useEvents.js`), se usan tal cual.
+- Si no: **ancla por nombre de sector** (`SECTOR_ANCHOR_BY_LABEL`, alineado con etiquetas de `location`/`sector` en Firestore) + **jitter determinista** por `id` para separar eventos en el mismo sector.
+
+### Filtros (`src/lib/exploreFilters.js`)
+- **`filterExploreEvents`**: categoría activa (chip) + texto con **`filterEventsByHomeSearch`** (mismo criterio que el buscador del home).
+- En la página se combina antes con **`filterEventsByCategoryVisibility`** para respetar categorías ocultas en ajustes de usuario.
+
+### Mapa (`src/components/explore/ExploreMapView.jsx`)
+- Idioma **`es`**, región **`EC`**.
+- **`fitBounds`** con padding superior pensado para el header flotante; sin eventos: centro en **Guayaquil** y zoom por defecto.
+- Tema oscuro: estilos simplificados (`MAP_STYLES_DARK`).
+- Clic en el mapa vacío cierra la selección; clic en marcador abre la mini-card (estado por `selectedEventId` derivado con `useMemo`).
+
+### Navegación
+- **`BottomNav`**: pestaña Explorar → `navigate('/explorar')` (eliminado toast “pronto”).
+- **`DesktopProfileMenuContent`**: fila “Explorar” → `navigate('/explorar')` (eliminado toast y dependencia de `sonner` en ese flujo).
+- **`main.jsx`**: ruta `<Route path="/explorar" element={<ExplorePage />} />`.
+
+### Dependencia npm
+- **`@react-google-maps/api`**: carga del loader oficial (`@googlemaps/js-api-loader` transitivo).
+
+---
+
+## 7. Archivos adicionales (Explorar)
+
+| Archivo / carpeta | Rol |
+|-------------------|-----|
+| `src/pages/ExplorePage.jsx` | Orquestación: clave API, filtros, estado de selección, `BottomNav` |
+| `src/components/explore/ExploreFloatingHeader.jsx` | Barra búsqueda + chips (`backdrop-blur-[10px]`) |
+| `src/components/explore/ExploreMapView.jsx` | Mapa, marcadores, bounds |
+| `src/components/explore/ExploreEventMiniCard.jsx` | Sheet inferior con CTA al detalle |
+| `src/lib/exploreGeo.js` | Coordenadas y anclas por sector |
+| `src/lib/exploreFilters.js` | Filtro categoría + búsqueda |
+| `src/lib/mapMarkerIcon.js` | Data URLs de iconos emoji |
+| `src/hooks/useEvents.js` | Campos opcionales `latitude` / `longitude` en el objeto evento |
+| `.env.example` | Entrada `VITE_GOOGLE_MAPS_API_KEY` |
+| `package.json` / `package-lock.json` | Dependencia `@react-google-maps/api` |
