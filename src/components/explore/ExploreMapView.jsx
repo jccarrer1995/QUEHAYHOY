@@ -5,9 +5,17 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
 import { GUAYAQUIL_DEFAULT, getEventMapPosition } from '../../lib/exploreGeo.js'
 import { firestoreCategoryToId } from '../../lib/exploreFilters.js'
-import { getDefaultBrandMarkerDataUrl, getEmojiMarkerDataUrl } from '../../lib/mapMarkerIcon.js'
+import {
+  getDefaultBrandMarkerDataUrl,
+  getEmojiMarkerDataUrl,
+  MARKER_MAP_ANCHOR_X,
+  MARKER_MAP_ANCHOR_Y,
+  MARKER_MAP_SCALED_HEIGHT,
+  MARKER_MAP_SCALED_WIDTH,
+} from '../../lib/mapMarkerIcon.js'
 import { CATEGORIES } from '../events/CategorySelector.jsx'
 
+/** Modo oscuro: colores propios + sin POI (restaurantes, hospitales, etc.). */
 const MAP_STYLES_DARK = [
   { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#1a3646' }] },
@@ -15,6 +23,15 @@ const MAP_STYLES_DARK = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1626' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+]
+
+/**
+ * Modo claro: mapa estándar pero sin POI (restaurantes, hoteles, hospitales, etc.)
+ * ni capa de transporte, para acercarse a la claridad del modo oscuro.
+ */
+const MAP_STYLES_LIGHT = [
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
 ]
 
 /**
@@ -86,7 +103,7 @@ export function ExploreMapView({
       gestureHandling: 'greedy',
       minZoom: 11,
       maxZoom: 18,
-      styles: isDark ? MAP_STYLES_DARK : undefined,
+      styles: isDark ? MAP_STYLES_DARK : MAP_STYLES_LIGHT,
     }),
     [isDark]
   )
@@ -96,8 +113,8 @@ export function ExploreMapView({
     const url = markerIconUrlForEvent(event)
     return {
       url,
-      scaledSize: new window.google.maps.Size(40, 40),
-      anchor: new window.google.maps.Point(20, 36),
+      scaledSize: new window.google.maps.Size(MARKER_MAP_SCALED_WIDTH, MARKER_MAP_SCALED_HEIGHT),
+      anchor: new window.google.maps.Point(MARKER_MAP_ANCHOR_X, MARKER_MAP_ANCHOR_Y),
     }
   }, [])
 

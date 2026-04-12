@@ -130,3 +130,44 @@ En este bloque de cabeceras no se añadieron rutas nuevas; la ruta `/explorar` f
 - **`AdminEventForm.jsx`**: bloque “Ubicación en el mapa” con inputs de lat/lng, validación (ambas o ninguna) y botón **Obtener coordenadas desde dirección** (dirección + sector + Guayaquil, Ecuador).
 - **`src/lib/geocodeFromAddress.js`**: carga el script con `@googlemaps/js-api-loader` y usa `google.maps.Geocoder` (requiere **Geocoding API** habilitada y la misma `VITE_GOOGLE_MAPS_API_KEY`).
 - **`.env.example`**: nota sobre Geocoding API.
+
+---
+
+## 9. Explorar: segunda fila de filtros (Gratis + tiempo + “+ Filtros”)
+
+### Objetivo
+- Debajo de los chips de **categoría**, barra con **dos niveles**: toggle **Gratis** independiente y **un solo chip de tiempo** (radio) entre Hoy / Mañana / Fin de semana / Mes.
+- Estilo **más fino** que las categorías (`text-xs`, menos padding), **`backdrop-blur-[8px]`** y fondo semitransparente.
+- **Separador** vertical sutil entre el botón Gratis y el carrusel horizontal (scroll).
+- Botón **+ Filtros** con icono **Sliders** (`lucide-react`): `onOpenMoreFilters` preparado para un modal futuro (por ahora no-op desde `ExplorePage`).
+
+### Archivos
+- **`src/components/explore/ExploreSecondaryFiltersBar.jsx`**: UI de la barra; `role="radiogroup"` en los chips de tiempo.
+- **`src/lib/exploreTimeFilters.js`**: `isEventGratis`, `eventMatchesTimePreset`, `filterEventsByExploreSecondary`, lista `EXPLORE_TIME_CHIPS`.
+- **`ExploreFloatingHeader.jsx`**: recibe props y renderiza la barra secundaria.
+- **`ExplorePage.jsx`**: estado `isFreeFilter`, `timePreset` (por defecto **`'today'`** para mostrar **eventos de hoy** al entrar), y encadena `filterEventsByExploreSecondary` tras categoría + búsqueda.
+
+### Lógica de tiempo (resumen)
+- **Únicos**: solape del intervalo del evento (`dateMs` / `endDateMs`) con el día o rango elegido (medianoche **local** del navegador).
+- **Recurrentes**: **Hoy** / **Mañana** comparan `recurrence_day` con el día de la semana (`0` = domingo, alineado con `Date.getDay()`); **Fin de semana** si `recurrence_day` es 0 o 6; **Mes**: únicos en el mes calendario local, recurrentes incluidos (regla simple).
+
+---
+
+## 10. Mapa Explorar: UX visual y marcadores
+
+- **`ExploreMapView.jsx`**: en **modo claro**, estilos `MAP_STYLES_LIGHT` ocultan **POI** y **transit** para reducir ruido (similar a la sensación del mapa oscuro).
+- **`ExploreFloatingHeader.jsx`**: input de búsqueda a **`text-[16px]`** para evitar el **zoom automático de iOS Safari** al enfocar (y que no “salte” el `BottomNav`).
+- **`mapMarkerIcon.js`**: marcadores **circulares** con emoji centrado; ancla y tamaño escalado alineados con el `Marker` de Google (`MARKER_MAP_*`); caché por versión para invalidar PNG antiguos.
+
+---
+
+## 11. Tabla rápida (fase Explorar reciente)
+
+| Archivo | Cambio |
+|---------|--------|
+| `ExploreSecondaryFiltersBar.jsx` | Nueva barra secundaria |
+| `exploreTimeFilters.js` | Filtros gratis + tiempo |
+| `ExplorePage.jsx` | Estado y filtro; `timePreset` inicial `'today'` |
+| `ExploreFloatingHeader.jsx` | Props y tercera fila |
+| `ExploreMapView.jsx` | Estilos mapa claro sin POI |
+| `mapMarkerIcon.js` | Pin circular + caché |

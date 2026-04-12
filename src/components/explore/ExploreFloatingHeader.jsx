@@ -4,6 +4,7 @@
 import { Search } from 'lucide-react'
 import { CATEGORIES } from '../events/CategorySelector.jsx'
 import { useCategoryVisibility } from '../../contexts/CategoryVisibilityContext.jsx'
+import { ExploreSecondaryFiltersBar } from './ExploreSecondaryFiltersBar.jsx'
 
 /**
  * @param {{
@@ -12,6 +13,11 @@ import { useCategoryVisibility } from '../../contexts/CategoryVisibilityContext.
  *   activeCategory: string
  *   onSelectCategory: (id: string) => void
  *   isDark: boolean
+ *   isFreeFilter: boolean
+ *   onFreeToggle: () => void
+ *   timePreset: 'today' | 'tomorrow' | 'weekend' | 'month' | null
+ *   onTimePresetChange: (preset: 'today' | 'tomorrow' | 'weekend' | 'month' | null) => void
+ *   onOpenMoreFilters?: () => void
  * }} props
  */
 export function ExploreFloatingHeader({
@@ -20,6 +26,11 @@ export function ExploreFloatingHeader({
   activeCategory,
   onSelectCategory,
   isDark,
+  isFreeFilter,
+  onFreeToggle,
+  timePreset,
+  onTimePresetChange,
+  onOpenMoreFilters,
 }) {
   const { isCategoryVisible } = useCategoryVisibility()
   const visibleCategories = CATEGORIES.filter(
@@ -51,6 +62,7 @@ export function ExploreFloatingHeader({
             }`}
             aria-hidden
           />
+          {/* text-[16px]: en iOS Safari, fuentes menores a 16px provocan zoom al foco y el layout “salta”. */}
           <input
             id="explore-search"
             type="search"
@@ -58,7 +70,9 @@ export function ExploreFloatingHeader({
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Buscar por nombre, sector o descripción…"
             autoComplete="off"
-            className={`w-full rounded-xl border-0 py-2.5 pl-10 pr-3 text-sm outline-none ring-0 focus:ring-2 focus:ring-[#14b8a6]/50 ${inputBg}`}
+            enterKeyHint="search"
+            inputMode="search"
+            className={`w-full rounded-xl border-0 py-2.5 pl-10 pr-3 text-[16px] outline-none ring-0 focus:ring-2 focus:ring-[#14b8a6]/50 ${inputBg}`}
             style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
           />
         </div>
@@ -86,6 +100,15 @@ export function ExploreFloatingHeader({
           )
         })}
       </div>
+
+      <ExploreSecondaryFiltersBar
+        isFreeActive={isFreeFilter}
+        onFreeToggle={onFreeToggle}
+        timePreset={timePreset}
+        onTimePresetChange={onTimePresetChange}
+        onOpenMoreFilters={onOpenMoreFilters}
+        isDark={isDark}
+      />
     </header>
   )
 }

@@ -13,6 +13,7 @@ import { useTheme } from '../contexts/ThemeContext.jsx'
 import { useEvents } from '../hooks/useEvents.js'
 import { filterExploreEvents } from '../lib/exploreFilters.js'
 import { filterEventsByCategoryVisibility } from '../lib/favoriteCategories.js'
+import { filterEventsByExploreSecondary } from '../lib/exploreTimeFilters.js'
 
 export function ExplorePage() {
   const navigate = useNavigate()
@@ -26,12 +27,20 @@ export function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedEventId, setSelectedEventId] = useState(null)
+  const [isFreeFilter, setIsFreeFilter] = useState(false)
+  const [timePreset, setTimePreset] = useState(
+    /** @type {'today' | 'tomorrow' | 'weekend' | 'month' | null} */ ('today')
+  )
 
   const filteredEvents = useMemo(() => {
     let list = filterEventsByCategoryVisibility(events, isCategoryVisible)
     list = filterExploreEvents(list, activeCategory, searchQuery)
+    list = filterEventsByExploreSecondary(list, {
+      isFreeActive: isFreeFilter,
+      timePreset,
+    })
     return list
-  }, [events, activeCategory, searchQuery, isCategoryVisible])
+  }, [events, activeCategory, searchQuery, isCategoryVisible, isFreeFilter, timePreset])
 
   const selectedEvent = useMemo(() => {
     if (!selectedEventId) return null
@@ -94,6 +103,11 @@ export function ExplorePage() {
         activeCategory={activeCategory}
         onSelectCategory={setActiveCategory}
         isDark={isDark}
+        isFreeFilter={isFreeFilter}
+        onFreeToggle={() => setIsFreeFilter((v) => !v)}
+        timePreset={timePreset}
+        onTimePresetChange={setTimePreset}
+        onOpenMoreFilters={() => {}}
       />
 
       <ExploreEventMiniCard

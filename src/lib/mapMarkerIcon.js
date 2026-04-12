@@ -1,13 +1,28 @@
 /**
- * Genera iconos de marcador (PNG data URL) con emoji sobre fondo circular (estilo pin suave).
- * Caché en memoria para no redibujar en cada render.
+ * Marcadores circulares (PNG data URL) con emoji centrado.
  */
 
 /** @type {Map<string, string>} */
 const cache = new Map()
 
+/** Invalida caché al cambiar el dibujo del marcador. */
+const CACHE_VERSION = 'circle-v1'
+
 const SIZE = 48
 const PAD = 3
+
+export const MARKER_ICON_WIDTH = SIZE
+export const MARKER_ICON_HEIGHT = SIZE
+
+/** Ancla en imagen a tamaño completo (centro inferior del círculo). */
+export const MARKER_ICON_ANCHOR_X = SIZE / 2
+export const MARKER_ICON_ANCHOR_Y = SIZE / 2 + (SIZE / 2 - PAD)
+
+/** Mismo criterio que antes en el mapa: 40×40 y ancla (20, 36). */
+export const MARKER_MAP_SCALED_WIDTH = 40
+export const MARKER_MAP_SCALED_HEIGHT = 40
+export const MARKER_MAP_ANCHOR_X = 20
+export const MARKER_MAP_ANCHOR_Y = 36
 
 /**
  * @param {string} emoji - carácter o secuencia corta (ej. 🍺)
@@ -15,7 +30,8 @@ const PAD = 3
  */
 export function getEmojiMarkerDataUrl(emoji) {
   const key = emoji || '🔥'
-  const cached = cache.get(key)
+  const cacheKey = `${CACHE_VERSION}:${key}`
+  const cached = cache.get(cacheKey)
   if (cached) return cached
 
   if (typeof document === 'undefined') {
@@ -53,12 +69,12 @@ export function getEmojiMarkerDataUrl(emoji) {
   ctx.fillText(key, cx, cy)
 
   const url = canvas.toDataURL('image/png')
-  cache.set(key, url)
+  cache.set(cacheKey, url)
   return url
 }
 
 /**
- * Marcador “marca” cuando no hay categoría conocida (logo conceptual 🔥 QUEHAYHOY).
+ * Marcador por defecto cuando no hay categoría conocida.
  * @returns {string}
  */
 export function getDefaultBrandMarkerDataUrl() {
