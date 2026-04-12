@@ -2,11 +2,14 @@
  * Menú de cuenta exclusivo para desktop (drawer del botón hamburguesa).
  * Intencionalmente separado de `ProfileMenuContent` para desacoplar desktop de `/perfil`.
  */
-import { Compass, Heart, MapPin, Tags, X } from 'lucide-react'
+import { Compass, Heart, LogOut, MapPin, Tags, X } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
+import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -32,7 +35,8 @@ function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
   )
 }
 
-function SettingsRow({ icon: RowIcon, label, onClick, isDark, withBorder = true }) {
+function SettingsRow({ icon, label, onClick, isDark, withBorder = true }) {
+  const RowIcon = icon
   const borderCls = isDark ? 'border-gray-800' : 'border-gray-200'
   const activeCls = isDark ? 'active:bg-white/5' : 'active:bg-black/5'
   const hoverCls = isDark ? 'hover:bg-white/[0.03]' : 'hover:bg-black/[0.03]'
@@ -67,20 +71,51 @@ export function DesktopProfileMenuContent({ onClose }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, user } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user, logout } = useAuth()
+  const [googleBusy, setGoogleBusy] = useState(false)
+  const [logoutBusy, setLogoutBusy] = useState(false)
 
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
     : 'border border-gray-200 bg-white text-black shadow-sm'
-  const greetingCls = isDark ? 'text-gray-300' : 'text-gray-600'
   const borderBar = isDark ? 'border-gray-800' : 'border-gray-200'
   const drawerBg = isDark ? 'bg-[#121212]' : 'bg-white'
+  const logoutBtnCls = isDark
+    ? 'border-red-400/35 text-red-300 hover:bg-red-500/10 active:bg-red-500/15'
+    : 'border-red-200 text-red-600 hover:bg-red-50 active:bg-red-100/80'
 
-  async function handleGoogle() {
+  function handleGoogleClick() {
+    if (shouldUseGoogleRedirect()) {
+      try {
+        beginGoogleRedirect()
+      } catch (err) {
+        console.error(err)
+      }
+      return
+    }
+    void handleGooglePopup()
+  }
+
+  async function handleGooglePopup() {
+    setGoogleBusy(true)
     try {
       await signInWithGoogle()
     } catch {
       // AuthContext ya loguea
+    } finally {
+      setGoogleBusy(false)
+    }
+  }
+
+  async function handleLogout() {
+    setLogoutBusy(true)
+    try {
+      await logout()
+      onClose?.()
+    } catch {
+      // AuthContext ya loguea
+    } finally {
+      setLogoutBusy(false)
     }
   }
 
@@ -124,18 +159,28 @@ export function DesktopProfileMenuContent({ onClose }) {
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="flex flex-col items-center pt-6 md:pt-4">
           {user ? (
-            <p className={`mb-8 text-center text-base ${greetingCls}`}>
-              Hola, {user.displayName ?? user.email ?? 'usuario'}
-            </p>
+            <>
+              <ProfileSignedInSummary className="mb-3" />
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={logoutBusy}
+                className={`mb-8 flex w-full max-w-sm items-center justify-center gap-2 rounded-full border py-3.5 pl-4 pr-5 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${logoutBtnCls}`}
+              >
+                <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+                {logoutBusy ? 'Cerrando sesión…' : 'Cerrar sesión'}
+              </button>
+            </>
           ) : (
             <div className="mb-8 flex w-full max-w-sm flex-col items-center">
               <button
                 type="button"
-                onClick={handleGoogle}
-                className={`flex w-full items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] ${googleBtnCls}`}
+                onClick={handleGoogleClick}
+                disabled={googleBusy}
+                className={`flex w-full items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
               >
                 <GoogleLogo className="h-7 w-7 shrink-0" />
-                Continuar con Google
+                {googleBusy ? 'Conectando…' : 'Continuar con Google'}
               </button>
               <p className="mt-2 pt-2 text-center text-xs text-gray-400">
                 - Para disfrutar la experiencia completa -

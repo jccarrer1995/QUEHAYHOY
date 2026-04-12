@@ -7,6 +7,8 @@ export default defineConfig({
   base: '/QUEHAYHOY/',
   plugins: [react(), tailwindcss()],
   server: {
-    host: true, // Escucha en 0.0.0.0 para acceso desde celular en la misma red
+    // Escucha en 0.0.0.0 para el móvil en la misma red. Ese host (p. ej. 192.168.x.x) debe estar en
+    // Firebase Console → Authentication → Configuración → Dominios autorizados, o Auth fallará al usar Google.
+    host: true,
   },
 })

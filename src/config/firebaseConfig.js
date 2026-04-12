@@ -23,7 +23,24 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-const hasValidConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
+/** Sin esto, `signInWithPopup` suele fallar con auth/configuration-not-found */
+const missingFirebaseEnvKeys = /** @type {string[]} */ ([])
+if (!firebaseConfig.apiKey) missingFirebaseEnvKeys.push('VITE_FIREBASE_API_KEY')
+if (!firebaseConfig.authDomain) missingFirebaseEnvKeys.push('VITE_FIREBASE_AUTH_DOMAIN')
+if (!firebaseConfig.projectId) missingFirebaseEnvKeys.push('VITE_FIREBASE_PROJECT_ID')
+if (!firebaseConfig.appId) missingFirebaseEnvKeys.push('VITE_FIREBASE_APP_ID')
+if (!firebaseConfig.messagingSenderId) missingFirebaseEnvKeys.push('VITE_FIREBASE_MESSAGING_SENDER_ID')
+if (!firebaseConfig.storageBucket) missingFirebaseEnvKeys.push('VITE_FIREBASE_STORAGE_BUCKET')
+
+const hasValidConfig = missingFirebaseEnvKeys.length === 0
+
+if (import.meta.env.DEV && !hasValidConfig) {
+  console.warn(
+    '[Firebase] Config incompleta. Completa en .env:',
+    missingFirebaseEnvKeys.join(', '),
+    '— Copia el objeto firebaseConfig desde Firebase Console → Configuración del proyecto → Tus apps → Web.'
+  )
+}
 
 let app = null;
 let db = null;
@@ -48,6 +65,9 @@ if (hasValidConfig) {
     analytics = getAnalytics(app);
   }
 }
+
+/** Nombres de variables faltantes en .env (vacío si la config es usable) */
+export { missingFirebaseEnvKeys };
 
 /** Firestore - base de datos */
 export { db };

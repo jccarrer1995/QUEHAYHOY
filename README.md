@@ -51,7 +51,7 @@
 ### 6. Firebase
 - Conexión a Firestore (colección `events`)
 - Campos mapeados: `title`, `location` → sector, `date`, `capacity_level`, `price`, `image_url`, `slug`, `isVisible`
-- Login con Google (Acceso Progresivo: solo se solicita para guardar favoritos)
+- **Login con Google** (`AuthContext`): sesión persistente, documento en `users/{uid}` con rol **Asistente** por defecto, popup en desktop y **redirect** en móvil / IP LAN; perfil con avatar y cierre de sesión en desktop. Detalle: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
 - Hook `useEvents` con `getDocs` para cargar eventos en tiempo real
 - Estados de loading y error en la UI
 
@@ -104,6 +104,8 @@ VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
 VITE_FIREBASE_MEASUREMENT_ID=...
+
+Las seis primeras son **obligatorias** para inicializar Auth y Firestore; ver `.env.example` y la guía de autenticación.
 
 # Cloudinary (subida de imágenes)
 VITE_CLOUDINARY_CLOUD_NAME=dfyp1q7tl
@@ -260,13 +262,32 @@ src/
   - Se añadió sección **Más eventos** para no perder eventos que no entran en los 3 bloques principales.
   - Criterio de **Gratis y Bacán** ampliado: ahora incluye precio `0`, `'0'`, vacío o `null`.
 
-### 13) Perfil, legales y sectores favoritos (28/03/2026)
+### 13) Autenticación Google, perfil y despliegue (abril 2026)
+
+- **Google Sign-In**: validación estricta de variables Firebase; `signInWithRedirect` en móvil / pantalla estrecha; `beginGoogleRedirect()` síncrono desde el botón para Safari iOS; restauración de ruta tras OAuth (`sessionStorage`); `auth.authStateReady()` + `getRedirectResult` antes del listener; toast ante `auth/unauthorized-domain` (p. ej. IP de LAN no registrada en Firebase).
+- **Dominios autorizados**: obligatorio añadir el hostname si accedes por `http://192.168.x.x:5173` (Vite con `host: true`) o por GitHub Pages.
+- **UI**: `ProfileSignedInSummary` (avatar + nombre); botón **Cerrar sesión** en menú desktop.
+- Documentación: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
+
+### 14) Perfil, legales y sectores favoritos (28/03/2026)
 
 - **Perfil (`/perfil`)**: diseño alineado al tema claro/oscuro del home; inicio de sesión con Google; secciones CONFIGURACIÓN y LEGAL; versión de app (**`V0.0.2`**) abajo a la izquierda (`src/lib/appVersion.js`).
 - **Texto bajo el botón de Google**: copy de acceso con `text-xs` / `text-gray-400`.
 - **Bottom sheets legales** (`src/components/legal/`): Términos, Política de privacidad y Acerca de; cierre con X, arrastre hacia abajo y overlay; contenido en `legalSheetContent.js` (revisión legal recomendada).
 - **Sectores favoritos (`/perfil/sectores`)**: pantalla con animación desde la derecha; interruptores por sector; preferencias en **`localStorage`** (`quehayhoy-sector-visibility-v1`); lista canónica en **`src/lib/topSectors.js`**; el carrusel «Sectores Top» en home solo muestra sectores activados.
 - Documentación detallada: [`docs/ACTUALIZACIONES-2026-03-28.md`](docs/ACTUALIZACIONES-2026-03-28.md).
+
+---
+
+## Despliegue (GitHub Pages)
+
+El `base` de Vite es `/QUEHAYHOY/` (subruta en Pages). Tras configurar el remoto y Pages en GitHub:
+
+```bash
+npm run deploy
+```
+
+Publica el contenido de `dist` mediante **gh-pages**. Añade el dominio público en **Firebase → Authentication → Dominios autorizados**. Más detalle en [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
 
 ---
 

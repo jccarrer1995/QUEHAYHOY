@@ -5,9 +5,11 @@ import { MapPin, Tags, ChevronRight, FileText, Lock, Info } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LegalBottomSheet } from '../legal'
+import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
+import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -64,9 +66,10 @@ export function ProfileMenuContent({ className = '' }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, user } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user } = useAuth()
 
   const [legalSheetOpen, setLegalSheetOpen] = useState(false)
+  const [googleBusy, setGoogleBusy] = useState(false)
   const [legalSheetType, setLegalSheetType] = useState('terms')
 
   function openLegalSheet(t) {
@@ -81,13 +84,28 @@ export function ProfileMenuContent({ className = '' }) {
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
     : 'border border-gray-200 bg-white text-black shadow-sm'
-  const greetingCls = isDark ? 'text-gray-300' : 'text-gray-600'
   const sectionHeadingCls = isDark ? '!text-gray-400' : '!text-gray-600'
-  async function handleGoogle() {
+
+  function handleGoogleClick() {
+    if (shouldUseGoogleRedirect()) {
+      try {
+        beginGoogleRedirect()
+      } catch (err) {
+        console.error(err)
+      }
+      return
+    }
+    void handleGooglePopup()
+  }
+
+  async function handleGooglePopup() {
+    setGoogleBusy(true)
     try {
       await signInWithGoogle()
     } catch {
       // AuthContext ya loguea
+    } finally {
+      setGoogleBusy(false)
     }
   }
 
@@ -103,18 +121,17 @@ export function ProfileMenuContent({ className = '' }) {
     <>
       <header className="flex flex-col items-center pt-6 md:pt-4">
         {user ? (
-          <p className={`mb-8 text-center text-base ${greetingCls}`}>
-            Hola, {user.displayName ?? user.email ?? 'usuario'}
-          </p>
+          <ProfileSignedInSummary />
         ) : (
           <div className="mb-8 flex w-full max-w-sm flex-col items-center">
             <button
               type="button"
-              onClick={handleGoogle}
-              className={`flex w-full items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] ${googleBtnCls}`}
+              onClick={handleGoogleClick}
+              disabled={googleBusy}
+              className={`flex w-full items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
             >
               <GoogleLogo className="h-7 w-7 shrink-0" />
-              Continuar con Google
+              {googleBusy ? 'Conectando…' : 'Continuar con Google'}
             </button>
             <p className="mt-2 pt-2 text-center text-xs text-gray-400">
               - Para disfrutar la experiencia completa -

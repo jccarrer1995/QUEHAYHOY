@@ -97,9 +97,9 @@ QUEHAYHOY/
 
 ---
 
-## ECUAMOMENT – Firebase
+## QUEHAYHOY – Firebase
 
-Copia `.env.example` a `.env` y añade tus credenciales de Firebase:
+Copia `.env.example` a `.env` y añade las credenciales del snippet **Web** en Firebase (las seis variables obligatorias; `measurementId` es opcional para Analytics).
 
 ```env
 VITE_FIREBASE_API_KEY=
@@ -112,3 +112,7 @@ VITE_FIREBASE_MEASUREMENT_ID=
 ```
 
 **Colecciones Firestore:** events, categories, tags, users.
+
+### Autenticación con Google
+
+Implementación en `src/contexts/AuthContext.jsx` (`useAuth`, `signInWithGoogle`, `beginGoogleRedirect`, `logout`). Guía completa (popup vs redirect, IP LAN, GitHub Pages): [`AUTENTICACION-GOOGLE-FIREBASE.md`](./AUTENTICACION-GOOGLE-FIREBASE.md).
