@@ -14,8 +14,10 @@ import {
   BADGE_LABELS,
   mapFirestoreDocToForm,
   buildEventPayload,
+  SECTOR_TO_FIRESTORE,
 } from './admin/eventAdminUtils.js'
 import { ensureUniqueEventSlug } from '../lib/slug.js'
+import { geocodeAddressString } from '../lib/geocodeFromAddress.js'
 
 export function AdminEventForm() {
   const { eventId } = useParams()
@@ -33,6 +35,7 @@ export function AdminEventForm() {
   const [loadError, setLoadError] = useState(null)
   const [error, setError] = useState(null)
   const [toastError, setToastError] = useState('')
+  const [geocoding, setGeocoding] = useState(false)
 
   const showError = (message) => {
     setError(message)
@@ -136,6 +139,29 @@ export function AdminEventForm() {
     setError(null)
   }
 
+  async function handleGeocodeFromAddress() {
+    const sectorLabel = form.sector ? SECTOR_TO_FIRESTORE[form.sector] ?? '' : ''
+    const parts = [form.address?.trim(), sectorLabel, 'Guayaquil', 'Ecuador'].filter(Boolean)
+    if (parts.length === 0) {
+      showError('Indica dirección o sector para buscar coordenadas.')
+      return
+    }
+    setGeocoding(true)
+    setError(null)
+    try {
+      const { lat, lng } = await geocodeAddressString(parts.join(', '))
+      setForm((prev) => ({
+        ...prev,
+        latitude: lat.toFixed(6),
+        longitude: lng.toFixed(6),
+      }))
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Error al geocodificar.')
+    } finally {
+      setGeocoding(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
@@ -159,6 +185,14 @@ export function AdminEventForm() {
 
     if (!db) {
       showError('Firebase no está configurado.')
+      setSubmitting(false)
+      return
+    }
+
+    const latStr = String(form.latitude ?? '').trim()
+    const lngStr = String(form.longitude ?? '').trim()
+    if ((latStr === '') !== (lngStr === '')) {
+      showError('Latitud y longitud deben ir las dos rellenas o las dos vacías.')
       setSubmitting(false)
       return
     }
@@ -455,6 +489,60 @@ export function AdminEventForm() {
               placeholder="Ej: Av. Víctor Emilio Estrada 123"
               className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
             />
+            <p className={`mt-2 text-xs ${mutedCl}`}>
+              Usa el botón de abajo para rellenar latitud y longitud desde esta dirección y el sector
+              seleccionado (requiere API Geocoding en Google Cloud).
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className={`text-sm font-medium ${labelCl}`}>Ubicación en el mapa (Explorar)</p>
+              <button
+                type="button"
+                onClick={handleGeocodeFromAddress}
+                disabled={geocoding || submitting}
+                className="inline-flex items-center justify-center rounded-xl bg-[#14b8a6] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0d9488] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {geocoding ? 'Buscando…' : 'Obtener coordenadas desde dirección'}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="latitude" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
+                  Latitud
+                </label>
+                <input
+                  id="latitude"
+                  name="latitude"
+                  type="text"
+                  inputMode="decimal"
+                  value={form.latitude}
+                  onChange={handleChange}
+                  placeholder="-2.189413"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="longitude" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
+                  Longitud
+                </label>
+                <input
+                  id="longitude"
+                  name="longitude"
+                  type="text"
+                  inputMode="decimal"
+                  value={form.longitude}
+                  onChange={handleChange}
+                  placeholder="-79.889483"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
+            <p className={`text-xs ${mutedCl}`}>
+              Opcional: si las dejas vacías, en el mapa público se usa una posición aproximada por sector.
+              Decimales con punto (ej. -2.1572).
+            </p>
           </div>
 
           <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-4">

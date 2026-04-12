@@ -121,3 +121,12 @@ En este bloque de cabeceras no se añadieron rutas nuevas; la ruta `/explorar` f
 | `src/hooks/useEvents.js` | Campos opcionales `latitude` / `longitude` en el objeto evento |
 | `.env.example` | Entrada `VITE_GOOGLE_MAPS_API_KEY` |
 | `package.json` / `package-lock.json` | Dependencia `@react-google-maps/api` |
+
+---
+
+## 8. Admin: coordenadas reales en el mapa
+
+- **`eventAdminUtils.js`**: `initialForm` incluye `latitude` y `longitude` (strings en el formulario); `mapFirestoreDocToForm` lee `latitude`/`longitude` o `lat`/`lng`; `buildEventPayload` persiste números válidos o `null` si faltan o son inválidos.
+- **`AdminEventForm.jsx`**: bloque “Ubicación en el mapa” con inputs de lat/lng, validación (ambas o ninguna) y botón **Obtener coordenadas desde dirección** (dirección + sector + Guayaquil, Ecuador).
+- **`src/lib/geocodeFromAddress.js`**: carga el script con `@googlemaps/js-api-loader` y usa `google.maps.Geocoder` (requiere **Geocoding API** habilitada y la misma `VITE_GOOGLE_MAPS_API_KEY`).
+- **`.env.example`**: nota sobre Geocoding API.

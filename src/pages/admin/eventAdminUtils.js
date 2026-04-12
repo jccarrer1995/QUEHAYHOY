@@ -32,6 +32,8 @@ export const initialForm = {
   badgeType: '',
   imageUrl: '',
   address: '',
+  latitude: '',
+  longitude: '',
   eventType: 'unique',
   date: '',
   time: '',
@@ -95,6 +97,17 @@ export function timestampToTimeInput(ts) {
  * @param {Record<string, unknown>} data
  * @returns {typeof initialForm}
  */
+/**
+ * @param {unknown} v
+ * @returns {string}
+ */
+function coordToFormString(v) {
+  if (v == null || v === '') return ''
+  if (typeof v === 'number' && Number.isFinite(v)) return String(v)
+  const n = Number(v)
+  return Number.isFinite(n) ? String(n) : ''
+}
+
 export function mapFirestoreDocToForm(data) {
   const type =
     data.type === 'unique' || data.type === 'recurring'
@@ -122,6 +135,8 @@ export function mapFirestoreDocToForm(data) {
     })(),
     imageUrl: typeof data.image_url === 'string' ? data.image_url : '',
     address: typeof data.address === 'string' ? data.address : '',
+    latitude: coordToFormString(data.latitude ?? data.lat),
+    longitude: coordToFormString(data.longitude ?? data.lng),
     eventType: type === 'recurring' ? 'recurring' : 'unique',
     date: '',
     time: '',
@@ -150,6 +165,16 @@ export function mapFirestoreDocToForm(data) {
 }
 
 /**
+ * @param {string | undefined} s
+ * @returns {number | null}
+ */
+function parseOptionalCoord(s) {
+  if (s == null || String(s).trim() === '') return null
+  const n = Number(String(s).trim().replace(',', '.'))
+  return Number.isFinite(n) ? n : null
+}
+
+/**
  * @param {typeof initialForm} form
  * @param {{ isUpdate: boolean, slug?: string }} opts
  * @returns {Record<string, unknown>}
@@ -172,6 +197,21 @@ export function buildEventPayload(form, opts) {
     image_url: (form.imageUrl || '').trim() || null,
     address: (form.address || '').trim() || null,
     popularidad: form.popularidad && form.popularidad !== '' ? Math.min(Math.max(Number(form.popularidad) || 1, 1), 3) : 1,
+  }
+
+  const lat = parseOptionalCoord(form.latitude)
+  const lng = parseOptionalCoord(form.longitude)
+  if (lat != null && lng != null) {
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      payload.latitude = lat
+      payload.longitude = lng
+    } else {
+      payload.latitude = null
+      payload.longitude = null
+    }
+  } else {
+    payload.latitude = null
+    payload.longitude = null
   }
 
   if (typeof slug === 'string' && slug.trim() !== '') {
