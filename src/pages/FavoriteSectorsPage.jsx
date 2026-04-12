@@ -108,14 +108,14 @@ export function FavoriteSectorsPage() {
             <ArrowLeft className="h-6 w-6" strokeWidth={2} />
           </button>
 
-          <h1
+          <h2
             className={`m-0 text-center text-sm font-bold transition-all duration-200 ${
               showCompactTitle ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
             }`}
             style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
           >
             Sectores favoritos
-          </h1>
+          </h2>
 
           <div className="h-11 w-11" aria-hidden />
         </div>
