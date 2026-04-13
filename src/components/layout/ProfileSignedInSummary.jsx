@@ -5,12 +5,16 @@ import { User } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
+import { resolveAuthUserForDisplay } from '../../lib/authDisplayUser.js'
 
 /**
  * @param {{ className?: string }} props
  */
 export function ProfileSignedInSummary({ className = '' }) {
-  const { user, photoURL, displayName } = useAuth()
+  const { user: contextUser, photoURL: contextPhotoURL, displayName } = useAuth()
+  /** El padre (`ProfileMenuContent` / drawer) ya suscribe con `useAuthUserForProfileHeader`; aquí solo resolvemos. */
+  const user = resolveAuthUserForDisplay(contextUser)
+  const photoURL = contextPhotoURL ?? user?.photoURL ?? null
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const mediaKey = `${user?.uid ?? ''}|${photoURL ?? ''}`

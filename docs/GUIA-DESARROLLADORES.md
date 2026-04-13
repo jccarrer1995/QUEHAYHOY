@@ -115,4 +115,4 @@ VITE_FIREBASE_MEASUREMENT_ID=
 
 ### Autenticación con Google
 
-Implementación en `src/contexts/AuthContext.jsx` (`useAuth`, `signInWithGoogle`, `beginGoogleRedirect`, `logout`). Guía completa (popup vs redirect, IP LAN, GitHub Pages): [`AUTENTICACION-GOOGLE-FIREBASE.md`](./AUTENTICACION-GOOGLE-FIREBASE.md).
+Implementación en `src/contexts/AuthContext.jsx` (`useAuth`, `signInWithGoogle`, `beginGoogleRedirect`, `logout`); perfil móvil en `useProfileGoogleSignIn.js`. Guía completa (popup unificado, redirect como respaldo, IP LAN, GitHub Pages): [`AUTENTICACION-GOOGLE-FIREBASE.md`](./AUTENTICACION-GOOGLE-FIREBASE.md).

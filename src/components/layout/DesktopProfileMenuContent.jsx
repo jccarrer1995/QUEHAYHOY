@@ -9,6 +9,7 @@ import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
+import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
@@ -72,6 +73,7 @@ export function DesktopProfileMenuContent({ onClose }) {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const { signInWithGoogle, beginGoogleRedirect, user, logout } = useAuth()
+  const displayUser = useAuthUserForProfileHeader(user)
   const [googleBusy, setGoogleBusy] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
 
@@ -158,7 +160,7 @@ export function DesktopProfileMenuContent({ onClose }) {
       <div className="flex min-h-0 flex-1 flex-col px-5">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <header className="flex flex-col items-center pt-6 md:pt-4">
-          {user ? (
+          {displayUser ? (
             <>
               <ProfileSignedInSummary className="mb-3" />
               <button

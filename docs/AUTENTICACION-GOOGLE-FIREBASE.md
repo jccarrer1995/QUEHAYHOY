@@ -11,10 +11,12 @@ Esta guía resume cómo está implementado el login en QUEHAYHOY, qué variables
 | `src/config/firebaseConfig.js` | Inicializa la app Firebase, Firestore (caché persistente multi-tab), `getAuth`, Functions y Analytics. Exige **seis** variables `VITE_FIREBASE_*` obligatorias. |
 | `src/firebaseConfig.js` | Reexporta `auth`, `db`, etc. para importar desde un único punto (`@/` o rutas relativas). |
 | `src/contexts/AuthContext.jsx` | `onAuthStateChanged`, `signInWithGoogle`, `beginGoogleRedirect`, `logout`, `useAuth`. |
-| `src/lib/shouldUseGoogleRedirect.js` | Heurística para usar **redirect** en móvil / pantalla estrecha en lugar de **popup**. |
-| `src/components/layout/ProfileMenuContent.jsx` | Perfil móvil (`/perfil`): botón Google; en redirect llama **`beginGoogleRedirect()`** en el mismo clic (importante para Safari iOS). |
+| `src/lib/shouldUseGoogleRedirect.js` | Reservado para futuras heurísticas; hoy devuelve siempre `false` (mismo flujo **popup** que desktop). |
+| `src/components/layout/useProfileGoogleSignIn.js` | Hook del botón Google en perfil móvil: delega en `signInWithGoogle` (popup + respaldo redirect en el contexto). |
+| `src/components/layout/ProfileMenuContent.jsx` | Perfil móvil (`/perfil`): botón Google, resumen con sesión y **Cerrar sesión**. |
 | `src/components/layout/DesktopProfileMenuContent.jsx` | Drawer desktop: mismo flujo + **Cerrar sesión** cuando hay sesión. |
 | `src/components/layout/ProfileSignedInSummary.jsx` | Avatar circular + nombre cuando el usuario está autenticado. |
+| `src/lib/authDisplayUser.js` | `useAuthUserForProfileHeader` + `useSyncExternalStore` sobre `onAuthStateChanged` y eventos **`visibilitychange` / `pageshow`** para refrescar el UID mostrado al volver del OAuth; `resolveAuthUserForDisplay` combina contexto y `auth.currentUser`. |
 
 ---
 
@@ -49,13 +51,13 @@ Si el origen no está autorizado, el SDK falla en validación de origen (`auth/u
 
 ## Popup vs redirect
 
-- **Escritorio / navegador amplio:** se usa `signInWithPopup` cuando la heurística no pide redirect.
-- **Móvil, iPad, ventana ≤767px o UA móvil:** se usa `signInWithRedirect` (los popups suelen bloquearse o fallar en Safari iOS).
-- **`beginGoogleRedirect()`:** debe ejecutarse **síncronamente** desde el `onClick` (sin `setState` previo ni `await` antes), para que iOS no cancele la navegación OAuth.
+- **Todos los dispositivos (incluido móvil):** el flujo principal es **`signInWithPopup`** (ventana o pestaña de cuentas de Google, igual que en desktop).
+- **Respaldo automático:** si el SDK devuelve `auth/popup-blocked` o `auth/operation-not-supported-in-this-environment`, `signInWithGoogle` usa **`signInWithRedirect`** en la misma pestaña.
+- **`beginGoogleRedirect()`:** API pública por si en el futuro se vuelve a un redirect explícito desde la UI; debe llamarse **síncronamente** desde el `onClick` si se usa (sin `setState` previo ni `await` antes), para que iOS no cancele la navegación OAuth.
 
-Antes del redirect se guarda en `sessionStorage` la ruta actual (`pathname` + `search`) para, al volver, restaurar la pantalla (p. ej. `/perfil`).
+Antes de **`signInWithRedirect`** (respaldo) se guardan en `sessionStorage` la ruta (`qh_auth_return`) y el flag `qh_oauth_return_pending`. Al volver de Google se restaura la ruta **solo si** ese flag está activo; el login con **popup** no activa ese flag de forma innecesaria, para no forzar navegación a `/perfil`.
 
-Tras el retorno de Google, el flujo usa `auth.authStateReady()`, luego `getRedirectResult(auth)` y después `onAuthStateChanged`.
+Tras el retorno de Google (redirect), el flujo usa `auth.authStateReady()`, luego `getRedirectResult(auth)`, una pasada **`syncSessionFromAuth()`** (lee `auth.currentUser` por si el redirect ya se consumió pero la sesión existe) y después `onAuthStateChanged`. En Safari móvil, al volver de cuentas.google.com la página puede restaurarse desde **bfcache** sin re-ejecutar efectos: por eso también se escucha **`pageshow`** en `AuthContext` y en la suscripción de `authDisplayUser.js`. Tras `signInWithPopup` se hace `setUser` explícito para no depender solo del listener.
 
 ---
 

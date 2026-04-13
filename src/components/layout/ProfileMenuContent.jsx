@@ -1,7 +1,7 @@
 /**
  * Contenido de cuenta / perfil para la página `/perfil`.
  */
-import { MapPin, Tags, ChevronRight, FileText, Lock, Info } from 'lucide-react'
+import { MapPin, Tags, ChevronRight, FileText, Lock, Info, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LegalBottomSheet } from '../legal'
@@ -9,7 +9,8 @@ import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
-import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
+import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
+import { useProfileGoogleSignIn } from './useProfileGoogleSignIn.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -66,10 +67,12 @@ export function ProfileMenuContent({ className = '' }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, beginGoogleRedirect, user } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user, logout } = useAuth()
+  const displayUser = useAuthUserForProfileHeader(user)
+  const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
 
   const [legalSheetOpen, setLegalSheetOpen] = useState(false)
-  const [googleBusy, setGoogleBusy] = useState(false)
+  const [logoutBusy, setLogoutBusy] = useState(false)
   const [legalSheetType, setLegalSheetType] = useState('terms')
 
   function openLegalSheet(t) {
@@ -84,28 +87,19 @@ export function ProfileMenuContent({ className = '' }) {
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
     : 'border border-gray-200 bg-white text-black shadow-sm'
+  const logoutBtnCls = isDark
+    ? 'border-red-400/35 text-red-300 hover:bg-red-500/10 active:bg-red-500/15'
+    : 'border-red-200 text-red-600 hover:bg-red-50 active:bg-red-100/80'
   const sectionHeadingCls = isDark ? '!text-gray-400' : '!text-gray-600'
 
-  function handleGoogleClick() {
-    if (shouldUseGoogleRedirect()) {
-      try {
-        beginGoogleRedirect()
-      } catch (err) {
-        console.error(err)
-      }
-      return
-    }
-    void handleGooglePopup()
-  }
-
-  async function handleGooglePopup() {
-    setGoogleBusy(true)
+  async function handleLogout() {
+    setLogoutBusy(true)
     try {
-      await signInWithGoogle()
+      await logout()
     } catch {
       // AuthContext ya loguea
     } finally {
-      setGoogleBusy(false)
+      setLogoutBusy(false)
     }
   }
 
@@ -120,8 +114,19 @@ export function ProfileMenuContent({ className = '' }) {
   const body = (
     <>
       <header className="flex flex-col items-center pt-6 md:pt-4">
-        {user ? (
-          <ProfileSignedInSummary />
+        {displayUser ? (
+          <>
+            <ProfileSignedInSummary className="mb-3" />
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={logoutBusy}
+              className={`mb-8 flex w-full max-w-sm items-center justify-center gap-2 rounded-full border py-3.5 pl-4 pr-5 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${logoutBtnCls}`}
+            >
+              <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+              {logoutBusy ? 'Cerrando sesión…' : 'Cerrar sesión'}
+            </button>
+          </>
         ) : (
           <div className="mb-8 flex w-full max-w-sm flex-col items-center">
             <button

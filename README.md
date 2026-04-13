@@ -51,7 +51,7 @@
 ### 6. Firebase
 - Conexión a Firestore (colección `events`)
 - Campos mapeados: `title`, `location` → sector, `date`, `capacity_level`, `price`, `image_url`, `slug`, `isVisible`
-- **Login con Google** (`AuthContext`): sesión persistente, documento en `users/{uid}` con rol **Asistente** por defecto, popup en desktop y **redirect** en móvil / IP LAN; perfil con avatar y cierre de sesión en desktop. Detalle: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
+- **Login con Google** (`AuthContext`): sesión persistente, documento en `users/{uid}` con rol **Asistente** por defecto, **`signInWithPopup`** en todos los tamaños de pantalla (redirect solo como respaldo si el popup falla); perfil con avatar y cierre de sesión. Detalle: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
 - Hook `useEvents` con `getDocs` para cargar eventos en tiempo real
 - Estados de loading y error en la UI
 
@@ -264,7 +264,7 @@ src/
 
 ### 13) Autenticación Google, perfil y despliegue (abril 2026)
 
-- **Google Sign-In**: validación estricta de variables Firebase; `signInWithRedirect` en móvil / pantalla estrecha; `beginGoogleRedirect()` síncrono desde el botón para Safari iOS; restauración de ruta tras OAuth (`sessionStorage`); `auth.authStateReady()` + `getRedirectResult` antes del listener; toast ante `auth/unauthorized-domain` (p. ej. IP de LAN no registrada en Firebase).
+- **Google Sign-In**: validación estricta de variables Firebase; **`signInWithPopup`** unificado (móvil y desktop), con `signInWithRedirect` solo como respaldo ante popup bloqueado / entorno no soportado; `beginGoogleRedirect()` disponible para un posible redirect explícito; restauración de ruta tras OAuth (`sessionStorage`); `auth.authStateReady()` + `getRedirectResult` antes del listener; toast ante `auth/unauthorized-domain` (p. ej. IP de LAN no registrada en Firebase).
 - **Dominios autorizados**: obligatorio añadir el hostname si accedes por `http://192.168.x.x:5173` (Vite con `host: true`) o por GitHub Pages.
 - **UI**: `ProfileSignedInSummary` (avatar + nombre); botón **Cerrar sesión** en menú desktop.
 - Documentación: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).

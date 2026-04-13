@@ -19,6 +19,8 @@ const FIREBASE_AUTH_SETUP_MSG =
 const USERS_COLLECTION = 'users'
 const DEFAULT_ROLE = 'Asistente'
 const AUTH_RETURN_PATH_KEY = 'qh_auth_return'
+/** Solo se navega de vuelta si el login fue por `signInWithRedirect` (móvil); el popup de desktop no debe tocar esto. */
+const AUTH_OAUTH_PENDING_KEY = 'qh_oauth_return_pending'
 
 function saveAuthReturnPath() {
   try {
@@ -27,6 +29,7 @@ function saveAuthReturnPath() {
       AUTH_RETURN_PATH_KEY,
       `${window.location.pathname}${window.location.search}`
     )
+    sessionStorage.setItem(AUTH_OAUTH_PENDING_KEY, '1')
   } catch {
     // modo privado o quota
   }
@@ -135,9 +138,15 @@ export function AuthProvider({ children }) {
 
     const consumeReturnPath = () => {
       try {
+        const pending = sessionStorage.getItem(AUTH_OAUTH_PENDING_KEY)
         const target = sessionStorage.getItem(AUTH_RETURN_PATH_KEY)
-        if (!target) return
+        if (pending !== '1') {
+          if (target) sessionStorage.removeItem(AUTH_RETURN_PATH_KEY)
+          return
+        }
+        sessionStorage.removeItem(AUTH_OAUTH_PENDING_KEY)
         sessionStorage.removeItem(AUTH_RETURN_PATH_KEY)
+        if (!target) return
         const current = `${window.location.pathname}${window.location.search}`
         if (target !== current) {
           navigate(target, { replace: true })
@@ -146,6 +155,38 @@ export function AuthProvider({ children }) {
         // ignore
       }
     }
+
+    /**
+     * Alinea React con `auth.currentUser` (sesión persistida o tras OAuth).
+     * En móvil/Safari, `getRedirectResult` puede no devolver nada pero ya hay usuario;
+     * con bfcache al volver de Google los efectos no se re-ejecutan: hace falta `pageshow`.
+     */
+    const syncSessionFromAuth = async () => {
+      if (!auth || cancelledRef.current) return
+      const u = auth.currentUser
+      if (!u) return
+      setUser(u)
+      try {
+        await ensureUserDocument(u)
+        if (db) {
+          const p = await fetchUserProfile(u.uid)
+          if (!cancelledRef.current) setProfile(p)
+        }
+      } catch (err) {
+        console.error('Error al sincronizar sesión desde Firebase:', err)
+        if (!cancelledRef.current) setProfile(null)
+      } finally {
+        if (!cancelledRef.current) setLoading(false)
+      }
+      consumeReturnPath()
+    }
+
+    /** Tras volver de OAuth (bfcache o recarga), re-alinea estado React con Firebase. */
+    const onPageShow = () => {
+      if (cancelledRef.current) return
+      void syncSessionFromAuth()
+    }
+    window.addEventListener('pageshow', onPageShow)
 
     const run = async () => {
       try {
@@ -179,6 +220,10 @@ export function AuthProvider({ children }) {
 
       if (cancelledRef.current) return
 
+      await syncSessionFromAuth()
+
+      if (cancelledRef.current) return
+
       unsubscribe = onAuthStateChanged(auth, async (u) => {
         if (cancelledRef.current) return
 
@@ -207,7 +252,6 @@ export function AuthProvider({ children }) {
             setLoading(false)
           }
         }
-        consumeReturnPath()
       })
     }
 
@@ -215,6 +259,7 @@ export function AuthProvider({ children }) {
 
     return () => {
       cancelledRef.current = true
+      window.removeEventListener('pageshow', onPageShow)
       unsubscribe()
     }
   }, [navigate])
@@ -271,6 +316,7 @@ export function AuthProvider({ children }) {
         throw popupErr
       }
 
+      setUser(credential.user)
       await ensureUserDocument(credential.user)
 
       if (db) {
