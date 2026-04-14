@@ -11,6 +11,7 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
   const isDark = theme === 'dark'
   const accentCl = 'text-[#14b8a6]'
   const mutedCl = 'text-gray-400'
+  const safeAreaBottomStyle = { paddingBottom: 'env(safe-area-inset-bottom, 0px)' }
 
   const items = [
     { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
@@ -24,8 +25,9 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
       className={`fixed bottom-0 left-0 right-0 z-50 border-t md:hidden ${
         isDark ? 'bg-[#121212] border-gray-800' : 'bg-white border-gray-200'
       }`}
+      style={safeAreaBottomStyle}
     >
-      <div className="flex items-center justify-around py-2">
+      <div className="flex min-h-16 items-center justify-around py-2">
         {items.map((item) => {
           const Icon = item.icon
           return (

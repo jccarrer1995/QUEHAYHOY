@@ -70,6 +70,7 @@ export function ProfileMenuContent({ className = '' }) {
   const { signInWithGoogle, beginGoogleRedirect, user, logout } = useAuth()
   const displayUser = useAuthUserForProfileHeader(user)
   const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
+  const safeAreaTopStyle = { paddingTop: 'env(safe-area-inset-top, 0px)' }
 
   const [legalSheetOpen, setLegalSheetOpen] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
@@ -177,7 +178,12 @@ export function ProfileMenuContent({ className = '' }) {
 
   return (
     <>
-      <div className={`mx-auto flex min-h-[100dvh] max-w-lg flex-col px-[20px] pb-24 ${className}`}>{body}</div>
+      <div
+        className={`mx-auto flex min-h-[100dvh] max-w-lg flex-col px-[20px] pb-24 ${className}`}
+        style={safeAreaTopStyle}
+      >
+        {body}
+      </div>
 
       <p
         className={`pointer-events-none fixed z-40 text-xs font-extralight tracking-wide ${
