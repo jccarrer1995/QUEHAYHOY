@@ -21,7 +21,7 @@ export function ExplorePage() {
   const isDark = theme === 'dark'
   const { isCategoryVisible } = useCategoryVisibility()
   const { events, loading, error } = useEvents('all', 'all')
-  const mapSafeAreaStyle = { top: 'env(safe-area-inset-top, 0px)' }
+  const statusBarOverlayStyle = { height: 'env(safe-area-inset-top, 0px)' }
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? ''
 
@@ -49,10 +49,11 @@ export function ExplorePage() {
   }, [filteredEvents, selectedEventId])
 
   const pageBg = isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-gray-100 text-gray-900'
+  const statusBarOverlayCls = isDark ? 'bg-[#121212]/88' : 'bg-white/88'
 
   return (
     <div className={`fixed inset-0 z-[60] flex h-[100dvh] w-full flex-col ${pageBg}`}>
-      <div className="absolute inset-x-0 bottom-0 z-0 min-h-0 w-full flex-1" style={mapSafeAreaStyle}>
+      <div className="absolute inset-0 z-0 h-full min-h-0 w-full flex-1">
         {apiKey ? (
           <ExploreMapView
             apiKey={apiKey}
@@ -97,6 +98,12 @@ export function ExplorePage() {
           </div>
         )}
       </div>
+
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-0 z-10 backdrop-blur-[6px] ${statusBarOverlayCls}`}
+        style={statusBarOverlayStyle}
+        aria-hidden
+      />
 
       <ExploreFloatingHeader
         searchQuery={searchQuery}
