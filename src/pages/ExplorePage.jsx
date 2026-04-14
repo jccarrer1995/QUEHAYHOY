@@ -21,6 +21,7 @@ export function ExplorePage() {
   const isDark = theme === 'dark'
   const { isCategoryVisible } = useCategoryVisibility()
   const { events, loading, error } = useEvents('all', 'all')
+  const mapSafeAreaStyle = { top: 'env(safe-area-inset-top, 0px)' }
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? ''
 
@@ -51,7 +52,7 @@ export function ExplorePage() {
 
   return (
     <div className={`fixed inset-0 z-[60] flex h-[100dvh] w-full flex-col ${pageBg}`}>
-      <div className="absolute inset-0 z-0 h-full min-h-0 w-full flex-1">
+      <div className="absolute inset-x-0 bottom-0 z-0 min-h-0 w-full flex-1" style={mapSafeAreaStyle}>
         {apiKey ? (
           <ExploreMapView
             apiKey={apiKey}
