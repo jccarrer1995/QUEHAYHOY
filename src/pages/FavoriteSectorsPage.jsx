@@ -85,7 +85,7 @@ export function FavoriteSectorsPage() {
 
   return (
     <MotionDiv
-      className={`fixed inset-0 z-[100] flex flex-col ${pageCls}`}
+      className={`relative min-h-[100dvh] w-full overflow-hidden ${pageCls}`}
       initial={{ x: '100%' }}
       animate={{ x: slideOut ? '100%' : 0 }}
       transition={{ type: 'tween', duration: 0.32, ease: [0.32, 0.72, 0, 1] }}

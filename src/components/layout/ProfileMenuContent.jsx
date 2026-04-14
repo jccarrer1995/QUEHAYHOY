@@ -179,7 +179,7 @@ export function ProfileMenuContent({ className = '' }) {
   return (
     <>
       <div
-        className={`mx-auto flex min-h-[100dvh] max-w-lg flex-col px-[20px] pb-24 ${className}`}
+        className={`mx-auto flex w-full max-w-lg flex-1 flex-col px-[20px] pb-24 ${className}`}
         style={safeAreaTopStyle}
       >
         {body}

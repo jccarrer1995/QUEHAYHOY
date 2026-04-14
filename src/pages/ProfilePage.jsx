@@ -12,7 +12,7 @@ export function ProfilePage() {
   const pageCls = isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-white text-gray-900'
 
   return (
-    <div className={`min-h-[100dvh] w-full transition-colors ${pageCls}`}>
+    <div className={`min-h-screen w-full pb-20 transition-colors md:pb-0 flex flex-col ${pageCls}`}>
       <ProfileMenuContent />
 
       <BottomNav
