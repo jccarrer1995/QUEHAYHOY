@@ -51,7 +51,7 @@ export function FavoriteSectorsPage() {
 
   useEffect(() => {
     if (!slideOut) return undefined
-    const t = window.setTimeout(() => navigate(-1), 330)
+    const t = window.setTimeout(() => navigate('/perfil', { replace: true }), 330)
     return () => window.clearTimeout(t)
   }, [slideOut, navigate])
 
