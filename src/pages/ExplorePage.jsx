@@ -52,7 +52,7 @@ export function ExplorePage() {
   const statusBarOverlayCls = isDark ? 'bg-[#121212]/88' : 'bg-white/88'
 
   return (
-    <div className={`fixed inset-0 z-[60] flex h-[100dvh] w-full flex-col ${pageBg}`}>
+    <div className={`relative min-h-[100dvh] w-full overflow-hidden ${pageBg}`}>
       <div className="absolute inset-0 z-0 h-full min-h-0 w-full flex-1">
         {apiKey ? (
           <ExploreMapView
