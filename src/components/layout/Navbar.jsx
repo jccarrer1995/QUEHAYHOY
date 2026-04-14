@@ -47,6 +47,7 @@ export function Navbar({ searchValue = '', onSearchChange }) {
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const bgColor = isDark ? 'bg-[#121212]' : 'bg-white'
   const borderColor = isDark ? 'border-gray-800' : 'border-gray-200'
+  const safeAreaTopStyle = { paddingTop: 'env(safe-area-inset-top, 0px)' }
 
   const searchInputCls = isDark
     ? 'w-full pl-4 pr-10 py-2.5 md:py-2 rounded-2xl bg-[#1e1e1e] border border-gray-700 text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-[#14b8a6]'
@@ -118,7 +119,10 @@ export function Navbar({ searchValue = '', onSearchChange }) {
     unreadCount > 99 ? '99+' : unreadCount > 0 ? String(unreadCount) : ''
 
   return (
-    <header className={`sticky top-0 z-50 border-b ${borderColor} ${bgColor}`}>
+    <header
+      className={`sticky top-0 z-50 border-b ${borderColor} ${bgColor}`}
+      style={safeAreaTopStyle}
+    >
       <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-3 md:py-0">
         <div className="flex items-center justify-between gap-3 md:h-[50px] md:min-h-[50px]">
           {/* Desktop: menú cuenta + logo. Móvil: sin hamburguesa (perfil en barra inferior). */}

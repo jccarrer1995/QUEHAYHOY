@@ -20,9 +20,11 @@ import { AuthProvider } from './contexts/AuthContext.jsx'
 import { SectorVisibilityProvider } from './contexts/SectorVisibilityContext.jsx'
 import { AppToaster } from './components/layout/AppToaster.jsx'
 
+const routerBasename = import.meta.env.DEV ? '/' : import.meta.env.BASE_URL
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter basename={routerBasename}>
       <ThemeProvider>
         <AuthProvider>
           <CategoryVisibilityProvider>
