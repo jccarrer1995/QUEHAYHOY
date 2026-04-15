@@ -112,6 +112,9 @@ Las seis primeras son **obligatorias** para inicializar Auth y Firestore; ver `.
 VITE_CLOUDINARY_CLOUD_NAME=dfyp1q7tl
 VITE_CLOUDINARY_UPLOAD_PRESET=quehayhoy_images
 
+# Google Maps (pantalla Explorar; Maps JavaScript API en Google Cloud)
+VITE_GOOGLE_MAPS_API_KEY=
+
 # Opcional: versión mostrada en «Acerca de» (por defecto en código: V0.0.2 en appVersion.js)
 # VITE_APP_VERSION=V0.0.2
 ```
@@ -125,6 +128,7 @@ src/
 ├── components/
 │   ├── layout/     # Navbar, BottomNav, AppToaster
 │   ├── events/     # carruseles, CategorySelector, SectorSelector, TodaySection…
+│   ├── explore/    # ExploreMapView (Google Maps), ExploreEventMiniCard (resumen al tocar pin)…
 │   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig
 ├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext, CategoryVisibilityContext, FavoriteEventsContext, FavoriteLoginPromptContext
@@ -303,6 +307,9 @@ src/
 - Contraste del botón **Gratis** (modo claro) sobre mapa: texto oscuro forzado y fondo más legible.
 - Eliminado el botón **+ Filtros** (placeholder).
 - Filtro de tiempo por defecto: **Mes** en lugar de Hoy.
+- **Mapa (`ExploreMapView.jsx`)**: Google Maps con marcadores por categoría (emoji). Requiere `VITE_GOOGLE_MAPS_API_KEY` (ver `.env.example`).
+- **Etiquetas de nombre junto al pin** (solo con zoom suficiente, umbral `EVENT_LABEL_MIN_ZOOM` en código, p. ej. ≥ 16): texto **a la derecha** del icono, **dos líneas** con título completo; partido preferente en `": "` o `" - "`; color de acento por categoría; tocar la etiqueta abre el mismo flujo que el pin. Implementación con **`OverlayView`** (HTML fijo en el mapa, no tooltip ni hover). Ajustes finos: `EVENT_LABEL_GAP_PX`, `EVENT_LABEL_NUDGE_UP_PX` en `src/lib/mapMarkerIcon.js` (tamaño/ancla del PNG) y clase `.qh-event-map-marker-label` en `src/index.css` (sombra para legibilidad).
+- **Mini card inferior (`ExploreEventMiniCard.jsx`)**: al seleccionar un evento en el mapa, panel con imagen, título, fecha/sector y enlace **Ver más** al detalle. Cierre con **X** en un **círculo** en la esquina superior derecha, sobresaliendo sobre la tarjeta (sin botón de texto «Cerrar»).
 
 ---
 
