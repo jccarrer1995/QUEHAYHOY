@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCategoryVisibility } from './contexts/CategoryVisibilityContext.jsx'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useSectorVisibility } from './contexts/SectorVisibilityContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, Footer } from './components/layout'
+import { HomeStartupSplash } from './components/layout/HomeStartupSplash.jsx'
 import {
   EventCardCarousel,
   CategorySelector,
@@ -33,6 +34,14 @@ function isEventGratis(e) {
   return !Number.isNaN(n) && n === 0
 }
 
+const HOME_SPLASH_SESSION_KEY = 'qh-home-startup-splash-v1'
+
+function shouldShowHomeStartupSplash() {
+  if (typeof window === 'undefined') return false
+  if (!window.matchMedia('(max-width: 767px)').matches) return false
+  return window.sessionStorage.getItem(HOME_SPLASH_SESSION_KEY) !== 'seen'
+}
+
 function App() {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -55,6 +64,7 @@ function App() {
   const { events, loading: eventsLoading, error: eventsError } = useEvents(effectiveCategory, effectiveSector)
   const isDark = theme === 'dark'
   const [activeNavTab, setActiveNavTab] = useState('home')
+  const [showHomeStartupSplash, setShowHomeStartupSplash] = useState(() => shouldShowHomeStartupSplash())
   const sectionDividerCls = isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'
 
   const filteredEvents = useMemo(() => {
@@ -103,6 +113,24 @@ function App() {
     const path = getEventDetailPath(picked)
     if (!path) return
     navigate(path)
+  }
+
+  useEffect(() => {
+    if (!showHomeStartupSplash) return undefined
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.setItem(HOME_SPLASH_SESSION_KEY, 'seen')
+      setShowHomeStartupSplash(false)
+    }, 1800)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.clearTimeout(timer)
+    }
+  }, [showHomeStartupSplash])
+
+  if (showHomeStartupSplash) {
+    return <HomeStartupSplash />
   }
 
   return (
