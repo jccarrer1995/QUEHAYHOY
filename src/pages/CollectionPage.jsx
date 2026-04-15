@@ -84,7 +84,7 @@ export function CollectionPage() {
               : 'border-white/40 bg-white/72 shadow-[0_4px_18px_rgba(15,23,42,0.08)]'
           }`}
         >
-          <div className="mx-auto grid max-w-6xl grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-3 px-4 py-2">
+          <div className="mx-auto grid max-w-6xl grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-3 px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
             <Link
               to="/"
               className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
@@ -119,8 +119,8 @@ export function CollectionPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/78 to-black/48" />
         </div>
-        <div className="relative mx-auto max-w-6xl px-4 pt-6 pb-8 md:pt-8 md:pb-10">
-          <div className="pointer-events-none absolute inset-x-4 top-6 flex items-center justify-between md:top-8">
+        <div className="relative mx-auto max-w-6xl px-4 pb-8 pt-[max(1.5rem,calc(env(safe-area-inset-top,0px)+0.75rem))] md:pt-8 md:pb-10">
+          <div className="pointer-events-none absolute inset-x-4 top-[max(1.5rem,env(safe-area-inset-top,0px))] flex items-center justify-between md:top-[max(2rem,env(safe-area-inset-top,0px))]">
             <Link
               to="/"
               className="pointer-events-auto inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"

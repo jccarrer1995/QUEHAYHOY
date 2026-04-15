@@ -225,7 +225,7 @@ Chequea los detalles aquí: ${eventUrl}`
           type="button"
           onClick={() => navigate('/')}
           whileTap={{ scale: 0.94 }}
-          className="absolute left-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
+          className="absolute left-[max(1rem,env(safe-area-inset-left,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] z-20 flex h-11 w-11 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur-sm transition hover:bg-black/60"
           aria-label="Volver al inicio"
         >
           <ArrowLeft className="h-5 w-5" />
