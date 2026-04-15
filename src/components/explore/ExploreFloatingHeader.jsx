@@ -17,7 +17,6 @@ import { ExploreSecondaryFiltersBar } from './ExploreSecondaryFiltersBar.jsx'
  *   onFreeToggle: () => void
  *   timePreset: 'today' | 'tomorrow' | 'weekend' | 'month' | null
  *   onTimePresetChange: (preset: 'today' | 'tomorrow' | 'weekend' | 'month' | null) => void
- *   onOpenMoreFilters?: () => void
  * }} props
  */
 export function ExploreFloatingHeader({
@@ -30,7 +29,6 @@ export function ExploreFloatingHeader({
   onFreeToggle,
   timePreset,
   onTimePresetChange,
-  onOpenMoreFilters,
 }) {
   const { isCategoryVisible } = useCategoryVisibility()
   const visibleCategories = CATEGORIES.filter(
@@ -106,7 +104,6 @@ export function ExploreFloatingHeader({
         onFreeToggle={onFreeToggle}
         timePreset={timePreset}
         onTimePresetChange={onTimePresetChange}
-        onOpenMoreFilters={onOpenMoreFilters}
         isDark={isDark}
       />
     </header>

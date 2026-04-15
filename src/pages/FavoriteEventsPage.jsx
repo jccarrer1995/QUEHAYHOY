@@ -3,17 +3,45 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Heart } from 'lucide-react'
 import { BottomNav, Footer } from '../components/layout'
 import { EventCard } from '../components/events'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useFavoriteEvents } from '../contexts/FavoriteEventsContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { useEvents } from '../hooks/useEvents.js'
+import { useProfileGoogleSignIn } from '../components/layout/useProfileGoogleSignIn.js'
 
 const COMPACT_TITLE_TOUCH_OFFSET = 10
+
+/** Logo Google (marca) */
+function GoogleLogo({ className = 'h-7 w-7 shrink-0' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      />
+    </svg>
+  )
+}
 
 export function FavoriteEventsPage() {
   const navigate = useNavigate()
   const { theme } = useTheme()
-  const { favoriteIds } = useFavoriteEvents()
-  const { events, loading, error } = useEvents('all', 'all')
+  const { user, loading: authLoading, signInWithGoogle, beginGoogleRedirect } = useAuth()
+  const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
+  const { favoriteIds, favoritesLoading } = useFavoriteEvents()
+  const { events, loading: eventsLoading, error } = useEvents('all', 'all')
   const isDark = theme === 'dark'
   const [showCompactTitle, setShowCompactTitle] = useState(false)
   const compactHeaderRef = useRef(null)
@@ -57,9 +85,21 @@ export function FavoriteEventsPage() {
     }
   }, [updateCompactTitle])
 
+  const listLoading = Boolean(user) && (favoritesLoading || eventsLoading)
+  const loading = authLoading || listLoading
+
   useEffect(() => {
     updateCompactTitle()
-  }, [loading, error, favoriteIds.length, favoriteEvents.length, updateCompactTitle])
+  }, [
+    error,
+    favoriteIds.length,
+    favoriteEvents.length,
+    authLoading,
+    user,
+    favoritesLoading,
+    eventsLoading,
+    updateCompactTitle,
+  ])
 
   return (
     <div className={`min-h-[100dvh] ${pageCls}`}>
@@ -106,11 +146,37 @@ export function FavoriteEventsPage() {
             <Heart className="h-6 w-6 shrink-0 text-[#14b8a6]" fill="currentColor" aria-hidden />
           </div>
           <p className={`mt-2 text-sm leading-5 ${isDark ? '!text-gray-400' : '!text-gray-500'}`}>
-            Aquí se guardan los eventos que marcaste con el corazón.
+            {user
+              ? 'Aquí se guardan los eventos que marcaste con el corazón.'
+              : 'Inicia sesión para guardar planes y volver a ellos cuando quieras.'}
           </p>
         </section>
 
-        {loading ? (
+        {!user && !authLoading ? (
+          <div className={`rounded-2xl border px-5 py-10 text-center ${panelCls}`}>
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#14b8a6]/12 text-[#14b8a6]">
+              <Heart className="h-10 w-10" strokeWidth={1.5} />
+            </div>
+            <h2
+              className="m-0 text-xl font-bold leading-snug"
+              style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
+            >
+              Guarda lo que te prende 🔥
+            </h2>
+            <p className={`mx-auto mt-3 max-w-md text-sm leading-relaxed ${mutedCls}`}>
+              Inicia sesión para guardar tus eventos favoritos y no perderte de nada.
+            </p>
+            <button
+              type="button"
+              onClick={handleGoogleClick}
+              disabled={googleBusy}
+              className="mx-auto mt-8 flex w-full max-w-sm items-center justify-center gap-3 rounded-2xl bg-[#14b8a6] py-4 pl-5 pr-6 text-base font-semibold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <GoogleLogo className="h-7 w-7 shrink-0" />
+              {googleBusy ? 'Conectando…' : 'Iniciar sesión con Google'}
+            </button>
+          </div>
+        ) : loading ? (
           <div className={`rounded-2xl border px-4 py-6 ${panelCls}`}>
             <p className={`text-sm ${mutedCls}`}>Cargando tus favoritos...</p>
           </div>

@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES_SELECTOR } from '../components/events/index.js'
+import { GuestPreferenceWall } from '../components/layout/GuestPreferenceWall.jsx'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useCategoryVisibility } from '../contexts/CategoryVisibilityContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 
@@ -42,6 +44,7 @@ export function FavoriteCategoriesPage() {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
+  const { user, loading: authLoading } = useAuth()
   const { visibleById, setCategoryVisible } = useCategoryVisibility()
   const [slideOut, setSlideOut] = useState(false)
   const [showCompactTitle, setShowCompactTitle] = useState(false)
@@ -87,6 +90,26 @@ export function FavoriteCategoriesPage() {
 
   function handleToggle(categoryId, enabled) {
     setCategoryVisible(categoryId, !enabled)
+  }
+
+  const mutedCls = isDark ? 'text-gray-400' : 'text-gray-600'
+
+  if (authLoading) {
+    return (
+      <div className={`flex min-h-[100dvh] items-center justify-center ${pageCls}`}>
+        <p className={`text-sm ${mutedCls}`}>Cargando…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <GuestPreferenceWall
+        isDark={isDark}
+        title="Tus categorías favoritas"
+        subtitle="Inicia sesión para elegir qué categorías quieres ver en el inicio."
+      />
+    )
   }
 
   return (

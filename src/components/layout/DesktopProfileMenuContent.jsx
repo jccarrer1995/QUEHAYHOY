@@ -193,15 +193,25 @@ export function DesktopProfileMenuContent({ onClose }) {
 
         <section className="mt-0">
           <SettingsRow isDark={isDark} icon={Compass} label="Explorar" onClick={goExplorar} />
-          <SettingsRow isDark={isDark} icon={Heart} label="Favoritos" onClick={goFavoritos} />
-          <SettingsRow isDark={isDark} icon={MapPin} label="Sectores Favoritos" onClick={goSectores} />
           <SettingsRow
             isDark={isDark}
-            icon={Tags}
-            label="Categorías Favoritas"
-            onClick={goCategorias}
-            withBorder={false}
+            icon={Heart}
+            label="Favoritos"
+            onClick={goFavoritos}
+            withBorder={!user}
           />
+          {user ? (
+            <>
+              <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
+              <SettingsRow
+                isDark={isDark}
+                icon={Tags}
+                label="Categorías favoritas"
+                onClick={goCategorias}
+                withBorder={false}
+              />
+            </>
+          ) : null}
         </section>
         </div>
 

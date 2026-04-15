@@ -1,7 +1,6 @@
 /**
- * Segunda fila de filtros en Explorar: Gratis (toggle) + carrusel de tiempo + acceso a más filtros.
+ * Segunda fila de filtros en Explorar: Gratis (toggle) + carrusel de tiempo.
  */
-import { SlidersHorizontal } from 'lucide-react'
 import { EXPLORE_TIME_CHIPS } from '../../lib/exploreTimeFilters.js'
 
 /**
@@ -10,7 +9,6 @@ import { EXPLORE_TIME_CHIPS } from '../../lib/exploreTimeFilters.js'
  *   onFreeToggle: () => void
  *   timePreset: 'today' | 'tomorrow' | 'weekend' | 'month' | null
  *   onTimePresetChange: (preset: 'today' | 'tomorrow' | 'weekend' | 'month' | null) => void
- *   onOpenMoreFilters?: () => void
  *   isDark: boolean
  * }} props
  */
@@ -19,17 +17,18 @@ export function ExploreSecondaryFiltersBar({
   onFreeToggle,
   timePreset,
   onTimePresetChange,
-  onOpenMoreFilters,
   isDark,
 }) {
   const shell =
     'rounded-2xl border shadow-sm backdrop-blur-[8px] ' +
     (isDark ? 'border-white/10 bg-[#121212]/55' : 'border-black/10 bg-white/55')
 
-  const freeInactive =
-    'border border-black/10 bg-white/40 text-gray-900 hover:bg-white/60 dark:border-white/15 dark:bg-white/5 dark:text-[#E0E0E0] dark:hover:bg-white/10'
-  const freeActive =
-    'border border-[#14b8a6] bg-[#14b8a6] text-white shadow-sm shadow-[#14b8a6]/25 dark:border-[#2dd4bf] dark:bg-[#0d9488] dark:text-white'
+  const freeInactive = isDark
+    ? 'border border-white/15 bg-white/5 text-[#E0E0E0] hover:bg-white/10'
+    : 'border border-gray-400/90 bg-white !text-[#0a0a0a] shadow-sm hover:bg-gray-50'
+  const freeActive = isDark
+    ? 'border border-[#2dd4bf] bg-[#0d9488] text-white shadow-sm'
+    : 'border border-[#14b8a6] bg-[#14b8a6] !text-white shadow-sm shadow-[#14b8a6]/25'
 
   const chipBase =
     'shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition active:scale-[0.98]'
@@ -39,10 +38,6 @@ export function ExploreSecondaryFiltersBar({
   const chipOn = isDark
     ? 'border-[#14b8a6]/80 bg-[#14b8a6]/20 text-[#5eead4]'
     : 'border-[#14b8a6] bg-[#14b8a6]/15 text-[#0f766e]'
-
-  const moreBtn = isDark
-    ? 'border-white/15 text-gray-300 hover:bg-white/10'
-    : 'border-gray-200/80 text-gray-700 hover:bg-white/70'
 
   return (
     <div
@@ -56,8 +51,10 @@ export function ExploreSecondaryFiltersBar({
         aria-pressed={isFreeActive}
         className={`flex shrink-0 items-center gap-1.5 self-center rounded-xl px-3 py-1.5 text-xs font-semibold transition ${isFreeActive ? freeActive : freeInactive}`}
       >
-        <span aria-hidden>🏷️</span>
-        <span>Gratis</span>
+        <span aria-hidden className={isDark ? '' : 'opacity-95'}>
+          🏷️
+        </span>
+        <span className={isFreeActive || isDark ? '' : '!text-[#0a0a0a]'}>Gratis</span>
       </button>
 
       <div
@@ -85,16 +82,6 @@ export function ExploreSecondaryFiltersBar({
             </button>
           )
         })}
-
-        <button
-          type="button"
-          onClick={() => onOpenMoreFilters?.()}
-          className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition ${moreBtn}`}
-          aria-label="Más filtros (próximamente)"
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5 opacity-80" strokeWidth={2} aria-hidden />
-          <span>+ Filtros</span>
-        </button>
       </div>
     </div>
   )

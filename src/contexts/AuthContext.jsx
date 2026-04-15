@@ -97,6 +97,7 @@ async function ensureUserDocument(firebaseUser) {
     displayName: firebaseUser.displayName ?? null,
     photoURL: firebaseUser.photoURL ?? null,
     role: DEFAULT_ROLE,
+    favoriteEventIds: [],
     createdAt: serverTimestamp(),
   })
 }

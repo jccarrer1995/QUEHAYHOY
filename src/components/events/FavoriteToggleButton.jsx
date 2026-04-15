@@ -1,19 +1,28 @@
 import { Heart } from 'lucide-react'
 import { motion, useAnimationControls } from 'framer-motion'
 import { useFavoriteEvents } from '../../contexts/FavoriteEventsContext.jsx'
+import { useAuth } from '../../contexts/AuthContext.jsx'
+import { useFavoriteLoginPrompt } from '../../contexts/FavoriteLoginPromptContext.jsx'
 
 export function FavoriteToggleButton({ eventId, className = '' }) {
+  const { user } = useAuth()
+  const { openFavoriteLoginPrompt } = useFavoriteLoginPrompt()
   const { isFavorite, toggleFavorite } = useFavoriteEvents()
   const controls = useAnimationControls()
   const normalizedId =
     typeof eventId === 'string' || typeof eventId === 'number' ? String(eventId).trim() : ''
   if (!normalizedId) return null
 
-  const active = isFavorite(normalizedId)
+  const active = Boolean(user) && isFavorite(normalizedId)
 
   async function handleToggle(e) {
     e.preventDefault()
     e.stopPropagation()
+
+    if (!user) {
+      openFavoriteLoginPrompt()
+      return
+    }
 
     toggleFavorite(normalizedId)
     await controls.start({

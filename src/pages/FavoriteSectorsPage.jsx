@@ -6,7 +6,9 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext.jsx'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useSectorVisibility } from '../contexts/SectorVisibilityContext.jsx'
+import { GuestPreferenceWall } from '../components/layout/GuestPreferenceWall.jsx'
 import { SECTORS } from '../lib/topSectors.js'
 
 const MotionDiv = motion.div
@@ -41,6 +43,7 @@ export function FavoriteSectorsPage() {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
+  const { user, loading: authLoading } = useAuth()
   const { visibleById, setSectorVisible } = useSectorVisibility()
   const [slideOut, setSlideOut] = useState(false)
   const [showCompactTitle, setShowCompactTitle] = useState(false)
@@ -82,6 +85,26 @@ export function FavoriteSectorsPage() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  const mutedCls = isDark ? 'text-gray-400' : 'text-gray-600'
+
+  if (authLoading) {
+    return (
+      <div className={`flex min-h-[100dvh] items-center justify-center ${pageCls}`}>
+        <p className={`text-sm ${mutedCls}`}>Cargando…</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <GuestPreferenceWall
+        isDark={isDark}
+        title="Tus sectores favoritos"
+        subtitle="Inicia sesión para elegir qué sectores quieres ver en el carrusel del inicio."
+      />
+    )
+  }
 
   return (
     <MotionDiv

@@ -15,6 +15,7 @@ import { FavoriteCategoriesPage } from './pages/FavoriteCategoriesPage.jsx'
 import { ExplorePage } from './pages/ExplorePage.jsx'
 import { CategoryVisibilityProvider } from './contexts/CategoryVisibilityContext.jsx'
 import { FavoriteEventsProvider } from './contexts/FavoriteEventsContext.jsx'
+import { FavoriteLoginPromptProvider } from './contexts/FavoriteLoginPromptContext.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { SectorVisibilityProvider } from './contexts/SectorVisibilityContext.jsx'
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <CategoryVisibilityProvider>
             <FavoriteEventsProvider>
+              <FavoriteLoginPromptProvider>
               <SectorVisibilityProvider>
                 <AppToaster />
                 <Routes>
@@ -47,6 +49,7 @@ createRoot(document.getElementById('root')).render(
                   <Route path="/wp-admin/editar/:eventId" element={<AdminEventForm />} />
                 </Routes>
               </SectorVisibilityProvider>
+              </FavoriteLoginPromptProvider>
             </FavoriteEventsProvider>
           </CategoryVisibilityProvider>
         </AuthProvider>

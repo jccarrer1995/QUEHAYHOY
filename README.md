@@ -52,6 +52,7 @@
 - Conexión a Firestore (colección `events`)
 - Campos mapeados: `title`, `location` → sector, `date`, `capacity_level`, `price`, `image_url`, `slug`, `isVisible`
 - **Login con Google** (`AuthContext`): sesión persistente, documento en `users/{uid}` con rol **Asistente** por defecto, **`signInWithPopup`** en todos los tamaños de pantalla (redirect solo como respaldo si el popup falla); perfil con avatar y cierre de sesión. Detalle: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
+- **Favoritos con sesión**: con usuario autenticado, los IDs favoritos se guardan en Firestore (`users/{uid}.favoriteEventIds`). Sin sesión no se persisten favoritos; la UI invita a iniciar sesión (pantalla `/favoritos`, bottom sheet al tocar el corazón, y muros en rutas de preferencias si alguien entra sin login). Los datos antiguos en `localStorage` (`favoritos_qhhy`) se fusionan una vez al iniciar sesión. Las reglas de Firestore deben permitir que cada usuario actualice su documento en `users`.
 - Hook `useEvents` con `getDocs` para cargar eventos en tiempo real
 - Estados de loading y error en la UI
 
@@ -126,7 +127,7 @@ src/
 │   ├── events/     # carruseles, CategorySelector, SectorSelector, TodaySection…
 │   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig
-├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext, CategoryVisibilityContext, FavoriteEventsContext
+├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext, CategoryVisibilityContext, FavoriteEventsContext, FavoriteLoginPromptContext
 ├── hooks/          # useEvents, useEphemeralNotifications…
 ├── lib/            # topSectors, appVersion, utilidades compartidas
 ├── pages/          # App (home vía ruta /), ProfilePage, FavoriteSectorsPage, FavoriteCategoriesPage, FavoriteEventsPage, EventDetailPage…
@@ -138,7 +139,7 @@ src/
 | Ruta | Descripción |
 |------|-------------|
 | `/` | Home (eventos, categorías, sectores) |
-| `/favoritos` | Página de eventos guardados localmente desde el corazón de las cards |
+| `/favoritos` | Favoritos: con sesión lista eventos marcados con el corazón (Firestore); sin sesión, pantalla de bienvenida e inicio de sesión |
 | `/perfil` | Cuenta, Google, configuración y legales |
 | `/perfil/sectores` | Sectores favoritos: mostrar/ocultar en el carrusel del inicio |
 | `/perfil/categorias` | Categorías favoritas: mostrar/ocultar categorías y eventos relacionados en Home |
@@ -277,6 +278,32 @@ src/
 - **Sectores favoritos (`/perfil/sectores`)**: pantalla con animación desde la derecha; interruptores por sector; preferencias en **`localStorage`** (`quehayhoy-sector-visibility-v1`); lista canónica en **`src/lib/topSectors.js`**; el carrusel «Sectores Top» en home solo muestra sectores activados.
 - Documentación detallada: [`docs/ACTUALIZACIONES-2026-03-28.md`](docs/ACTUALIZACIONES-2026-03-28.md).
 
+### 15) Abril 2026 — Firestore en lectura, safe area iPhone, favoritos con cuenta y Explorar
+
+**Firestore y mensajes “Target ID already exists”**
+
+- El SDK web a veces mostraba ese error en la UI al usar listeners; se redujo el uso de `onSnapshot` donde bastaba lectura puntual.
+- `TodaySection` («Pilas Hoy») y el hook de notificaciones recientes pasan a **`getDocs`** (con reintento breve ante errores transitorios).
+- `useEvents` reintenta la lectura si detecta conflicto de target interno del SDK.
+- Utilidad compartida: `src/lib/firestoreTransientErrors.js` (`isFirestoreTargetIdConflictError`, `delay`).
+
+**Safe area en iPhone (detalle y colecciones)**
+
+- Botón «atrás» / cerrar alineado con `env(safe-area-inset-top)` y márgenes laterales donde aplica en `EventDetailPage`, `EventDetailModal` y `CollectionPage` (hero y barra compacta al hacer scroll).
+
+**Favoritos y autenticación (flujo “Stateful Wall”)**
+
+- Sin sesión: `/favoritos` muestra mensaje **«Guarda lo que te prende 🔥»** y CTA **Iniciar sesión con Google**; el corazón en cards abre un **bottom sheet** (`FavoriteLoginSheet`) en lugar de guardar.
+- Con sesión: favoritos en **`users/{uid}.favoriteEventIds`**; nuevos usuarios reciben el campo al crearse el documento en Auth.
+- **Configuración** en perfil (**Sectores favoritos** / **Categorías favoritas**) solo visible si hay sesión (móvil y menú desktop). Rutas `/perfil/sectores` y `/perfil/categorias` sin sesión muestran `GuestPreferenceWall`.
+- Un solo sheet global: `FavoriteLoginPromptProvider` + `useFavoriteLoginPrompt()`.
+
+**Pantalla Explorar**
+
+- Contraste del botón **Gratis** (modo claro) sobre mapa: texto oscuro forzado y fondo más legible.
+- Eliminado el botón **+ Filtros** (placeholder).
+- Filtro de tiempo por defecto: **Mes** en lugar de Hoy.
+
 ---
 
 ## Despliegue (GitHub Pages)
@@ -294,7 +321,7 @@ Publica el contenido de `dist` mediante **gh-pages**. Añade el dominio público
 ## Próximos pasos sugeridos
 
 - [ ] Autenticación con Apple
-- [ ] Guardar planes/favoritos (requiere login)
-- [ ] Mapa interactivo
+- [x] Guardar planes/favoritos con cuenta (Google + Firestore `favoriteEventIds`)
+- [x] Mapa interactivo (pantalla Explorar con Google Maps; requiere `VITE_GOOGLE_MAPS_API_KEY`)
 - [ ] Notificaciones Push (FCM)
 - [ ] Integración completa con Firestore para categorías y tags

@@ -30,7 +30,7 @@ export function ExplorePage() {
   const [selectedEventId, setSelectedEventId] = useState(null)
   const [isFreeFilter, setIsFreeFilter] = useState(false)
   const [timePreset, setTimePreset] = useState(
-    /** @type {'today' | 'tomorrow' | 'weekend' | 'month' | null} */ ('today')
+    /** @type {'today' | 'tomorrow' | 'weekend' | 'month' | null} */ ('month')
   )
 
   const filteredEvents = useMemo(() => {
@@ -115,7 +115,6 @@ export function ExplorePage() {
         onFreeToggle={() => setIsFreeFilter((v) => !v)}
         timePreset={timePreset}
         onTimePresetChange={setTimePreset}
-        onOpenMoreFilters={() => {}}
       />
 
       <ExploreEventMiniCard

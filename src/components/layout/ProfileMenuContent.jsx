@@ -146,13 +146,15 @@ export function ProfileMenuContent({ className = '' }) {
         )}
       </header>
 
-      <section className="mt-0">
-        <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
-        <SettingsRow isDark={isDark} icon={MapPin} label="Sectores Favoritos" onClick={goSectores} />
-        <SettingsRow isDark={isDark} icon={Tags} label="Categorías Favoritas" onClick={goCategorias} />
-      </section>
+      {user ? (
+        <section className="mt-0">
+          <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
+          <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
+          <SettingsRow isDark={isDark} icon={Tags} label="Categorías favoritas" onClick={goCategorias} />
+        </section>
+      ) : null}
 
-      <section className="mt-8">
+      <section className={`${user ? 'mt-8' : 'mt-0'}`}>
         <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Legal</h2>
         <SettingsRow
           isDark={isDark}
