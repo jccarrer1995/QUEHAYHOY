@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
+import { delay, isFirestoreTargetIdConflictError } from '../lib/firestoreTransientErrors.js'
 import { formatRecurrenceLabel } from '../lib/index.js'
 
 /**
@@ -216,7 +217,17 @@ export function useEvents(category = 'all', sector = 'all') {
         where('active_until', '>=', now)
       )
 
-      Promise.all([getDocs(qUnique), getDocs(qRecurring)])
+      async function fetchBoth() {
+        try {
+          return await Promise.all([getDocs(qUnique), getDocs(qRecurring)])
+        } catch (err) {
+          if (!isFirestoreTargetIdConflictError(err)) throw err
+          await delay(450)
+          return Promise.all([getDocs(qUnique), getDocs(qRecurring)])
+        }
+      }
+
+      fetchBoth()
         .then(([snapUnique, snapRecurring]) => {
           if (cancelled) return
           const byId = new Map()
@@ -234,7 +245,11 @@ export function useEvents(category = 'all', sector = 'all') {
         })
         .catch((err) => {
           if (cancelled) return
-          setError(err.message ?? 'Error al cargar eventos')
+          const msg =
+            err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
+              ? err.message
+              : 'Error al cargar eventos'
+          setError(isFirestoreTargetIdConflictError(err) ? 'Intenta de nuevo en un momento.' : msg)
           setEvents([])
         })
         .finally(() => {

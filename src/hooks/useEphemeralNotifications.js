@@ -3,6 +3,7 @@ import {
   arrayUnion,
   collection,
   doc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -12,6 +13,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
+import { delay, isFirestoreTargetIdConflictError } from '../lib/firestoreTransientErrors.js'
 
 const WINDOW_MS = 24 * 60 * 60 * 1000
 const MAX_ITEMS = 10
@@ -115,26 +117,39 @@ export function useEphemeralNotifications(userId) {
       limit(MAX_ITEMS)
     )
 
-    const unsub = onSnapshot(
-      qRecent,
-      (snap) => {
-        const list = snap.docs.map(mapRecentDoc)
-        queueMicrotask(() => {
-          setRecentEvents(list)
-          setEventsLoading(false)
-          setEventsError(null)
-        })
-      },
-      (err) => {
-        queueMicrotask(() => {
-          setEventsError(err?.message ?? 'Error al escuchar eventos recientes')
-          setRecentEvents([])
-          setEventsLoading(false)
-        })
-      }
-    )
+    let cancelled = false
 
-    return () => unsub()
+    async function loadRecent() {
+      try {
+        let snap
+        try {
+          snap = await getDocs(qRecent)
+        } catch (err) {
+          if (cancelled) return
+          if (!isFirestoreTargetIdConflictError(err)) throw err
+          await delay(450)
+          snap = await getDocs(qRecent)
+        }
+        if (cancelled) return
+        const list = snap.docs.map(mapRecentDoc)
+        setRecentEvents(list)
+        setEventsError(null)
+      } catch (err) {
+        if (cancelled) return
+        if (!isFirestoreTargetIdConflictError(err)) {
+          setEventsError(err?.message ?? 'Error al cargar eventos recientes')
+        }
+        setRecentEvents([])
+      } finally {
+        if (!cancelled) setEventsLoading(false)
+      }
+    }
+
+    void loadRecent()
+
+    return () => {
+      cancelled = true
+    }
   }, [oneDayAgo])
 
   useEffect(() => {

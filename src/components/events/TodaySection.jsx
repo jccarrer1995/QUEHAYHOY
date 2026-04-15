@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../config/firebaseConfig'
+import { delay, isFirestoreTargetIdConflictError } from '../../lib/firestoreTransientErrors.js'
 import { useCategoryVisibility } from '../../contexts/CategoryVisibilityContext.jsx'
 import { useSectorVisibility } from '../../contexts/SectorVisibilityContext.jsx'
 import { filterEventsByCategoryVisibility } from '../../lib/favoriteCategories.js'
@@ -103,8 +104,7 @@ export function TodaySection({ isDark = false, activeSector = 'all', searchQuery
       return () => {}
     }
 
-    setLoading(true)
-    setError(null)
+    let cancelled = false
 
     const now = new Date()
     const startOfDay = new Date(now)
@@ -115,35 +115,63 @@ export function TodaySection({ isDark = false, activeSector = 'all', searchQuery
     const todayWeekday = now.getDay()
     const qVisible = query(collection(db, 'events'), where('isVisible', '==', true))
 
-    const unsubVisible = onSnapshot(
-      qVisible,
-      (snapshot) => {
-        const filtered = snapshot.docs
-          .map((doc) => ({ id: doc.id, data: doc.data() }))
-          .filter(({ data }) => {
-            const type = data.type ?? data.eventType ?? 'unique'
-            if (type === 'recurring') {
-              const recurrenceDay = Number(data.recurrence_day)
-              const activeUntilMs = toMs(data.active_until)
-              return recurrenceDay === todayWeekday && (Number.isNaN(activeUntilMs) || activeUntilMs >= now.getTime())
+    function applySnapshot(snapshot) {
+      return snapshot.docs
+        .map((doc) => ({ id: doc.id, data: doc.data() }))
+        .filter(({ data }) => {
+          const type = data.type ?? data.eventType ?? 'unique'
+          if (type === 'recurring') {
+            const recurrenceDay = Number(data.recurrence_day)
+            const activeUntilMs = toMs(data.active_until)
+            return recurrenceDay === todayWeekday && (Number.isNaN(activeUntilMs) || activeUntilMs >= now.getTime())
+          }
+
+          const dateMs = toMs(data.date)
+          return dateMs >= startOfDay.getTime() && dateMs < endOfDay.getTime()
+        })
+        .map(({ id, data }) => mapDocToEvent({ id, data: () => data }))
+    }
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const snapshot = await getDocs(qVisible)
+        if (cancelled) return
+        setRawTodayEvents(applySnapshot(snapshot))
+      } catch (err) {
+        if (cancelled) return
+        if (isFirestoreTargetIdConflictError(err)) {
+          try {
+            await delay(450)
+            const snapshot = await getDocs(qVisible)
+            if (cancelled) return
+            setRawTodayEvents(applySnapshot(snapshot))
+          } catch (err2) {
+            if (!cancelled) {
+              setError(
+                isFirestoreTargetIdConflictError(err2)
+                  ? 'No se pudieron cargar los eventos de hoy. Intenta actualizar la página.'
+                  : err2?.message ?? 'No se pudo cargar eventos de hoy'
+              )
             }
-
-            const dateMs = toMs(data.date)
-            return dateMs >= startOfDay.getTime() && dateMs < endOfDay.getTime()
-          })
-          .map(({ id, data }) => mapDocToEvent({ id, data: () => data }))
-
-        setRawTodayEvents(filtered)
-        setLoading(false)
-      },
-      (err) => {
-        setError(err?.message ?? 'No se pudo cargar eventos de hoy')
-        setLoading(false)
+          }
+        } else {
+          setError(
+            isFirestoreTargetIdConflictError(err)
+              ? 'No se pudieron cargar los eventos de hoy. Intenta actualizar la página.'
+              : err?.message ?? 'No se pudo cargar eventos de hoy'
+          )
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
       }
-    )
+    }
+
+    void load()
 
     return () => {
-      unsubVisible()
+      cancelled = true
     }
   }, [])
 
