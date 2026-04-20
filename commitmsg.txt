@@ -1,3 +1,0 @@
-feat(admin): aplicar permisos por rol y flujo de mis eventos
-
-Se implementa gestión por roles para que organizadores vean y editen solo sus eventos, mientras administradores mantienen visibilidad global. También se incorpora el catálogo de Mis eventos con cuota para organizador y se actualiza la documentación del proyecto por funcionalidades.
