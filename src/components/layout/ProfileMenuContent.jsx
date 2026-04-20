@@ -1,7 +1,7 @@
 /**
  * Contenido de cuenta / perfil para la página `/perfil`.
  */
-import { MapPin, Tags, ChevronRight, FileText, Lock, Info, LogOut } from 'lucide-react'
+import { MapPin, Tags, ChevronRight, FileText, Lock, Info, LogOut, CalendarDays } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LegalBottomSheet } from '../legal'
@@ -11,6 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { useProfileGoogleSignIn } from './useProfileGoogleSignIn.js'
+import { canManageEventsRole } from '../../lib/organizerPlans.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -67,7 +68,8 @@ export function ProfileMenuContent({ className = '' }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, beginGoogleRedirect, user, logout } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user, logout, role } = useAuth()
+  const canManageEvents = canManageEventsRole(role)
   const displayUser = useAuthUserForProfileHeader(user)
   const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
   const safeAreaTopStyle = { paddingTop: 'env(safe-area-inset-top, 0px)' }
@@ -112,6 +114,10 @@ export function ProfileMenuContent({ className = '' }) {
     navigate('/perfil/categorias')
   }
 
+  function goMisEventos() {
+    navigate('/mis-eventos')
+  }
+
   const body = (
     <>
       <header className="flex flex-col items-center pt-6 md:pt-4">
@@ -149,6 +155,14 @@ export function ProfileMenuContent({ className = '' }) {
       {user ? (
         <section className="mt-0">
           <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
+          {canManageEvents ? (
+            <SettingsRow
+              isDark={isDark}
+              icon={CalendarDays}
+              label="Mis eventos"
+              onClick={goMisEventos}
+            />
+          ) : null}
           <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
           <SettingsRow isDark={isDark} icon={Tags} label="Categorías favoritas" onClick={goCategorias} />
         </section>

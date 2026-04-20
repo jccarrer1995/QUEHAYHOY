@@ -149,3 +149,84 @@ html.dark .qh-event-map-marker-label {
     0 0 6px rgba(0, 0, 0, 0.85),
     0 1px 3px rgba(0, 0, 0, 0.75);
 }
+
+/* Admin / crear evento: inputs nativos date/time respetan el ancho del contenedor */
+.qh-event-datetime-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+input.qh-event-datetime[type='date'],
+input.qh-event-datetime[type='time'] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+input.qh-event-datetime[type='date']::-webkit-calendar-picker-indicator,
+input.qh-event-datetime[type='time']::-webkit-calendar-picker-indicator {
+  margin-inline-end: 0;
+  flex-shrink: 0;
+}
+
+input.qh-event-datetime[type='date']::-webkit-datetime-edit-fields-wrapper,
+input.qh-event-datetime[type='time']::-webkit-datetime-edit-fields-wrapper {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Móvil: Chrome/Android e iOS suelen forzar ancho mínimo del control interno */
+@media (max-width: 767.98px) {
+  .qh-event-datetime-shell {
+    /* refuerza que el clip sea respecto al padre, no al viewport */
+    position: relative;
+    isolation: isolate;
+  }
+
+  input.qh-event-datetime[type='date'],
+  input.qh-event-datetime[type='time'] {
+    font-size: 16px;
+    line-height: 1.25;
+    max-width: 100%;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+
+  input.qh-event-datetime[type='date']::-webkit-datetime-edit,
+  input.qh-event-datetime[type='time']::-webkit-datetime-edit {
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+  }
+
+  input.qh-event-datetime[type='date']::-webkit-datetime-edit-fields-wrapper,
+  input.qh-event-datetime[type='time']::-webkit-datetime-edit-fields-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  input.qh-event-datetime[type='date']::-webkit-datetime-edit-year-field,
+  input.qh-event-datetime[type='date']::-webkit-datetime-edit-month-field,
+  input.qh-event-datetime[type='date']::-webkit-datetime-edit-day-field {
+    min-width: 0;
+    padding: 0 1px;
+  }
+
+  input.qh-event-datetime[type='time']::-webkit-datetime-edit-hour-field,
+  input.qh-event-datetime[type='time']::-webkit-datetime-edit-minute-field,
+  input.qh-event-datetime[type='time']::-webkit-datetime-edit-ampm-field {
+    min-width: 0;
+    padding: 0 1px;
+  }
+}

@@ -8,10 +8,11 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { auth, db, missingFirebaseEnvKeys } from '../firebaseConfig.js'
 import { shouldUseGoogleRedirect } from '../lib/shouldUseGoogleRedirect.js'
+import { getOrganizerPlan, ROLE_ORGANIZADOR } from '../lib/organizerPlans.js'
 
 const FIREBASE_AUTH_SETUP_MSG =
   'En Firebase Console: abre Authentication y pulsa "Comenzar" si aún no está activo; en la pestaña "Sign-in method" habilita el proveedor Google. En Google Cloud, la API "Identity Toolkit API" debe estar habilitada para el proyecto (suele activarse al usar Auth).'
@@ -63,18 +64,25 @@ function notifyGoogleRedirectFailure(err) {
 }
 
 /**
- * @typedef {{ role: string, photoURL: string | null, displayName: string | null }} UserProfile
+ * @typedef {{
+ *   role: string
+ *   photoURL: string | null
+ *   displayName: string | null
+ *   activePlan: import('../lib/organizerPlans.js').OrganizerPlanDefinition | null
+ * }} UserProfile
  */
 
 const AuthContext = createContext({
   user: null,
   profile: null,
   role: null,
+  activePlan: null,
   photoURL: null,
   displayName: null,
   loading: true,
   signInWithGoogle: async () => {},
   beginGoogleRedirect: () => {},
+  upgradeToOrganizerPlan: async () => {},
   signOut: async () => {},
   logout: async () => {},
 })
@@ -117,7 +125,24 @@ async function fetchUserProfile(uid) {
   const photoURL = typeof d.photoURL === 'string' ? d.photoURL : null
   const displayName = typeof d.displayName === 'string' ? d.displayName : null
 
-  return { role, photoURL, displayName }
+  /** @type {UserProfile['activePlan']} */
+  let activePlan = null
+  const raw = d.activePlan
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const planId = typeof raw.planId === 'string' ? raw.planId : ''
+    const def = getOrganizerPlan(planId)
+    if (def) {
+      activePlan = {
+        id: def.id,
+        label: def.label,
+        maxEventsPerMonth: def.maxEventsPerMonth,
+        priceUsd: def.priceUsd,
+        trialMonths: def.trialMonths,
+      }
+    }
+  }
+
+  return { role, photoURL, displayName, activePlan }
 }
 
 export function AuthProvider({ children }) {
@@ -357,20 +382,53 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }, [])
 
+  /**
+   * Activa rol organizador y guarda el plan elegido en `users/{uid}`.
+   * @param {string} planId - `basic` | `pro`
+   */
+  const upgradeToOrganizerPlan = useCallback(
+    async (planId) => {
+      if (!db || !user?.uid) {
+        throw new Error('Debes iniciar sesión para continuar.')
+      }
+      const plan = getOrganizerPlan(planId)
+      if (!plan) {
+        throw new Error('Plan no válido.')
+      }
+      const ref = doc(db, USERS_COLLECTION, user.uid)
+      await updateDoc(ref, {
+        role: ROLE_ORGANIZADOR,
+        activePlan: {
+          planId: plan.id,
+          label: plan.label,
+          maxEventsPerMonth: plan.maxEventsPerMonth,
+          priceUsd: plan.priceUsd,
+          trialMonths: plan.trialMonths,
+          updatedAt: serverTimestamp(),
+        },
+      })
+      const p = await fetchUserProfile(user.uid)
+      setProfile(p)
+    },
+    [user]
+  )
+
   const value = useMemo(
     () => ({
       user,
       profile,
       role: profile?.role ?? null,
+      activePlan: profile?.activePlan ?? null,
       photoURL: profile?.photoURL ?? user?.photoURL ?? null,
       displayName: profile?.displayName ?? user?.displayName ?? null,
       loading,
       signInWithGoogle,
       beginGoogleRedirect,
+      upgradeToOrganizerPlan,
       signOut: logout,
       logout,
     }),
-    [user, profile, loading, signInWithGoogle, beginGoogleRedirect, logout]
+    [user, profile, loading, signInWithGoogle, beginGoogleRedirect, upgradeToOrganizerPlan, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

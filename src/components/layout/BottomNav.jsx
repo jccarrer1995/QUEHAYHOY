@@ -1,13 +1,17 @@
 /**
- * BottomNav - Navegación inferior móvil: Inicio, Explorar, Favoritos, Perfil
+ * BottomNav - Navegación inferior móvil: Inicio, Explorar, (Mis eventos si gestiona eventos), Favoritos, Perfil
  */
-import { Heart as HeartIcon } from 'lucide-react'
+import { CalendarDays, Heart as HeartIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext'
+import { canManageEventsRole } from '../../lib/organizerPlans.js'
 
 export function BottomNav({ activeTab = 'home', onTabChange }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
+  const { role } = useAuth()
+  const canManageEvents = canManageEventsRole(role)
   const isDark = theme === 'dark'
   const accentCl = 'text-[#14b8a6]'
   const mutedCl = 'text-gray-400'
@@ -16,12 +20,52 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
     paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   }
 
-  const items = [
-    { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
-    { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
-    { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
-    { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
-  ]
+  const items = canManageEvents
+    ? [
+        { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
+        { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
+        {
+          id: 'myEvents',
+          label: 'Mis Eventos',
+          icon: CalendarDaysIcon,
+          active: activeTab === 'myEvents',
+        },
+        { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
+        { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
+      ]
+    : [
+        { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
+        { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
+        { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
+        { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
+      ]
+
+  function handleItemClick(id) {
+    if (id === 'home') {
+      navigate('/')
+      onTabChange?.('home')
+      return
+    }
+    if (id === 'explore') {
+      navigate('/explorar')
+      onTabChange?.('explore')
+      return
+    }
+    if (id === 'myEvents') {
+      navigate('/mis-eventos')
+      onTabChange?.('myEvents')
+      return
+    }
+    if (id === 'favorites') {
+      navigate('/favoritos')
+      onTabChange?.('favorites')
+      return
+    }
+    if (id === 'profile') {
+      navigate('/perfil')
+      onTabChange?.('profile')
+    }
+  }
 
   return (
     <nav
@@ -30,45 +74,35 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
       }`}
       style={safeAreaDockStyle}
     >
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-stretch justify-between gap-0 px-1 py-2">
         {items.map((item) => {
           const Icon = item.icon
           return (
             <button
               key={item.id}
               type="button"
-              onClick={() => {
-                if (item.id === 'home') {
-                  navigate('/')
-                  onTabChange?.(item.id)
-                  return
-                }
-                if (item.id === 'profile') {
-                  navigate('/perfil')
-                  onTabChange?.(item.id)
-                  return
-                }
-                if (item.id === 'favorites') {
-                  navigate('/favoritos')
-                  onTabChange?.(item.id)
-                  return
-                }
-                if (item.id === 'explore') {
-                  navigate('/explorar')
-                  onTabChange?.(item.id)
-                  return
-                }
-              }}
-              className="flex flex-col items-center gap-1 py-2 px-3"
+              onClick={() => handleItemClick(item.id)}
+              className="flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2"
             >
-              <Icon className={`w-6 h-6 ${item.active ? accentCl : mutedCl}`} />
-              <span className={`text-xs ${item.active ? accentCl : mutedCl}`}>{item.label}</span>
+              <Icon className={`h-6 w-6 shrink-0 ${item.active ? accentCl : mutedCl}`} />
+              <span
+                className={`max-w-full text-center text-[11px] leading-tight sm:text-xs ${
+                  item.active ? accentCl : mutedCl
+                }`}
+              >
+                {item.label}
+              </span>
             </button>
           )
         })}
       </div>
     </nav>
   )
+}
+
+/** Mismo trazo que otros íconos del dock (lucide stroke 2) */
+function CalendarDaysIcon({ className }) {
+  return <CalendarDays className={className} strokeWidth={2} aria-hidden />
 }
 
 function HomeIcon({ className }) {

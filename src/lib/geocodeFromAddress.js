@@ -2,39 +2,52 @@
  * Geocodificación en el navegador con Maps JavaScript API (Geocoder).
  * Requiere `VITE_GOOGLE_MAPS_API_KEY` y la API **Geocoding** habilitada en Google Cloud.
  */
-import { Loader } from '@googlemaps/js-api-loader'
+import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 
 /** @type {Promise<void> | null} */
-let loadPromise = null
+let loadGeocodingPromise = null
+
+/** Si ya aplicamos `setOptions` en esta sesión (v2 solo debería configurarse una vez). */
+let optionsConfigured = false
 
 /**
  * @param {string} apiKey
  * @returns {Promise<void>}
  */
-function ensureGoogleMapsLoaded(apiKey) {
+async function ensureGeocodingLoaded(apiKey) {
   if (typeof window === 'undefined') {
     return Promise.reject(new Error('La geocodificación solo está disponible en el navegador.'))
   }
   if (!apiKey) {
     return Promise.reject(new Error('Configura VITE_GOOGLE_MAPS_API_KEY en tu archivo .env.'))
   }
+
   if (window.google?.maps?.Geocoder) {
-    return Promise.resolve()
+    return undefined
   }
-  if (!loadPromise) {
-    const loader = new Loader({
-      apiKey,
-      version: 'weekly',
-      language: 'es',
-      region: 'EC',
-      id: 'qh-geocoder-loader',
-    })
-    loadPromise = loader.load().catch((err) => {
-      loadPromise = null
+
+  if (!loadGeocodingPromise) {
+    loadGeocodingPromise = (async () => {
+      if (!optionsConfigured) {
+        setOptions({
+          key: apiKey,
+          v: 'weekly',
+          language: 'es',
+          region: 'EC',
+        })
+        optionsConfigured = true
+      }
+      await importLibrary('geocoding')
+      if (!window.google?.maps?.Geocoder) {
+        throw new Error('No se pudo inicializar el geocodificador de Google Maps.')
+      }
+    })().catch((err) => {
+      loadGeocodingPromise = null
       throw err
     })
   }
-  return loadPromise
+
+  await loadGeocodingPromise
 }
 
 /**
@@ -48,9 +61,10 @@ export async function geocodeAddressString(addressQuery) {
   }
 
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() ?? ''
-  await ensureGoogleMapsLoaded(apiKey)
+  await ensureGeocodingLoaded(apiKey)
 
-  const geocoder = new window.google.maps.Geocoder()
+  const GeocoderCtor = window.google.maps.Geocoder
+  const geocoder = new GeocoderCtor()
 
   return new Promise((resolve, reject) => {
     geocoder.geocode({ address: trimmed }, (results, status) => {

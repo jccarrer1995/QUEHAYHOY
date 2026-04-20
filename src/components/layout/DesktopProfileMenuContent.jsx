@@ -2,7 +2,7 @@
  * Menú de cuenta exclusivo para desktop (drawer del botón hamburguesa).
  * Intencionalmente separado de `ProfileMenuContent` para desacoplar desktop de `/perfil`.
  */
-import { Compass, Heart, LogOut, MapPin, Tags, X } from 'lucide-react'
+import { Compass, Heart, LogOut, MapPin, Tags, X, CalendarDays } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
@@ -11,6 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
+import { canManageEventsRole } from '../../lib/organizerPlans.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -72,7 +73,8 @@ export function DesktopProfileMenuContent({ onClose }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, beginGoogleRedirect, user, logout } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user, logout, role } = useAuth()
+  const canManageEvents = canManageEventsRole(role)
   const displayUser = useAuthUserForProfileHeader(user)
   const [googleBusy, setGoogleBusy] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
@@ -141,6 +143,11 @@ export function DesktopProfileMenuContent({ onClose }) {
     onClose?.()
   }
 
+  function goMisEventos() {
+    navigate('/mis-eventos')
+    onClose?.()
+  }
+
   return (
     <div className={`flex h-full min-h-0 flex-1 flex-col ${drawerBg}`}>
       <div className={`flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 ${borderBar} ${drawerBg}`}>
@@ -202,6 +209,9 @@ export function DesktopProfileMenuContent({ onClose }) {
           />
           {user ? (
             <>
+              {canManageEvents ? (
+                <SettingsRow isDark={isDark} icon={CalendarDays} label="Mis eventos" onClick={goMisEventos} />
+              ) : null}
               <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
               <SettingsRow
                 isDark={isDark}

@@ -5,6 +5,7 @@ import { useTheme } from './contexts/ThemeContext.jsx'
 import { useSectorVisibility } from './contexts/SectorVisibilityContext.jsx'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, Footer } from './components/layout'
+import { OrganizerPromoBanner } from './components/organizer/OrganizerPromoBanner.jsx'
 import { HomeStartupSplash } from './components/layout/HomeStartupSplash.jsx'
 import {
   EventCardCarousel,
@@ -271,6 +272,8 @@ function App() {
             </button>
           </div>
         </section>
+
+        <OrganizerPromoBanner isDark={isDark} />
 
       </main>
 

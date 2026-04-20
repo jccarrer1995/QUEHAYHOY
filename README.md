@@ -156,160 +156,75 @@ src/
 
 ---
 
-## Actualizaciones recientes
+## Funcionalidades implementadas (en orden)
 
-### 1) Favoritos locales, categorías favoritas y navegación (08/04/2026)
-- **Favoritos locales**: se añadió un sistema de favoritos en cliente con `localStorage` usando la clave `favoritos_qhhy`, sin requerir autenticación.
-- **Cards de eventos**: `EventCard` y `EventCardCarousel` ahora muestran un corazón en la esquina superior derecha con estado `outline`/relleno, color de acento y micro-interacción al presionarlo.
-- **Nueva página `/favoritos`**: se creó `FavoriteEventsPage` para listar eventos guardados localmente; en móvil mantiene `BottomNav` visible y activa el tab de favoritos.
-- **Bottom navigation**: el item **Favoritos** del menú inferior ahora abre una vista real y usa icono de corazón.
-- **Menú de perfil**: se añadió **Categorías Favoritas** en móvil y desktop, y **Favoritos** del menú desktop también navega a la nueva página.
-- **Categorías favoritas**: se añadió `CategoryVisibilityContext` y la ruta `/perfil/categorias`; las categorías arrancan activadas por defecto y, al desactivarlas, desaparecen sus chips y eventos del Home, `Pilas Hoy` y colecciones.
-- **Sectores favoritos**: se refinó la cabecera de la pantalla para una experiencia más compacta y con comportamiento de título dinámico al hacer scroll.
-- **Documentación de entorno**: se actualizó el README con requisitos de Node para la versión actual de Vite y notas de mantenimiento de dependencias.
+### 1) Descubrimiento de eventos
+- Home con secciones de descubrimiento y filtros por categorías/sectores.
+- Bloque “¿No sabes a dónde ir?” con selección aleatoria de evento.
+- Sección “Más eventos” para no perder contenido fuera de los bloques principales.
 
-### 2) Ajustes del 06/04/2026
-- **Slugs para eventos**: se implementó `src/lib/slug.js` para generar slugs únicos, construir rutas amigables y compartir URLs públicas consistentes.
-- **Rutas nuevas**: el detalle de evento ya soporta `/evento/:categoria/:slug` y mantiene fallback por ID para eventos antiguos.
-- **Admin**: al crear o editar eventos desde `AdminEventForm`, ahora también se genera y persiste el campo `slug`.
-- **Filtros del home**: los sectores favoritos ahora afectan tanto a los chips visibles como a los eventos mostrados en Home, `Pilas Hoy` y colecciones.
-- **Buscador + Pilas Hoy**: el buscador principal del home ya filtra también los eventos de `TodaySection`.
-- **Desktop menu**: se desacopló el contenido del menú hamburguesa respecto a la página de perfil con `DesktopProfileMenuContent`.
-- **Footer desktop**: se añadió footer editorial con enlaces legales y layout estable en desktop.
-- **Legales desktop**: se añadieron páginas semánticas para términos, privacidad y acerca de la app.
-- **Contraste UI**: se corrigieron títulos y subtítulos que se perdían sobre fondo blanco en perfil, sectores favoritos y legales.
-- **Imágenes**: se mejoró la carga y fallback de imágenes en cards y colecciones especiales.
-- Documentación detallada: [`docs/ACTUALIZACIONES-2026-04-06.md`](docs/ACTUALIZACIONES-2026-04-06.md).
+### 2) Detalle de evento y rutas públicas
+- Detalle en página dedicada con carga por documento y estados de `loading/error`.
+- URLs amigables con slug: `/evento/:categoria/:slug`.
+- Compatibilidad con eventos legacy por ID: `/evento/:id`.
+- Acciones en detalle: abrir en Google Maps y compartir por WhatsApp.
 
-### 3) Dependencias y seguridad
-- Se actualizaron dependencias transitivas vulnerables detectadas por `npm audit`.
-- Estado validado: `0 vulnerabilities` tras la actualización del lockfile.
-- Requisito de entorno confirmado para compilar con la versión actual de Vite: `Node 20.19+` o `22.12+`.
+### 3) Gestión de favoritos y preferencias
+- Favoritos con corazón en cards (`EventCard`, `EventCardCarousel`) y vista `/favoritos`.
+- Sin sesión: flujo guiado a login (wall + bottom sheet de autenticación).
+- Con sesión: favoritos persistidos en `users/{uid}.favoriteEventIds`.
+- Preferencias de sectores/categorías desde perfil con persistencia y efecto en Home.
 
-### 4) Detalle de evento por ruta dinámica
-- Se migró de modal a página dedicada de detalle: `\/evento\/:id`.
-- Nueva página `EventDetailPage` con carga de un solo documento (`getDoc`) y estados de loading/error.
-- Mejoras de UI mobile-first: imagen de cabecera, panel superpuesto, bloque de información, CTA fijo y contraste optimizado de textos.
+### 4) Autenticación y perfil
+- Google Sign-In integrado con Firebase Auth, sesión persistente y restauración de ruta tras OAuth.
+- Creación/actualización de documento de usuario en `users/{uid}`.
+- Menús de perfil móviles y desktop con resumen de usuario y cierre de sesión.
+- Secciones legales integradas en perfil y rutas semánticas en desktop.
 
-### 5) Acciones en detalle
-- Botón **Abrir en Google Maps** con dirección del evento.
-- Botón **Enviar por WhatsApp** con mensaje persuasivo (evento, sector, precio y URL actual), codificado con `encodeURIComponent`.
-- Feedback táctil con `whileTap` en botones de acción y navegación.
+### 5) Admin de eventos (CRUD)
+- Dashboard admin en `/wp-admin` con tabla paginada.
+- Crear, editar, eliminar y alternar visibilidad (`isVisible`) de eventos.
+- Formulario de admin con validaciones de título, descripción y fechas.
+- Soporte de imagen con Cloudinary y generación de `slug` único.
 
-### 6) Home y descubrimiento
-- Se añadió sección final **“¿No sabes a dónde ir?”** con CTA **“¡Sorpréndeme! 🔥”**.
-- Al hacer click, se selecciona un evento activo aleatorio y se abre su detalle.
+### 6) Modelo de roles y permisos de gestión
+- Rol `organizador`: gestiona solo sus eventos (`createdByUid`) y aplica cuota por plan.
+- Rol `administrador`: acceso de gestión global y visibilidad de todos los eventos.
+- Guard de rutas (`RequireOrganizador`) habilita acceso a organizador y administrador.
+- En edición, un organizador no puede modificar eventos de otro usuario.
+- Eventos legacy sin `createdByUid`: solo administrador puede editarlos.
 
-### 7) Firestore, estructura de datos y rendimiento
-- Consulta de eventos adaptada al modelo **unique / recurring**:
-  - `type == 'unique'` con `endDate >= now`
-  - `type == 'recurring'` con `active_until >= now`
-- Filtro global de visibilidad en Home: solo eventos con `isVisible == true`.
-- Orden de eventos en Home: únicos por proximidad y luego recurrentes.
-- Se añadió `firestore.indexes.json` para soportar consultas con campos de visibilidad/tipo/fecha.
-- Firestore configurado con `persistentLocalCache` y soporte multi-tab para cache offline consistente.
+### 7) Mis eventos y cuota mensual
+- Ruta `/mis-eventos` para gestión de catálogo según rol:
+  - Administrador: lista global.
+  - Organizador: solo eventos propios.
+- Ruta `/mis-eventos/crear` para alta de nuevos eventos.
+- Cuota mensual mostrada únicamente para organizador con plan activo.
 
-### 8) Admin completo (CRUD)
-- Se creó dashboard admin con tabla paginada de eventos (`/wp-admin`).
-- Acciones disponibles:
-  - Crear (`/wp-admin/nuevo`)
-  - Editar (`/wp-admin/editar/:eventId`)
-  - Eliminar
-  - Activar/Desactivar visibilidad (`isVisible`) con toggle en tiempo real (`updateDoc`).
-- Indicadores visuales de estado:
-  - Filas opacas si evento está inactivo
-  - Eventos vencidos con estilo diferenciado y badge **Vencido**.
-- Validaciones de formulario (crear/editar):
-  - Título obligatorio y máximo 50 caracteres
-  - Descripción máximo 250 caracteres
-  - `endDate` en eventos únicos (Timestamp) y validación de fecha fin >= fecha inicio
-  - Notifier inferior para mostrar errores sin perder contexto.
+### 8) Pantalla Explorar con mapa
+- Integración de Google Maps con marcadores por categoría.
+- Etiquetas de eventos junto al pin (con umbral de zoom configurable).
+- Mini card inferior con resumen del evento seleccionado y acceso a detalle.
+- Requiere `VITE_GOOGLE_MAPS_API_KEY`.
 
-### 9) Navegación móvil y estados “En desarrollo”
-- Se ajustó visualmente el icono de **Crear Plan** para que sea consistente con el resto.
-- Para botones sin página (Explorar, Crear Plan, Perfil), se agregaron toasts de **En Desarrollo** con mensajes personalizados.
-- Se añadió `AppToaster` global con estilos adaptados a modo claro/oscuro y acento esmeralda.
+### 9) Firestore: consultas, rendimiento y resiliencia
+- Consultas adaptadas al modelo `unique/recurring` y visibilidad (`isVisible`).
+- Índices en `firestore.indexes.json` para soportar consultas compuestas.
+- Cache local persistente y soporte multi-tab.
+- Manejo de errores transitorios de Firestore en lecturas críticas.
 
-### 10) Librerías instaladas hoy
-- **`framer-motion`**: animaciones y microinteracciones (entradas suaves y feedback táctil).
-- **`sonner`**: sistema de toasts elegante y configurable por tema.
+### 10) UI/UX transversal
+- Mobile-first con soporte desktop.
+- Modo claro/oscuro consistente en componentes y pantallas clave.
+- Safe area en iPhone para headers/acciones en pantallas de detalle y colecciones.
+- Toaster global para feedback contextual.
 
-### 11) Actualizaciones 18/03/2025
-- **Cloudinary**: Subida de imágenes desde admin; preset `quehayhoy_images`; fallback URL.
-- **Sectores**: Kennedy, Bellavista, Malecón del Salado, Centro, Alborada.
-- **Categoría**: Videojuegos 🎮
-- **Popularidad**: Sistema de fueguitos (1-3); secciones Destacados (pop 3), Gratis y Bacán, No te lo puedes perder.
-- **Badge conceptual**: MASIVO, FERIA, PROMO, SOCIAL con colores dinámicos.
-- **Precio**: Formato $5 para enteros, $26.50 para decimales.
-- Ver detalle completo en [`docs/ACTUALIZACIONES-2025-03-18.md`](docs/ACTUALIZACIONES-2025-03-18.md).
+## Pendiente para completar
 
-### 12) Actualizaciones recientes (notificaciones, sectores y Home)
-- **Campana funcional en `Navbar`**:
-  - Panel desplegable con título **“Nuevos Planes (Últimos 30m)”**.
-  - Badge dinámico con conteo de no leídos.
-  - Lista limitada de eventos recientes y tiempo relativo en español (**`date-fns`** + locale `es`).
-- **Lógica efímera en tiempo real**:
-  - Nuevo hook `useEphemeralNotifications` con `onSnapshot` a eventos recientes (`createdAt` en ventana de 30 min).
-  - Estado leído/no leído:
-    - Sin login: guardado en `sessionStorage`.
-    - Con login (cuando se active): preparado para `usuarios/{uid}.vistos`.
-- **Interacción de notificaciones**:
-  - Al hacer click en una notificación se marca como vista y se abre detalle en modal sin cambiar de ruta.
-  - Nuevo componente `EventDetailModal` con imagen, descripción, ubicación, precio, CTA de Maps y WhatsApp.
-- **Ajustes visuales de campana y dropdown**:
-  - Hover restaurado con fondo oscuro en modo dark.
-  - Contraste corregido en títulos de eventos dentro del panel para que no se pierdan sobre fondos claros/oscuros.
-- **Nuevo sector `La Joya`**:
-  - Añadido en `SectorSelector`, en mapeos de filtros (`useEvents`) y en utilidades de admin (`eventAdminUtils`).
-  - Imagen de sector actualizada y fallback visual si la URL externa falla (`SectorRoundImage`).
-- **Mejoras de visibilidad en Home**:
-  - Sección **Eventos Destacados** se oculta automáticamente si no hay eventos destacados (manteniendo loading/error).
-  - Se añadió sección **Más eventos** para no perder eventos que no entran en los 3 bloques principales.
-  - Criterio de **Gratis y Bacán** ampliado: ahora incluye precio `0`, `'0'`, vacío o `null`.
-
-### 13) Autenticación Google, perfil y despliegue (abril 2026)
-
-- **Google Sign-In**: validación estricta de variables Firebase; **`signInWithPopup`** unificado (móvil y desktop), con `signInWithRedirect` solo como respaldo ante popup bloqueado / entorno no soportado; `beginGoogleRedirect()` disponible para un posible redirect explícito; restauración de ruta tras OAuth (`sessionStorage`); `auth.authStateReady()` + `getRedirectResult` antes del listener; toast ante `auth/unauthorized-domain` (p. ej. IP de LAN no registrada en Firebase).
-- **Dominios autorizados**: obligatorio añadir el hostname si accedes por `http://192.168.x.x:5173` (Vite con `host: true`) o por GitHub Pages.
-- **UI**: `ProfileSignedInSummary` (avatar + nombre); botón **Cerrar sesión** en menú desktop.
-- Documentación: [`docs/AUTENTICACION-GOOGLE-FIREBASE.md`](docs/AUTENTICACION-GOOGLE-FIREBASE.md).
-
-### 14) Perfil, legales y sectores favoritos (28/03/2026)
-
-- **Perfil (`/perfil`)**: diseño alineado al tema claro/oscuro del home; inicio de sesión con Google; secciones CONFIGURACIÓN y LEGAL; versión de app (**`V0.0.2`**) abajo a la izquierda (`src/lib/appVersion.js`).
-- **Texto bajo el botón de Google**: copy de acceso con `text-xs` / `text-gray-400`.
-- **Bottom sheets legales** (`src/components/legal/`): Términos, Política de privacidad y Acerca de; cierre con X, arrastre hacia abajo y overlay; contenido en `legalSheetContent.js` (revisión legal recomendada).
-- **Sectores favoritos (`/perfil/sectores`)**: pantalla con animación desde la derecha; interruptores por sector; preferencias en **`localStorage`** (`quehayhoy-sector-visibility-v1`); lista canónica en **`src/lib/topSectors.js`**; el carrusel «Sectores Top» en home solo muestra sectores activados.
-- Documentación detallada: [`docs/ACTUALIZACIONES-2026-03-28.md`](docs/ACTUALIZACIONES-2026-03-28.md).
-
-### 15) Abril 2026 — Firestore en lectura, safe area iPhone, favoritos con cuenta y Explorar
-
-**Firestore y mensajes “Target ID already exists”**
-
-- El SDK web a veces mostraba ese error en la UI al usar listeners; se redujo el uso de `onSnapshot` donde bastaba lectura puntual.
-- `TodaySection` («Pilas Hoy») y el hook de notificaciones recientes pasan a **`getDocs`** (con reintento breve ante errores transitorios).
-- `useEvents` reintenta la lectura si detecta conflicto de target interno del SDK.
-- Utilidad compartida: `src/lib/firestoreTransientErrors.js` (`isFirestoreTargetIdConflictError`, `delay`).
-
-**Safe area en iPhone (detalle y colecciones)**
-
-- Botón «atrás» / cerrar alineado con `env(safe-area-inset-top)` y márgenes laterales donde aplica en `EventDetailPage`, `EventDetailModal` y `CollectionPage` (hero y barra compacta al hacer scroll).
-
-**Favoritos y autenticación (flujo “Stateful Wall”)**
-
-- Sin sesión: `/favoritos` muestra mensaje **«Guarda lo que te prende 🔥»** y CTA **Iniciar sesión con Google**; el corazón en cards abre un **bottom sheet** (`FavoriteLoginSheet`) en lugar de guardar.
-- Con sesión: favoritos en **`users/{uid}.favoriteEventIds`**; nuevos usuarios reciben el campo al crearse el documento en Auth.
-- **Configuración** en perfil (**Sectores favoritos** / **Categorías favoritas**) solo visible si hay sesión (móvil y menú desktop). Rutas `/perfil/sectores` y `/perfil/categorias` sin sesión muestran `GuestPreferenceWall`.
-- Un solo sheet global: `FavoriteLoginPromptProvider` + `useFavoriteLoginPrompt()`.
-
-**Pantalla Explorar**
-
-- Contraste del botón **Gratis** (modo claro) sobre mapa: texto oscuro forzado y fondo más legible.
-- Eliminado el botón **+ Filtros** (placeholder).
-- Filtro de tiempo por defecto: **Mes** en lugar de Hoy.
-- **Mapa (`ExploreMapView.jsx`)**: Google Maps con marcadores por categoría (emoji). Requiere `VITE_GOOGLE_MAPS_API_KEY` (ver `.env.example`).
-- **Etiquetas de nombre junto al pin** (solo con zoom suficiente, umbral `EVENT_LABEL_MIN_ZOOM` en código, p. ej. ≥ 16): texto **a la derecha** del icono, **dos líneas** con título completo; partido preferente en `": "` o `" - "`; color de acento por categoría; tocar la etiqueta abre el mismo flujo que el pin. Implementación con **`OverlayView`** (HTML fijo en el mapa, no tooltip ni hover). Ajustes finos: `EVENT_LABEL_GAP_PX`, `EVENT_LABEL_NUDGE_UP_PX` en `src/lib/mapMarkerIcon.js` (tamaño/ancla del PNG) y clase `.qh-event-map-marker-label` en `src/index.css` (sombra para legibilidad).
-- **Mini card inferior (`ExploreEventMiniCard.jsx`)**: al seleccionar un evento en el mapa, panel con imagen, título, fecha/sector y enlace **Ver más** al detalle. Cierre con **X** en un **círculo** en la esquina superior derecha, sobresaliendo sobre la tarjeta (sin botón de texto «Cerrar»).
+- Integrar notificaciones push con FCM.
+- Completar integración de categorías y tags 100% desde Firestore.
+- Definir y ejecutar estrategia de migración para eventos legacy sin `createdByUid`.
+- Evaluar autenticación adicional (por ejemplo, Apple Sign-In).
 
 ---
 

@@ -13,6 +13,11 @@ import { ProfilePage } from './pages/ProfilePage.jsx'
 import { FavoriteSectorsPage } from './pages/FavoriteSectorsPage.jsx'
 import { FavoriteCategoriesPage } from './pages/FavoriteCategoriesPage.jsx'
 import { ExplorePage } from './pages/ExplorePage.jsx'
+import { MisEventosPage } from './pages/MisEventosPage.jsx'
+import { MisEventosCrearPage } from './pages/MisEventosCrearPage.jsx'
+import { OrganizadorBenefitsPage } from './pages/OrganizadorBenefitsPage.jsx'
+import { OrganizadorPlansPage } from './pages/OrganizadorPlansPage.jsx'
+import { RequireOrganizador } from './components/auth/RequireOrganizador.jsx'
 import { CategoryVisibilityProvider } from './contexts/CategoryVisibilityContext.jsx'
 import { FavoriteEventsProvider } from './contexts/FavoriteEventsContext.jsx'
 import { FavoriteLoginPromptProvider } from './contexts/FavoriteLoginPromptContext.jsx'
@@ -36,6 +41,15 @@ createRoot(document.getElementById('root')).render(
                 <Routes>
                   <Route path="/" element={<App />} />
                   <Route path="/favoritos" element={<FavoriteEventsPage />} />
+                  <Route
+                    path="/mis-eventos/crear"
+                    element={
+                      <RequireOrganizador>
+                        <MisEventosCrearPage />
+                      </RequireOrganizador>
+                    }
+                  />
+                  <Route path="/mis-eventos" element={<MisEventosPage />} />
                   <Route path="/explorar" element={<ExplorePage />} />
                   <Route path="/coleccion/:id" element={<CollectionPage />} />
                   <Route path="/legal/:slug" element={<LegalPage />} />
@@ -44,9 +58,32 @@ createRoot(document.getElementById('root')).render(
                   <Route path="/perfil/categorias" element={<FavoriteCategoriesPage />} />
                   <Route path="/evento/:categoria/:slug" element={<EventDetailPage />} />
                   <Route path="/evento/:id" element={<EventDetailPage />} />
-                  <Route path="/wp-admin" element={<AdminDashboard />} />
-                  <Route path="/wp-admin/nuevo" element={<AdminEventForm />} />
-                  <Route path="/wp-admin/editar/:eventId" element={<AdminEventForm />} />
+                  <Route path="/onboarding-organizador" element={<OrganizadorBenefitsPage />} />
+                  <Route path="/onboarding-organizador/planes" element={<OrganizadorPlansPage />} />
+                  <Route
+                    path="/wp-admin"
+                    element={
+                      <RequireOrganizador>
+                        <AdminDashboard />
+                      </RequireOrganizador>
+                    }
+                  />
+                  <Route
+                    path="/wp-admin/nuevo"
+                    element={
+                      <RequireOrganizador>
+                        <AdminEventForm />
+                      </RequireOrganizador>
+                    }
+                  />
+                  <Route
+                    path="/wp-admin/editar/:eventId"
+                    element={
+                      <RequireOrganizador>
+                        <AdminEventForm />
+                      </RequireOrganizador>
+                    }
+                  />
                 </Routes>
               </SectorVisibilityProvider>
               </FavoriteLoginPromptProvider>

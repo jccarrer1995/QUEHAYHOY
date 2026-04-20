@@ -1,5 +1,5 @@
 /**
- * Formulario admin: crear (/wp-admin/nuevo) o editar (/wp-admin/editar/:eventId)
+ * Formulario admin: crear (/wp-admin/nuevo, /mis-eventos/crear) o editar (/wp-admin/editar/:eventId)
  */
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -7,6 +7,8 @@ import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
 import { ArrowLeft } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
+import { useAuth } from '../contexts/AuthContext.jsx'
+import { isAdministratorRole } from '../lib/organizerPlans.js'
 import { CATEGORIES } from '../components/events/CategorySelector'
 import { SECTORS } from '../components/events/SectorSelector'
 import {
@@ -15,14 +17,32 @@ import {
   mapFirestoreDocToForm,
   buildEventPayload,
   SECTOR_TO_FIRESTORE,
+  DESCRIPTION_MAX_LENGTH,
 } from './admin/eventAdminUtils.js'
 import { ensureUniqueEventSlug } from '../lib/slug.js'
 import { geocodeAddressString } from '../lib/geocodeFromAddress.js'
 
-export function AdminEventForm() {
+/**
+ * Fecha local de hoy en formato `YYYY-MM-DD` (input type="date").
+ * @returns {string}
+ */
+function getTodayYmdLocal() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/**
+ * @param {{ embeddedInMisEventos?: boolean }} props
+ * Si es true, se oculta la cabecera propia del admin y al guardar se vuelve a `/mis-eventos`.
+ */
+export function AdminEventForm({ embeddedInMisEventos = false }) {
   const { eventId } = useParams()
   const isEdit = Boolean(eventId)
   const navigate = useNavigate()
+  const { user, role, loading: authLoading } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
   const labelCl = isDark ? 'text-gray-200' : 'text-gray-800'
@@ -36,6 +56,8 @@ export function AdminEventForm() {
   const [error, setError] = useState(null)
   const [toastError, setToastError] = useState('')
   const [geocoding, setGeocoding] = useState(false)
+
+  const todayYmdMin = getTodayYmdLocal()
 
   const showError = (message) => {
     setError(message)
@@ -61,6 +83,10 @@ export function AdminEventForm() {
       setLoadingDoc(false)
       return
     }
+    if (authLoading) {
+      setLoadingDoc(true)
+      return
+    }
     let cancelled = false
     setLoadingDoc(true)
     setLoadError(null)
@@ -72,7 +98,22 @@ export function AdminEventForm() {
           setLoadError('Evento no encontrado')
           return
         }
-        setForm(mapFirestoreDocToForm(snap.data() ?? {}))
+        const data = snap.data() ?? {}
+        if (!isAdministratorRole(role)) {
+          const ownerUid = typeof data.createdByUid === 'string' ? data.createdByUid.trim() : ''
+          const uid = user?.uid ? String(user.uid).trim() : ''
+          if (ownerUid && ownerUid !== uid) {
+            setLoadError('No tienes permiso para editar este evento.')
+            return
+          }
+          if (!ownerUid) {
+            setLoadError(
+              'Este evento no tiene dueño registrado. Solo un administrador puede editarlo.'
+            )
+            return
+          }
+        }
+        setForm(mapFirestoreDocToForm(data))
       } catch (e) {
         if (!cancelled) setLoadError(e?.message ?? 'Error al cargar')
       } finally {
@@ -82,7 +123,7 @@ export function AdminEventForm() {
     return () => {
       cancelled = true
     }
-  }, [isEdit, eventId])
+  }, [isEdit, eventId, role, user?.uid, authLoading])
 
   useEffect(() => {
     if (!toastError) return
@@ -177,8 +218,9 @@ export function AdminEventForm() {
       setSubmitting(false)
       return
     }
-    if ((form.description || '').trim().length > 500) {
-      showError('La descripción no puede superar 500 caracteres.')
+    const descLen = (form.description || '').trim().length
+    if (descLen > DESCRIPTION_MAX_LENGTH) {
+      showError(`La descripción no puede superar ${DESCRIPTION_MAX_LENGTH} caracteres.`)
       setSubmitting(false)
       return
     }
@@ -208,6 +250,17 @@ export function AdminEventForm() {
         setSubmitting(false)
         return
       }
+      const todayYmd = getTodayYmdLocal()
+      if (form.date < todayYmd) {
+        showError('La fecha de inicio no puede ser anterior a hoy.')
+        setSubmitting(false)
+        return
+      }
+      if (form.endDate < todayYmd) {
+        showError('La fecha de fin no puede ser anterior a hoy.')
+        setSubmitting(false)
+        return
+      }
       const startAt = toDateTime(form.date, form.time, false)
       const endAt = toDateTime(form.endDate, form.endTime, true)
       if (startAt && endAt && endAt.getTime() < startAt.getTime()) {
@@ -219,13 +272,17 @@ export function AdminEventForm() {
 
     try {
       const slug = await ensureUniqueEventSlug(db, form, isEdit ? eventId : null)
-      const payload = buildEventPayload(form, { isUpdate: isEdit, slug })
+      const payload = buildEventPayload(form, {
+        isUpdate: isEdit,
+        slug,
+        organizerUid: !isEdit && user?.uid ? user.uid : null,
+      })
       if (isEdit && eventId) {
         await updateDoc(doc(db, 'events', eventId), payload)
       } else {
         await addDoc(collection(db, 'events'), payload)
       }
-      navigate('/wp-admin')
+      navigate(embeddedInMisEventos ? '/mis-eventos' : '/wp-admin')
     } catch (err) {
       showError(err.message ?? 'Error al guardar el evento.')
     } finally {
@@ -236,6 +293,13 @@ export function AdminEventForm() {
   const headerBg = isDark ? 'border-gray-800 bg-[#121212]/95' : 'border-gray-200 bg-white/95'
 
   if (loadingDoc) {
+    if (embeddedInMisEventos) {
+      return (
+        <div className="py-16 text-center">
+          <p className={mutedCl}>Cargando evento…</p>
+        </div>
+      )
+    }
     return (
       <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
         <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Cargando evento…</p>
@@ -244,6 +308,19 @@ export function AdminEventForm() {
   }
 
   if (isEdit && loadError) {
+    if (embeddedInMisEventos) {
+      return (
+        <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+          <p className={`mb-4 ${isDark ? 'text-red-400' : 'text-red-600'}`}>{loadError}</p>
+          <Link
+            to="/mis-eventos"
+            className="rounded-xl bg-[#14b8a6] px-6 py-3 font-semibold text-white"
+          >
+            Volver a Mis eventos
+          </Link>
+        </div>
+      )
+    }
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center px-6 ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
         <p className={`mb-4 text-center ${isDark ? 'text-red-400' : 'text-red-600'}`}>{loadError}</p>
@@ -257,40 +334,46 @@ export function AdminEventForm() {
     )
   }
 
-  return (
-    <div className={`min-h-screen ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
-      <header className={`sticky top-0 z-10 border-b backdrop-blur ${headerBg}`}>
-        <div className="mx-auto max-w-2xl px-4 py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Link
-              to="/wp-admin"
-              className={`p-2 -ml-2 rounded-lg hover:opacity-80 transition-colors flex-shrink-0 ${isDark ? 'text-gray-300 hover:text-[#E0E0E0]' : 'text-gray-700 hover:text-gray-900'}`}
-              aria-label="Volver al listado"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <h1
-              className="text-lg font-bold truncate"
-              style={{ color: isDark ? '#ffffff' : '#0a0a0a' }}
-            >
-              {isEdit ? 'Editar evento' : 'Nuevo evento'}
-            </h1>
-          </div>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className={`p-2.5 rounded-full flex-shrink-0 transition-colors ${
-              isDark ? 'bg-gray-700 hover:bg-gray-600 text-amber-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-            }`}
-            aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
-        </div>
-      </header>
+  const mainClassName = embeddedInMisEventos
+    ? 'mx-auto w-full min-w-0 max-w-2xl pb-28 pt-0'
+    : 'mx-auto min-w-0 max-w-2xl px-4 py-6 pb-24'
 
-      <main className="mx-auto max-w-2xl px-4 py-6 pb-24">
-        <form onSubmit={handleSubmit} className="space-y-6">
+  const formInner = (
+    <>
+      {!embeddedInMisEventos ? (
+        <header className={`sticky top-0 z-10 border-b backdrop-blur ${headerBg}`}>
+          <div className="mx-auto max-w-2xl px-4 py-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link
+                to="/wp-admin"
+                className={`p-2 -ml-2 rounded-lg hover:opacity-80 transition-colors flex-shrink-0 ${isDark ? 'text-gray-300 hover:text-[#E0E0E0]' : 'text-gray-700 hover:text-gray-900'}`}
+                aria-label="Volver al listado"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <h1
+                className="text-lg font-bold truncate"
+                style={{ color: isDark ? '#ffffff' : '#0a0a0a' }}
+              >
+                {isEdit ? 'Editar evento' : 'Nuevo evento'}
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-full flex-shrink-0 transition-colors ${
+                isDark ? 'bg-gray-700 hover:bg-gray-600 text-amber-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {isDark ? '☀️' : '🌙'}
+            </button>
+          </div>
+        </header>
+      ) : null}
+
+      <main className={mainClassName}>
+        <form onSubmit={handleSubmit} className="min-w-0 max-w-full space-y-6 overflow-x-clip">
           {error && (
             <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm">
               {error}
@@ -315,19 +398,35 @@ export function AdminEventForm() {
           </div>
 
           <div>
-            <label htmlFor="description" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
-              Descripción
+            <label htmlFor="description" className={`mb-1.5 block text-sm font-medium ${labelCl}`}>
+              Descripción{' '}
+              <span className={`font-normal ${mutedCl}`}>
+                (máximo {DESCRIPTION_MAX_LENGTH} caracteres)
+              </span>
             </label>
             <textarea
               id="description"
               name="description"
               value={form.description}
               onChange={handleChange}
-              rows={5}
-              maxLength={500}
+              rows={6}
+              maxLength={DESCRIPTION_MAX_LENGTH}
               placeholder="Descripción del evento..."
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none transition resize-none"
+              className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-[#14b8a6] dark:border-gray-600 dark:bg-gray-800 dark:text-[#E0E0E0]"
             />
+            <p className={`mt-1.5 text-xs ${mutedCl}`}>
+              <span
+                className={
+                  form.description.length >= DESCRIPTION_MAX_LENGTH
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : ''
+                }
+              >
+                {form.description.length}
+              </span>
+              {' / '}
+              {DESCRIPTION_MAX_LENGTH}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -369,43 +468,26 @@ export function AdminEventForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="price" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
-                Precio ($)
-              </label>
-              <input
-                id="price"
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.price}
-                onChange={handleChange}
-                placeholder="0 = Gratis"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
-              />
-            </div>
-            <div>
-              <label htmlFor="capacity" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
-                Aforo
-              </label>
-              <input
-                id="capacity"
-                name="capacity"
-                type="number"
-                min="0"
-                value={form.capacity}
-                onChange={handleChange}
-                placeholder="Ej: 150"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
-              />
-            </div>
+          <div>
+            <label htmlFor="price" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
+              Precio ($)
+            </label>
+            <input
+              id="price"
+              name="price"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={handleChange}
+              placeholder="0 = Gratis"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] placeholder-gray-400 focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
+            />
           </div>
 
           <div>
             <label htmlFor="badgeType" className={`block text-sm font-medium ${labelCl} mb-1.5`}>
-              Badge conceptual
+              Etiqueta
             </label>
             <select
               id="badgeType"
@@ -545,7 +627,7 @@ export function AdminEventForm() {
             </p>
           </div>
 
-          <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 space-y-4">
+          <div className="min-w-0 max-w-full space-y-4 overflow-x-clip rounded-xl border border-gray-200 p-3 sm:p-4 dark:border-gray-700">
             <p className={`text-sm font-medium ${labelCl}`}>Tipo de evento</p>
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -573,59 +655,75 @@ export function AdminEventForm() {
             </div>
 
             {form.eventType === 'unique' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label htmlFor="date" className={`block text-sm ${mutedCl} mb-1`}>
-                    Fecha
-                  </label>
-                  <input
-                    id="date"
-                    name="date"
-                    type="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
-                  />
+              <div className="flex w-full min-w-0 max-w-full flex-col gap-4 pt-2">
+                <div className="flex w-full min-w-0 max-w-full flex-row items-start gap-2 sm:gap-3">
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="date" className={`mb-1 block text-sm ${mutedCl}`}>
+                      Fecha inicio
+                    </label>
+                    <div className="qh-event-datetime-shell">
+                      <input
+                        id="date"
+                        name="date"
+                        type="date"
+                        value={form.date}
+                        min={todayYmdMin}
+                        onChange={handleChange}
+                        className="qh-event-datetime box-border w-full min-w-0 max-w-full rounded-xl border border-gray-300 bg-white py-3 text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#14b8a6] dark:border-gray-600 dark:bg-gray-800 dark:text-[#E0E0E0] sm:px-4"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-[42%] max-w-[11rem] shrink-0 min-w-0 sm:w-[38%]">
+                    <label htmlFor="time" className={`mb-1 block text-sm ${mutedCl}`}>
+                      Hora inicio
+                    </label>
+                    <div className="qh-event-datetime-shell">
+                      <input
+                        id="time"
+                        name="time"
+                        type="time"
+                        value={form.time}
+                        onChange={handleChange}
+                        className="qh-event-datetime box-border w-full min-w-0 max-w-full rounded-xl border border-gray-300 bg-white py-3 text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#14b8a6] dark:border-gray-600 dark:bg-gray-800 dark:text-[#E0E0E0] sm:px-4"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="time" className={`block text-sm ${mutedCl} mb-1`}>
-                    Hora
-                  </label>
-                  <input
-                    id="time"
-                    name="time"
-                    type="time"
-                    value={form.time}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="endDate" className={`block text-sm ${mutedCl} mb-1`}>
-                    Fecha de finalización
-                  </label>
-                  <input
-                    id="endDate"
-                    name="endDate"
-                    type="date"
-                    value={form.endDate}
-                    onChange={handleChange}
-                    required={form.eventType === 'unique'}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="endTime" className={`block text-sm ${mutedCl} mb-1`}>
-                    Hora de finalización
-                  </label>
-                  <input
-                    id="endTime"
-                    name="endTime"
-                    type="time"
-                    value={form.endTime}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-[#E0E0E0] focus:ring-2 focus:ring-[#14b8a6] focus:border-transparent outline-none"
-                  />
+                <div className="flex w-full min-w-0 max-w-full flex-row items-start gap-2 sm:gap-3">
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="endDate" className={`mb-1 block text-sm ${mutedCl}`}>
+                      Fecha fin
+                    </label>
+                    <div className="qh-event-datetime-shell">
+                      <input
+                        id="endDate"
+                        name="endDate"
+                        type="date"
+                        value={form.endDate}
+                        min={
+                          form.date && form.date >= todayYmdMin ? form.date : todayYmdMin
+                        }
+                        onChange={handleChange}
+                        required={form.eventType === 'unique'}
+                        className="qh-event-datetime box-border w-full min-w-0 max-w-full rounded-xl border border-gray-300 bg-white py-3 text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#14b8a6] dark:border-gray-600 dark:bg-gray-800 dark:text-[#E0E0E0] sm:px-4"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-[42%] max-w-[11rem] shrink-0 min-w-0 sm:w-[38%]">
+                    <label htmlFor="endTime" className={`mb-1 block text-sm ${mutedCl}`}>
+                      Hora fin
+                    </label>
+                    <div className="qh-event-datetime-shell">
+                      <input
+                        id="endTime"
+                        name="endTime"
+                        type="time"
+                        value={form.endTime}
+                        onChange={handleChange}
+                        className="qh-event-datetime box-border w-full min-w-0 max-w-full rounded-xl border border-gray-300 bg-white py-3 text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#14b8a6] dark:border-gray-600 dark:bg-gray-800 dark:text-[#E0E0E0] sm:px-4"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -666,7 +764,11 @@ export function AdminEventForm() {
 
       {toastError ? (
         <div
-          className={`fixed left-4 bottom-4 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-lg ${
+          className={`fixed left-4 z-50 max-w-sm rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            embeddedInMisEventos
+              ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]'
+              : 'bottom-4'
+          } ${
             isDark
               ? 'border-red-800 bg-[#2a1212] text-red-200'
               : 'border-red-200 bg-red-50 text-red-800'
@@ -678,8 +780,14 @@ export function AdminEventForm() {
           <p className="mt-1">{toastError}</p>
         </div>
       ) : null}
-    </div>
+    </>
   )
+
+  if (embeddedInMisEventos) {
+    return formInner
+  }
+
+  return <div className={`min-h-screen ${isDark ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>{formInner}</div>
 }
 
 export default AdminEventForm

@@ -58,7 +58,7 @@ function resolveEventType(data) {
 }
 
 /** Mapea documento Firestore al formato de la app */
-function mapDocToEvent(doc) {
+export function mapDocToEvent(doc) {
   const data = doc.data()
   const type = resolveEventType(data)
   const endTs = type === 'unique' ? data.endDate ?? data.date : null

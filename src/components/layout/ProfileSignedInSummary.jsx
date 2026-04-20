@@ -6,12 +6,13 @@ import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { resolveAuthUserForDisplay } from '../../lib/authDisplayUser.js'
+import { formatProfileRoleLabel } from '../../lib/profileRoleLabel.js'
 
 /**
  * @param {{ className?: string }} props
  */
 export function ProfileSignedInSummary({ className = '' }) {
-  const { user: contextUser, photoURL: contextPhotoURL, displayName } = useAuth()
+  const { user: contextUser, photoURL: contextPhotoURL, displayName, role } = useAuth()
   /** El padre (`ProfileMenuContent` / drawer) ya suscribe con `useAuthUserForProfileHeader`; aquí solo resolvemos. */
   const user = resolveAuthUserForDisplay(contextUser)
   const photoURL = contextPhotoURL ?? user?.photoURL ?? null
@@ -39,6 +40,8 @@ export function ProfileSignedInSummary({ className = '' }) {
   const placeholderBg = isDark ? 'bg-gray-700' : 'bg-gray-200'
   const iconCls = isDark ? 'text-gray-400' : 'text-gray-500'
   const nameCls = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
+  const roleLabel = formatProfileRoleLabel(role)
+  const roleCls = isDark ? 'text-gray-500' : 'text-gray-500'
 
   return (
     <div className={`flex w-full flex-col items-center px-1 ${className || 'mb-8'}`}>
@@ -60,6 +63,9 @@ export function ProfileSignedInSummary({ className = '' }) {
         )}
       </div>
       <p className={`mt-3 max-w-full truncate text-center text-base font-semibold ${nameCls}`}>{name}</p>
+      <p className={`mt-1.5 text-center text-xs font-normal ${roleCls}`} aria-label={`Rol: ${roleLabel}`}>
+        {roleLabel}
+      </p>
     </div>
   )
 }

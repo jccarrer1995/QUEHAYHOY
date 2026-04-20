@@ -5,7 +5,13 @@ import {
   legacyBadgeLabelToFormValue,
 } from '../../lib/eventBadges.js'
 
-/** Opciones del select «Badge conceptual» (alias para el admin) */
+/** Aforo fijo en Firestore (el formulario ya no lo edita). */
+export const DEFAULT_EVENT_CAPACITY = 100
+
+/** Descripción: máximo de caracteres en admin. */
+export const DESCRIPTION_MAX_LENGTH = 750
+
+/** Opciones del select «Etiqueta» (admin) */
 export const BADGE_LABELS = BADGE_FORM_OPTIONS
 
 export const SECTOR_TO_FIRESTORE = {
@@ -176,11 +182,11 @@ function parseOptionalCoord(s) {
 
 /**
  * @param {typeof initialForm} form
- * @param {{ isUpdate: boolean, slug?: string }} opts
+ * @param {{ isUpdate: boolean, slug?: string, organizerUid?: string | null }} opts
  * @returns {Record<string, unknown>}
  */
 export function buildEventPayload(form, opts) {
-  const { isUpdate, slug } = opts
+  const { isUpdate, slug, organizerUid } = opts
   const payload = {
     title: form.title.trim(),
     description: (form.description || '').trim(),
@@ -191,7 +197,7 @@ export function buildEventPayload(form, opts) {
         ? form.category.charAt(0).toUpperCase() + form.category.slice(1)
         : 'All',
     price: form.price !== '' ? (Number.isNaN(Number(form.price)) ? 0 : Number(form.price)) : null,
-    capacity: form.capacity !== '' ? (Number.isNaN(Number(form.capacity)) ? null : Number(form.capacity)) : null,
+    capacity: DEFAULT_EVENT_CAPACITY,
     capacity_level: form.capacity_level || null,
     badgeType: form.badgeType && form.badgeType !== '' ? form.badgeType : null,
     image_url: (form.imageUrl || '').trim() || null,
@@ -221,6 +227,9 @@ export function buildEventPayload(form, opts) {
   if (!isUpdate) {
     payload.createdAt = serverTimestamp()
     payload.isVisible = true
+    if (typeof organizerUid === 'string' && organizerUid.trim() !== '') {
+      payload.createdByUid = organizerUid.trim()
+    }
   } else {
     payload.updatedAt = serverTimestamp()
     payload.badgeLabel = deleteField()

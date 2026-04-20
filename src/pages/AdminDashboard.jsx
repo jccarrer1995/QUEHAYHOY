@@ -12,9 +12,12 @@ import {
   updateDoc,
   serverTimestamp,
   documentId,
+  where,
 } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme } from '../contexts/ThemeContext'
+import { isAdministratorRole } from '../lib/organizerPlans.js'
 import { ArrowLeft, Moon, Pencil, Plus, Sun, Trash2 } from 'lucide-react'
 
 const PAGE_SIZE = 10
@@ -69,7 +72,9 @@ function isExpired(data) {
 
 export function AdminDashboard() {
   const { theme, toggleTheme } = useTheme()
+  const { user, profile } = useAuth()
   const isDark = theme === 'dark'
+  const isAdmin = isAdministratorRole(profile?.role)
 
   const [pageIndex, setPageIndex] = useState(0)
   const [rows, setRows] = useState([])
@@ -92,16 +97,42 @@ export function AdminDashboard() {
     try {
       const col = collection(db, 'events')
       const take = PAGE_SIZE + 1
+      const organizerUid = user?.uid ? String(user.uid).trim() : ''
+      if (!isAdmin && !organizerUid) {
+        setError('No se pudo identificar al organizador.')
+        setRows([])
+        setLoading(false)
+        return
+      }
       let q
-      if (pageIndex === 0) {
-        q = query(col, orderBy(documentId()), limit(take))
-      } else {
-        const prevLast = lastDocPerPageRef.current[pageIndex - 1]
-        if (!prevLast) {
-          setPageIndex(0)
-          return
+      if (isAdmin) {
+        if (pageIndex === 0) {
+          q = query(col, orderBy(documentId()), limit(take))
+        } else {
+          const prevLast = lastDocPerPageRef.current[pageIndex - 1]
+          if (!prevLast) {
+            setPageIndex(0)
+            return
+          }
+          q = query(col, orderBy(documentId()), startAfter(prevLast), limit(take))
         }
-        q = query(col, orderBy(documentId()), startAfter(prevLast), limit(take))
+      } else {
+        if (pageIndex === 0) {
+          q = query(col, where('createdByUid', '==', organizerUid), orderBy(documentId()), limit(take))
+        } else {
+          const prevLast = lastDocPerPageRef.current[pageIndex - 1]
+          if (!prevLast) {
+            setPageIndex(0)
+            return
+          }
+          q = query(
+            col,
+            where('createdByUid', '==', organizerUid),
+            orderBy(documentId()),
+            startAfter(prevLast),
+            limit(take)
+          )
+        }
       }
       const snap = await getDocs(q)
       let docs = snap.docs
@@ -142,7 +173,7 @@ export function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [pageIndex])
+  }, [pageIndex, isAdmin, user?.uid])
 
   useEffect(() => {
     loadPage()
@@ -236,7 +267,7 @@ export function AdminDashboard() {
               {isDark ? 'Claro' : 'Oscuro'}
             </button>
             <Link
-              to="/wp-admin/nuevo"
+              to="/mis-eventos/crear"
               className="inline-flex items-center gap-2 rounded-xl bg-[#14b8a6] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#14b8a6]/20 hover:bg-[#0d9488] transition-colors"
             >
               <Plus className="w-4 h-4" />
