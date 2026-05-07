@@ -174,6 +174,7 @@ export function FavoriteCategoriesPage() {
         <ul>
           {selectableCategories.map((category) => {
             const enabled = visibleById[category.id] !== false
+            const CatIcon = category.Icon
 
             return (
               <li
@@ -181,9 +182,11 @@ export function FavoriteCategoriesPage() {
                 className={`flex min-w-0 items-center justify-between gap-3 border-b py-4 first:pt-0 ${borderCls}`}
               >
                 <span className="flex min-w-0 flex-1 items-center gap-3">
-                  <span className="text-xl" aria-hidden>
-                    {category.icon}
-                  </span>
+                  <CatIcon
+                    className={`h-6 w-6 shrink-0 ${isDark ? 'text-[#E0E0E0]' : 'text-gray-800'}`}
+                    strokeWidth={2}
+                    aria-hidden
+                  />
                   <span
                     className={`min-w-0 flex-1 text-base font-medium ${
                       isDark ? '!text-[#E0E0E0]' : '!text-gray-900'

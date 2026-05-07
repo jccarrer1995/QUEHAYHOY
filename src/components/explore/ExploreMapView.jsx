@@ -122,7 +122,7 @@ function markerIconUrlForEvent(event) {
   const cid = firestoreCategoryToId(event.category)
   const cat = CATEGORIES.find((c) => c.id === cid)
   if (cat && cat.id !== 'all') {
-    return getEmojiMarkerDataUrl(cat.icon)
+    return getEmojiMarkerDataUrl(cat.markerEmoji)
   }
   return getDefaultBrandMarkerDataUrl()
 }

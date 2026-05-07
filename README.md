@@ -33,7 +33,9 @@
 - PWA: `manifest.json` y metadatos HTML para instalación en iPhone/Android
 
 ### 4. Componentes
-- **Navbar:** Logo QUEHAY/HOY, buscador, campana (planes recientes), tema y menú hamburguesa en desktop
+- **Navbar:** Logo QUEHAY/HOY, buscador, campana (planes recientes), tema y menú hamburguesa en desktop; en **móvil** puede incluir una segunda fila opcional bajo el buscador (`mobileHomeFilters`) que permanece **sticky** con el header
+- **HomeMobileFilters (solo Home / móvil):** label «Filtrar» con icono, **pills** horizontales (categoría y sector). Cada pill abre un **bottom sheet** con el selector correspondiente, botón «Aplicar» y cierre sin aplicar. Los pills muestran **Categoría** / **Sector** cuando el filtro está en «todo», o el **nombre de la opción** aplicada; si hay filtro activo el pill usa el **acento teal** y texto blanco. Desktop sigue usando `CategorySelector` + `SectorSelector` en el contenido principal
+- **CategorySelector / SectorSelector:** variante `toolbar` (fila con etiqueta) y variante `sheet` (solo chips, sin título duplicado en el sheet)
 - **CategorySelector:** Bares, Conciertos, Comida, Cine, Ferias (tarjetas con iconos)
 - **EventCardCarousel:** Imagen, título, badge de aforo (✨ Exclusivo, 👥 Social, 🔥 Masivo), fecha, ubicación, precio
 - **FloatingButtons:** Tema (☀️/🌙), Filter, Gratis — solo móvil
@@ -60,6 +62,8 @@
 - Diseño mobile-first responsive
 - Carrusel horizontal de eventos en móvil, grid en desktop
 - Padding inferior para evitar que los FABs tapen el contenido al hacer scroll en iPhone
+- Filtros de categoría y sector en Home replican patrón tipo app de delivery: barra compacta bajo el buscador (sticky con el `Navbar`), sheets modales con Framer Motion y contraste explícito en títulos para tema claro con `prefers-color-scheme: dark`
+- La sección **«¡Pilas Hoy!»** (`TodaySection`) no muestra línea separadora superior respecto al bloque anterior
 
 ### 8. SEO, rutas y descubrimiento
 - URLs amigables para eventos con formato `/evento/:categoria/:slug`
@@ -126,8 +130,8 @@ VITE_GOOGLE_MAPS_API_KEY=
 ```
 src/
 ├── components/
-│   ├── layout/     # Navbar, BottomNav, AppToaster
-│   ├── events/     # carruseles, CategorySelector, SectorSelector, TodaySection…
+│   ├── layout/     # Navbar (opc. `mobileHomeFilters` sticky), BottomNav, AppToaster
+│   ├── events/     # carruseles, HomeMobileFilters, CategorySelector, SectorSelector, TodaySection…
 │   ├── explore/    # ExploreMapView (Google Maps), ExploreEventMiniCard (resumen al tocar pin)…
 │   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig

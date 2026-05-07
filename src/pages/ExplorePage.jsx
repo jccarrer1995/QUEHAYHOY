@@ -4,7 +4,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin } from 'lucide-react'
-import { BottomNav } from '../components/layout'
+import { BottomNav, Navbar } from '../components/layout'
 import { ExploreEventMiniCard } from '../components/explore/ExploreEventMiniCard.jsx'
 import { ExploreFloatingHeader } from '../components/explore/ExploreFloatingHeader.jsx'
 import { ExploreMapView } from '../components/explore/ExploreMapView.jsx'
@@ -52,76 +52,82 @@ export function ExplorePage() {
   const statusBarOverlayCls = isDark ? 'bg-[#121212]/88' : 'bg-white/88'
 
   return (
-    <div className={`relative min-h-[100dvh] w-full overflow-hidden ${pageBg}`}>
-      <div className="absolute inset-0 z-0 h-full min-h-0 w-full flex-1">
-        {apiKey ? (
-          <ExploreMapView
-            apiKey={apiKey}
-            isDark={isDark}
-            events={filteredEvents}
-            onSelectEvent={(ev) => setSelectedEventId(ev.id)}
-            onMapClick={() => setSelectedEventId(null)}
-          />
-        ) : (
-          <div
-            className={`flex h-full w-full flex-col items-center justify-center gap-3 px-8 text-center ${
-              isDark ? 'bg-[#0f0f0f]' : 'bg-slate-200'
-            }`}
-          >
-            <MapPin className="h-12 w-12 text-[#14b8a6]" strokeWidth={1.5} aria-hidden />
-            <p className="max-w-sm text-sm font-medium" style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}>
-              Configura la variable{' '}
-              <code className="rounded bg-black/10 px-1.5 py-0.5 text-xs dark:bg-white/10">
-                VITE_GOOGLE_MAPS_API_KEY
-              </code>{' '}
-              en tu archivo <code className="rounded bg-black/10 px-1.5 py-0.5 text-xs dark:bg-white/10">.env</code>{' '}
-              para ver el mapa (Maps JavaScript API).
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="mt-2 rounded-2xl bg-[#14b8a6] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0d9488]"
-            >
-              Volver al inicio
-            </button>
-          </div>
-        )}
-
-        {(loading || error) && (
-          <div
-            className={`pointer-events-none absolute inset-x-0 bottom-28 z-10 mx-auto max-w-md rounded-2xl border px-4 py-3 text-center text-sm shadow-lg md:bottom-8 ${
-              isDark ? 'border-gray-700 bg-[#121212]/95 text-gray-200' : 'border-gray-200 bg-white/95 text-gray-800'
-            }`}
-          >
-            {loading ? 'Cargando eventos…' : null}
-            {error ? error : null}
-          </div>
-        )}
+    <div className={`flex min-h-[100dvh] w-full flex-col overflow-hidden ${pageBg}`}>
+      <div className="relative z-50 hidden shrink-0 md:block">
+        <Navbar searchValue={searchQuery} onSearchChange={setSearchQuery} />
       </div>
 
-      <div
-        className={`pointer-events-none absolute inset-x-0 top-0 z-10 backdrop-blur-[6px] ${statusBarOverlayCls}`}
-        style={statusBarOverlayStyle}
-        aria-hidden
-      />
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div className="absolute inset-0 z-0 h-full min-h-0 w-full flex-1">
+          {apiKey ? (
+            <ExploreMapView
+              apiKey={apiKey}
+              isDark={isDark}
+              events={filteredEvents}
+              onSelectEvent={(ev) => setSelectedEventId(ev.id)}
+              onMapClick={() => setSelectedEventId(null)}
+            />
+          ) : (
+            <div
+              className={`flex h-full w-full flex-col items-center justify-center gap-3 px-8 text-center ${
+                isDark ? 'bg-[#0f0f0f]' : 'bg-slate-200'
+              }`}
+            >
+              <MapPin className="h-12 w-12 text-[#14b8a6]" strokeWidth={1.5} aria-hidden />
+              <p className="max-w-sm text-sm font-medium" style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}>
+                Configura la variable{' '}
+                <code className="rounded bg-black/10 px-1.5 py-0.5 text-xs dark:bg-white/10">
+                  VITE_GOOGLE_MAPS_API_KEY
+                </code>{' '}
+                en tu archivo <code className="rounded bg-black/10 px-1.5 py-0.5 text-xs dark:bg-white/10">.env</code>{' '}
+                para ver el mapa (Maps JavaScript API).
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="mt-2 rounded-2xl bg-[#14b8a6] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0d9488]"
+              >
+                Volver al inicio
+              </button>
+            </div>
+          )}
 
-      <ExploreFloatingHeader
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeCategory={activeCategory}
-        onSelectCategory={setActiveCategory}
-        isDark={isDark}
-        isFreeFilter={isFreeFilter}
-        onFreeToggle={() => setIsFreeFilter((v) => !v)}
-        timePreset={timePreset}
-        onTimePresetChange={setTimePreset}
-      />
+          {(loading || error) && (
+            <div
+              className={`pointer-events-none absolute inset-x-0 bottom-28 z-10 mx-auto max-w-md rounded-2xl border px-4 py-3 text-center text-sm shadow-lg md:bottom-8 ${
+                isDark ? 'border-gray-700 bg-[#121212]/95 text-gray-200' : 'border-gray-200 bg-white/95 text-gray-800'
+              }`}
+            >
+              {loading ? 'Cargando eventos…' : null}
+              {error ? error : null}
+            </div>
+          )}
+        </div>
 
-      <ExploreEventMiniCard
-        event={selectedEvent}
-        isDark={isDark}
-        onClose={() => setSelectedEventId(null)}
-      />
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 z-10 backdrop-blur-[6px] md:hidden ${statusBarOverlayCls}`}
+          style={statusBarOverlayStyle}
+          aria-hidden
+        />
+
+        <ExploreFloatingHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeCategory={activeCategory}
+          onSelectCategory={setActiveCategory}
+          isDark={isDark}
+          isFreeFilter={isFreeFilter}
+          onFreeToggle={() => setIsFreeFilter((v) => !v)}
+          timePreset={timePreset}
+          onTimePresetChange={setTimePreset}
+        />
+
+        <ExploreEventMiniCard
+          event={selectedEvent}
+          isDark={isDark}
+          onClose={() => setSelectedEventId(null)}
+        />
+      </div>
 
       <BottomNav activeTab="explore" onTabChange={() => {}} />
     </div>

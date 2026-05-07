@@ -233,9 +233,7 @@ export function TodaySection({ isDark = false, activeSector = 'all', searchQuery
   )
 
   return (
-    <section
-      className={`mt-0.5 pt-5 mb-5 ${isDark ? 'border-t border-gray-800' : 'border-t border-gray-200'}`}
-    >
+    <section className="mt-0.5 pt-5 mb-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h2

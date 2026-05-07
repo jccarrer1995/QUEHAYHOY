@@ -1,67 +1,68 @@
-import { SectorRoundImage } from './SectorRoundImage.jsx'
+import { MapPin, Sparkles } from 'lucide-react'
 import { useSectorVisibility } from '../../contexts/SectorVisibilityContext.jsx'
 import { SECTORS } from '../../lib/topSectors.js'
 
 export { SECTORS }
 
 /**
- * SectorSelector - Carrusel de iconos redondos con imágenes por sector
- * SECTORES TOP: Urdesa, Samborondón, Puerto Santa Ana, Centro, etc.
+ * @param {{
+ *   activeSector: string
+ *   onSelect: (id: string) => void
+ *   isDark?: boolean
+ *   variant?: 'toolbar' | 'sheet'
+ * }} props
  */
-export function SectorSelector({ activeSector, onSelect, isDark = false }) {
+export function SectorSelector({ activeSector, onSelect, isDark = false, variant = 'toolbar' }) {
   const { isSectorVisible } = useSectorVisibility()
   const visibleSectors = SECTORS.filter(
     (sector) => sector.id === 'all' || isSectorVisible(sector.id)
   )
-  const textCl = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
-  const headingCl = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
+  const btnBase =
+    'px-3 py-2 rounded-full text-sm font-medium transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 border cursor-pointer'
+  const btnActive = 'bg-[#14b8a6] text-white border-[#14b8a6]'
+  const btnInactive = isDark
+    ? 'bg-transparent text-gray-300 border-gray-600 hover:border-gray-500 hover:text-[#E0E0E0]'
+    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+  const headingCl = isDark ? '!text-[#E0E0E0]' : '!text-[#0a0a0a]'
+
+  const scrollRowCls =
+    variant === 'sheet'
+      ? 'flex gap-2 overflow-x-auto pb-2 scrollbar-hide'
+      : 'flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-hide'
+
+  const chipButtons = visibleSectors.map((sector) => {
+    const isActive = activeSector === sector.id
+
+    return (
+      <button
+        key={sector.id}
+        type="button"
+        onClick={() => onSelect(sector.id)}
+        className={`${btnBase} ${isActive ? btnActive : btnInactive}`}
+        aria-pressed={isActive}
+      >
+        {sector.id === 'all' ? (
+          <Sparkles className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+        ) : (
+          <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+        )}
+        <span>{sector.label}</span>
+      </button>
+    )
+  })
+
+  if (variant === 'sheet') {
+    return (
+      <div className="w-full">
+        <div className={scrollRowCls}>{chipButtons}</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="w-full">
-      <h3 className={`text-sm font-bold tracking-wider mb-2 ${headingCl}`}>
-        Sectores Top
-      </h3>
-      <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible scrollbar-hide">
-      {visibleSectors.map((sector) => {
-        const isActive = activeSector === sector.id
-        return (
-          <button
-            key={sector.id}
-            type="button"
-            onClick={() => onSelect(sector.id)}
-            className="flex-shrink-0 flex flex-col items-center gap-1 p-1 transition-all duration-200 ease-out active:scale-95 select-none cursor-pointer"
-            aria-pressed={isActive}
-          >
-            <span
-              className={`w-14 h-14 md:w-12 md:h-12 rounded-full overflow-hidden border-2 transition-all duration-200 ${
-                isActive
-                  ? 'border-[#14b8a6] shadow-md shadow-[#14b8a6]/15'
-                  : isDark
-                    ? 'border-gray-600 hover:border-gray-500'
-                    : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              {sector.image ? (
-                <SectorRoundImage src={sector.image} label={sector.label} isDark={isDark} />
-              ) : (
-                <span
-                  className={`w-full h-full flex items-center justify-center text-lg ${
-                    isDark ? 'bg-gray-800' : 'bg-gray-100'
-                  }`}
-                >
-                  ✨
-                </span>
-              )}
-            </span>
-            <span
-              className={`text-[10px] md:text-xs font-medium -translate-y-0.5 ${isActive ? 'text-[#14b8a6]' : textCl}`}
-            >
-              {sector.label}
-            </span>
-          </button>
-        )
-      })}
-      </div>
+    <div className="-mx-4 flex w-full items-center gap-3 px-4 pb-2 md:mx-0 md:px-0">
+      <h3 className={`shrink-0 text-sm font-bold tracking-wider ${headingCl}`}>Sectores</h3>
+      <div className={scrollRowCls}>{chipButtons}</div>
     </div>
   )
 }

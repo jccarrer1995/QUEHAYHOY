@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTheme } from '../contexts/ThemeContext.jsx'
@@ -10,9 +10,15 @@ export function OrganizadorPlansPage() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, profile, upgradeToOrganizerPlan, loading: authLoading } = useAuth()
   const [selected, setSelected] = useState(/** @type {'basic' | 'pro'} */ ('pro'))
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const p = searchParams.get('plan')
+    if (p === 'basic' || p === 'pro') setSelected(p)
+  }, [searchParams])
 
   const isOrganizer = (profile?.role ?? '').toLowerCase() === ROLE_ORGANIZADOR
 

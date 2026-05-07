@@ -1,13 +1,13 @@
 /**
  * Navbar - QUEHAYHOY
- * Mobile: hamburger, logo, campana | Desktop: logo, search, nav, campana, tema
- * QuickFilters (pills) debajo del buscador
+ * Mobile: hamburger, campana | Desktop: menú cuenta, búsqueda, campana, tema (logo visual oculto en md+)
+ * Opcional: fila extra bajo el buscador (p. ej. filtros del home) dentro del header sticky.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Menu } from 'lucide-react'
+import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
@@ -15,17 +15,17 @@ import { useEphemeralNotifications } from '../../hooks/useEphemeralNotifications
 import { EventDetailModal } from '../events'
 import { DesktopProfileMenuContent } from './DesktopProfileMenuContent.jsx'
 
-const ACCENT = 'text-[#14b8a6] dark:text-[#14b8a6]'
-
 /**
- * @param {{ searchValue?: string, onSearchChange?: (v: string) => void }} props
+ * @param {{ searchValue?: string, onSearchChange?: (v: string) => void, mobileHomeFilters?: import('react').ReactNode }} props
  */
-export function Navbar({ searchValue = '', onSearchChange }) {
+export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = null }) {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
   const { user } = useAuth()
   const isDark = theme === 'dark'
   const showDesktopProfileMenu = !location.pathname.startsWith('/perfil')
+  /** En Explorar la búsqueda va en ExploreFloatingHeader; evitar duplicar el input en desktop. */
+  const hideDesktopSearch = location.pathname === '/explorar'
 
   const {
     recentEvents,
@@ -125,30 +125,21 @@ export function Navbar({ searchValue = '', onSearchChange }) {
     >
       <div className="mx-auto max-w-6xl lg:max-w-7xl px-4 py-3 md:py-0">
         <div className="flex items-center justify-between gap-3 md:h-[50px] md:min-h-[50px]">
-          {/* Desktop: menú cuenta + logo. Móvil: sin hamburguesa (perfil en barra inferior). */}
+          {/* Desktop: menú cuenta (sin logo visual en md+). Móvil: sin hamburguesa (perfil en barra inferior). */}
           <div className="hidden md:flex md:flex-none md:items-center md:gap-2">
             {showDesktopProfileMenu ? (
               <button
                 type="button"
                 onClick={() => setProfileDrawerOpen(true)}
-                className="group rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="cursor-pointer rounded-lg p-2"
                 aria-label="Abrir menú de cuenta"
                 aria-expanded={profileDrawerOpen}
                 aria-controls="desktop-profile-drawer"
               >
-                <Menu className={`h-6 w-6 ${textColor} dark:group-hover:text-white`} strokeWidth={2} />
+                <Menu className={`h-6 w-6 ${textColor}`} strokeWidth={2} />
               </button>
             ) : null}
-            <h1
-              className={`flex flex-none min-w-[90px] text-left font-bold tracking-tight items-center gap-0.5 text-sm leading-normal`}
-            >
-              <span className={textColor}>QUEHAY</span>
-              <span className={ACCENT}>H</span>
-              <span className="text-xs" aria-hidden>
-                🔥
-              </span>
-              <span className={ACCENT}>Y</span>
-            </h1>
+            <h1 className="sr-only">QUEHAYHOY</h1>
           </div>
 
           {/* Móvil: buscador en la cabecera para ahorrar espacio vertical */}
@@ -171,12 +162,22 @@ export function Navbar({ searchValue = '', onSearchChange }) {
                   <span>QUEHAYHOY</span> en GYE?
                 </span>
               ) : null}
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+              <Search
+                className="pointer-events-none absolute right-3 top-1/2 h-6 w-6 -translate-y-1/2 text-gray-400 md:h-5 md:w-5"
+                strokeWidth={2}
+                aria-hidden
+              />
             </div>
           </div>
 
-          {/* Desktop: búsqueda centrada */}
-          <div className="hidden md:flex md:flex-[2] md:justify-center md:items-center md:px-4">
+          {/* Desktop: búsqueda centrada (oculta en /explorar) */}
+          <div
+            className={
+              hideDesktopSearch
+                ? 'hidden'
+                : 'hidden md:flex md:flex-[2] md:justify-center md:items-center md:px-4'
+            }
+          >
             <div className="relative w-full max-w-md">
               <input
                 type="search"
@@ -186,7 +187,11 @@ export function Navbar({ searchValue = '', onSearchChange }) {
                 className={`${searchInputCls} md:py-1.5 md:text-sm`}
                 aria-label="Buscar"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+              <Search
+                className="pointer-events-none absolute right-3 top-1/2 h-6 w-6 -translate-y-1/2 text-gray-400 md:h-5 md:w-5"
+                strokeWidth={2}
+                aria-hidden
+              />
             </div>
           </div>
 
@@ -195,34 +200,26 @@ export function Navbar({ searchValue = '', onSearchChange }) {
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-1.5 md:p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="cursor-pointer rounded-lg p-1.5 md:p-1.5"
               aria-label={isDark ? 'Modo claro' : 'Modo oscuro'}
             >
-              {isDark ? '☀️' : '🌙'}
+              {isDark ? (
+                <Sun className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
+              ) : (
+                <Moon className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
+              )}
             </button>
 
             <div className="relative" ref={bellWrapRef}>
               <button
                 type="button"
-                className="group relative p-1.5 md:p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="relative cursor-pointer rounded-lg p-1.5 md:p-1.5"
                 aria-label="Notificaciones"
                 aria-expanded={panelOpen}
                 aria-controls={menuId}
                 onClick={() => setPanelOpen((v) => !v)}
               >
-                <svg
-                  className={`w-6 h-6 md:w-5 md:h-5 ${textColor} dark:group-hover:text-white`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
+                <Bell className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
                 {unreadCount > 0 ? (
                   <span className="absolute -top-0.5 -right-0.5 min-h-[18px] min-w-[18px] rounded-full bg-red-600 px-1 text-[10px] font-bold leading-[18px] text-white text-center">
                     {badgeLabel}
@@ -327,6 +324,12 @@ export function Navbar({ searchValue = '', onSearchChange }) {
         </div>
 
       </div>
+
+      {mobileHomeFilters ? (
+        <div className={`md:hidden border-t ${borderColor} ${bgColor}`}>
+          <div className="mx-auto max-w-6xl px-4 pb-3 pt-2.5 lg:max-w-7xl">{mobileHomeFilters}</div>
+        </div>
+      ) : null}
 
       {profileDrawerOpen ? (
         <>

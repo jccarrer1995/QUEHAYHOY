@@ -1,3 +1,4 @@
+import { Flame, MapPin, Sparkles, Ticket } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCategoryVisibility } from './contexts/CategoryVisibilityContext.jsx'
@@ -11,6 +12,7 @@ import {
   EventCardCarousel,
   CategorySelector,
   SectorSelector,
+  HomeMobileFilters,
   EventSkeleton,
   TodaySection,
   SpecialCollections,
@@ -143,18 +145,25 @@ function App() {
       <Navbar
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
+        mobileHomeFilters={
+          <HomeMobileFilters
+            isDark={isDark}
+            activeCategory={effectiveCategory}
+            activeSector={effectiveSector}
+            onCategorySelect={setActiveCategory}
+            onSectorSelect={setActiveSector}
+          />
+        }
       />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 md:py-6 lg:max-w-7xl">
-        {/* Categoría y sectores arriba - móvil y desktop */}
-        <section className="mb-3">
+        {/* Categorías y sectores: móvil = barra bajo buscador (Navbar sticky); md+ = aquí */}
+        <section className="mb-4 hidden space-y-3 md:block">
           <CategorySelector
             activeCategory={effectiveCategory}
             onSelect={setActiveCategory}
             isDark={isDark}
           />
-        </section>
-        <section className="mb-4">
           <SectorSelector
             activeSector={effectiveSector}
             onSelect={setActiveSector}
@@ -172,7 +181,7 @@ function App() {
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
                 Eventos Destacados
-                <span>🔥</span>
+                <Flame className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
               </h2>
 
             </div>
@@ -208,7 +217,7 @@ function App() {
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
                 Gratis y Bacán
-                <span>✨</span>
+                <Sparkles className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
               </h2>
             </div>
             <HorizontalEventRow events={freeEvents} isDark={isDark} />
@@ -225,7 +234,7 @@ function App() {
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
                 No te lo puedes perder
-                <span>📍</span>
+                <MapPin className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
               </h2>
             </div>
             <HorizontalEventRow events={noTeLoPuedesPerderEvents} isDark={isDark} />
@@ -239,7 +248,7 @@ function App() {
                 className="text-xl font-bold tracking-wide flex items-center gap-2"
                 style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
               >
-                <span>🎫</span>
+                <Ticket className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
                 Más eventos
               </h2>
             </div>
@@ -268,7 +277,10 @@ function App() {
               disabled={filteredEvents.length === 0}
               className="mt-4 w-full sm:w-auto min-w-[220px] rounded-2xl bg-[#14b8a6] px-6 py-3.5 text-base font-bold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] enabled:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ¡Sorpréndeme! 🔥
+              <span className="inline-flex items-center justify-center gap-2">
+                ¡Sorpréndeme!
+                <Flame className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
+              </span>
             </button>
           </div>
         </section>

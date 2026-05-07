@@ -155,7 +155,7 @@ export function DesktopProfileMenuContent({ onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
+          className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition ${
             isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
           }`}
           aria-label="Cerrar menú"
@@ -186,7 +186,7 @@ export function DesktopProfileMenuContent({ onClose }) {
                 type="button"
                 onClick={handleGoogleClick}
                 disabled={googleBusy}
-                className={`flex w-full items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
+                className={`flex w-full cursor-pointer items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
               >
                 <GoogleLogo className="h-7 w-7 shrink-0" />
                 {googleBusy ? 'Conectando…' : 'Continuar con Google'}

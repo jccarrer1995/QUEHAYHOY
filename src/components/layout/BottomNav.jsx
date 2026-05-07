@@ -1,11 +1,13 @@
 /**
  * BottomNav - Navegación inferior móvil: Inicio, Explorar, (Mis eventos si gestiona eventos), Favoritos, Perfil
  */
-import { CalendarDays, Heart as HeartIcon } from 'lucide-react'
+import { CalendarDays, Compass, Heart, House, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext'
 import { canManageEventsRole } from '../../lib/organizerPlans.js'
+
+const ICON_STROKE = 2
 
 export function BottomNav({ activeTab = 'home', onTabChange }) {
   const navigate = useNavigate()
@@ -22,22 +24,22 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
 
   const items = canManageEvents
     ? [
-        { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
-        { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
+        { id: 'home', label: 'Inicio', icon: House, active: activeTab === 'home' },
+        { id: 'explore', label: 'Explorar', icon: Compass, active: activeTab === 'explore' },
         {
           id: 'myEvents',
           label: 'Mis Eventos',
-          icon: CalendarDaysIcon,
+          icon: CalendarDays,
           active: activeTab === 'myEvents',
         },
-        { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
-        { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
+        { id: 'favorites', label: 'Favoritos', icon: Heart, active: activeTab === 'favorites' },
+        { id: 'profile', label: 'Perfil', icon: User, active: activeTab === 'profile' },
       ]
     : [
-        { id: 'home', label: 'Inicio', icon: HomeIcon, active: activeTab === 'home' },
-        { id: 'explore', label: 'Explorar', icon: CompassIcon, active: activeTab === 'explore' },
-        { id: 'favorites', label: 'Favoritos', icon: HeartIcon, active: activeTab === 'favorites' },
-        { id: 'profile', label: 'Perfil', icon: UserIcon, active: activeTab === 'profile' },
+        { id: 'home', label: 'Inicio', icon: House, active: activeTab === 'home' },
+        { id: 'explore', label: 'Explorar', icon: Compass, active: activeTab === 'explore' },
+        { id: 'favorites', label: 'Favoritos', icon: Heart, active: activeTab === 'favorites' },
+        { id: 'profile', label: 'Perfil', icon: User, active: activeTab === 'profile' },
       ]
 
   function handleItemClick(id) {
@@ -84,7 +86,11 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
               onClick={() => handleItemClick(item.id)}
               className="flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-2"
             >
-              <Icon className={`h-6 w-6 shrink-0 ${item.active ? accentCl : mutedCl}`} />
+              <Icon
+                className={`h-6 w-6 shrink-0 ${item.active ? accentCl : mutedCl}`}
+                strokeWidth={ICON_STROKE}
+                aria-hidden
+              />
               <span
                 className={`max-w-full text-center text-[11px] leading-tight sm:text-xs ${
                   item.active ? accentCl : mutedCl
@@ -97,40 +103,6 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
         })}
       </div>
     </nav>
-  )
-}
-
-/** Mismo trazo que otros íconos del dock (lucide stroke 2) */
-function CalendarDaysIcon({ className }) {
-  return <CalendarDays className={className} strokeWidth={2} aria-hidden />
-}
-
-function HomeIcon({ className }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-      <path d="M3 13h1v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7h1a1 1 0 00.707-1.707l-9-9a.999.999 0 00-1.414 0l-9 9A1 1 0 003 13z" />
-    </svg>
-  )
-}
-function CompassIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-    </svg>
-  )
-}
-function BellIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-  )
-}
-function UserIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-    </svg>
   )
 }
 

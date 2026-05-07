@@ -443,7 +443,7 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
               >
                 {CATEGORIES.filter((c) => c.id !== 'all').map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.icon} {c.label}
+                    {c.markerEmoji} {c.label}
                   </option>
                 ))}
               </select>

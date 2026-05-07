@@ -82,6 +82,7 @@ export function ExploreFloatingHeader({
       >
         {visibleCategories.map((cat) => {
           const active = activeCategory === cat.id
+          const CatIcon = cat.Icon
           return (
             <button
               key={cat.id}
@@ -92,7 +93,7 @@ export function ExploreFloatingHeader({
                 active ? chipActive : chipIdle
               }`}
             >
-              <span aria-hidden>{cat.icon}</span>
+              <CatIcon className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               <span>{cat.label}</span>
             </button>
           )
