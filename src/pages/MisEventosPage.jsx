@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CalendarDays } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Plus } from 'lucide-react'
 import { BottomNav, Footer } from '../components/layout'
 import { EventCard } from '../components/events'
 import { OrganizerQuotaCard } from '../components/organizer/OrganizerQuotaCard.jsx'
@@ -62,6 +62,7 @@ export function MisEventosPage() {
     uid: user?.uid,
     role,
     enabled: catalogEnabled,
+    scope: 'createdThisMonth',
   })
   const error = listError
 
@@ -160,7 +161,7 @@ export function MisEventosPage() {
               ? 'Inicia sesión para ver y administrar tus eventos.'
               : isAdministratorRole(role)
                 ? 'Como administrador ves todos los eventos del sistema.'
-                : 'Aquí verás solo los eventos que creaste como organizador.'}
+                : 'Aquí verás solo los eventos que creaste este mes como organizador.'}
           </p>
           {user && showQuota ? (
             <div className="mt-5">
@@ -217,17 +218,11 @@ export function MisEventosPage() {
               className="m-0 text-lg font-bold"
               style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
             >
-              Aún no hay eventos aquí
+              Aún no hay eventos de este mes
             </h2>
             <p className={`mx-auto mt-2 max-w-md text-sm ${mutedCls}`}>
-              Cuando publiques o enlaces eventos, los verás listados en esta pantalla.
+              Aquí aparecen solo los eventos creados en el mes actual.
             </p>
-            <Link
-              to="/mis-eventos/crear"
-              className="mt-5 inline-flex rounded-2xl bg-[#14b8a6] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d9488]"
-            >
-              Crear evento
-            </Link>
           </div>
         ) : (
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -237,6 +232,18 @@ export function MisEventosPage() {
           </section>
         )}
       </main>
+
+      {catalogEnabled && user && !loading && !error ? (
+        <Link
+          to="/mis-eventos/crear"
+          aria-label="Crear evento"
+          className={`fixed right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-[#14b8a6] text-white shadow-lg shadow-[#14b8a6]/35 transition hover:bg-[#0d9488] active:scale-95 md:right-8 ${
+            isDark ? 'ring-2 ring-[#1f1f1f]' : 'ring-2 ring-white'
+          } bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] md:bottom-8`}
+        >
+          <Plus className="h-7 w-7" strokeWidth={2.5} aria-hidden />
+        </Link>
+      ) : null}
 
       <Footer />
       <BottomNav activeTab="myEvents" onTabChange={() => {}} />

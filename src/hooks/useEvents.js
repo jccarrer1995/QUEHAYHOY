@@ -48,6 +48,17 @@ function timestampToMs(ts) {
 }
 
 /**
+ * @param {import('firebase/firestore').Timestamp | { seconds?: number } | null | undefined} ts
+ * @returns {number | null}
+ */
+function timestampToMsOrNull(ts) {
+  if (ts == null) return null
+  if (typeof ts.toMillis === 'function') return ts.toMillis()
+  if (typeof ts === 'object' && typeof ts.seconds === 'number') return ts.seconds * 1000
+  return null
+}
+
+/**
  * @param {Record<string, unknown>} data
  * @returns {'unique' | 'recurring'}
  */
@@ -107,6 +118,7 @@ export function mapDocToEvent(doc) {
         ? null
         : Number(data.recurrence_day),
     dateMs,
+    createdAtMs: timestampToMsOrNull(data.createdAt),
     endDateMs,
     capacity_level: data.capacity_level ?? null,
     capacity: data.capacity ?? null,

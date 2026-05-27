@@ -2,7 +2,7 @@
  * Menú de cuenta exclusivo para desktop (drawer del botón hamburguesa).
  * Intencionalmente separado de `ProfileMenuContent` para desacoplar desktop de `/perfil`.
  */
-import { Compass, Heart, LogOut, MapPin, Tags, X, CalendarDays } from 'lucide-react'
+import { Compass, Heart, LogOut, MapPin, Tags, X, CalendarDays, CreditCard, BarChart3, History } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
@@ -11,7 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
-import { canManageEventsRole } from '../../lib/organizerPlans.js'
+import { canManageEventsRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -75,6 +75,7 @@ export function DesktopProfileMenuContent({ onClose }) {
   const isDark = theme === 'dark'
   const { signInWithGoogle, beginGoogleRedirect, user, logout, role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
+  const isOrganizer = (role ?? '').trim().toLowerCase() === ROLE_ORGANIZADOR
   const displayUser = useAuthUserForProfileHeader(user)
   const [googleBusy, setGoogleBusy] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
@@ -148,6 +149,21 @@ export function DesktopProfileMenuContent({ onClose }) {
     onClose?.()
   }
 
+  function goHistorialEventos() {
+    navigate('/historial-eventos')
+    onClose?.()
+  }
+
+  function goSubscriptionPlan() {
+    navigate('/perfil/suscripcion-plan')
+    onClose?.()
+  }
+
+  function goMetricasRendimiento() {
+    navigate('/perfil/metricas-rendimiento')
+    onClose?.()
+  }
+
   return (
     <div className={`flex h-full min-h-0 flex-1 flex-col ${drawerBg}`}>
       <div className={`flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 ${borderBar} ${drawerBg}`}>
@@ -218,8 +234,29 @@ export function DesktopProfileMenuContent({ onClose }) {
                 icon={Tags}
                 label="Categorías favoritas"
                 onClick={goCategorias}
-                withBorder={false}
+                withBorder={!isOrganizer}
               />
+              {isOrganizer ? (
+                <>
+                  <p className={`mb-1 mt-7 text-xs font-semibold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Gestión
+                  </p>
+                  <SettingsRow isDark={isDark} icon={History} label="Historial" onClick={goHistorialEventos} />
+                  <SettingsRow
+                    isDark={isDark}
+                    icon={CreditCard}
+                    label="Mi Suscripción / Plan"
+                    onClick={goSubscriptionPlan}
+                  />
+                  <SettingsRow
+                    isDark={isDark}
+                    icon={BarChart3}
+                    label="Métricas y Rendimiento"
+                    onClick={goMetricasRendimiento}
+                    withBorder={false}
+                  />
+                </>
+              ) : null}
             </>
           ) : null}
         </section>

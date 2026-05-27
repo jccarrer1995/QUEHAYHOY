@@ -1,7 +1,7 @@
 /**
  * Contenido de cuenta / perfil para la página `/perfil`.
  */
-import { MapPin, Tags, ChevronRight, FileText, Lock, Info, LogOut, CalendarDays } from 'lucide-react'
+import { MapPin, Tags, ChevronRight, FileText, Lock, Info, LogOut, CalendarDays, CreditCard, BarChart3, History } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LegalBottomSheet } from '../legal'
@@ -11,7 +11,7 @@ import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { useProfileGoogleSignIn } from './useProfileGoogleSignIn.js'
-import { canManageEventsRole } from '../../lib/organizerPlans.js'
+import { canManageEventsRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -70,6 +70,7 @@ export function ProfileMenuContent({ className = '' }) {
   const isDark = theme === 'dark'
   const { signInWithGoogle, beginGoogleRedirect, user, logout, role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
+  const isOrganizer = (role ?? '').trim().toLowerCase() === ROLE_ORGANIZADOR
   const displayUser = useAuthUserForProfileHeader(user)
   const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
   const safeAreaTopStyle = { paddingTop: 'env(safe-area-inset-top, 0px)' }
@@ -116,6 +117,18 @@ export function ProfileMenuContent({ className = '' }) {
 
   function goMisEventos() {
     navigate('/mis-eventos')
+  }
+
+  function goHistorialEventos() {
+    navigate('/historial-eventos')
+  }
+
+  function goSubscriptionPlan() {
+    navigate('/perfil/suscripcion-plan')
+  }
+
+  function goMetricasRendimiento() {
+    navigate('/perfil/metricas-rendimiento')
   }
 
   const body = (
@@ -165,6 +178,20 @@ export function ProfileMenuContent({ className = '' }) {
           ) : null}
           <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
           <SettingsRow isDark={isDark} icon={Tags} label="Categorías favoritas" onClick={goCategorias} />
+        </section>
+      ) : null}
+
+      {user && isOrganizer ? (
+        <section className="mt-8">
+          <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Gestión</h2>
+          <SettingsRow isDark={isDark} icon={History} label="Historial" onClick={goHistorialEventos} />
+          <SettingsRow isDark={isDark} icon={CreditCard} label="Mi Suscripción / Plan" onClick={goSubscriptionPlan} />
+          <SettingsRow
+            isDark={isDark}
+            icon={BarChart3}
+            label="Métricas y Rendimiento"
+            onClick={goMetricasRendimiento}
+          />
         </section>
       ) : null}
 

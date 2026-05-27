@@ -13,14 +13,17 @@ export function SpecialCollections({ isDark = false }) {
 
   const visibleCollections = useMemo(() => {
     const now = new Date()
-    const todayMonth = now.getMonth() + 1
-    const todayDay = now.getDate()
-    return SPECIAL_COLLECTIONS.filter((item) => {
-      if (typeof item.month !== 'number' || typeof item.day !== 'number') return true
-      if (item.month > todayMonth) return true
-      if (item.month === todayMonth && item.day >= todayDay) return true
-      return false
-    })
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    return SPECIAL_COLLECTIONS
+      .filter((item) => typeof item.month === 'number' && typeof item.day === 'number')
+      .map((item) => ({
+        item,
+        eventTime: new Date(now.getFullYear(), item.month - 1, item.day).getTime(),
+      }))
+      .filter((entry) => entry.eventTime >= startOfToday)
+      .sort((a, b) => a.eventTime - b.eventTime)
+      .slice(0, 3)
+      .map((entry) => entry.item)
   }, [])
 
   function updateScrollControls() {

@@ -149,6 +149,9 @@ src/
 | `/` | Home (eventos, categorías, sectores) |
 | `/favoritos` | Favoritos: con sesión lista eventos marcados con el corazón (Firestore); sin sesión, pantalla de bienvenida e inicio de sesión |
 | `/perfil` | Cuenta, Google, configuración y legales |
+| `/historial-eventos` | Historial de eventos (organizador): antiguos y nuevos |
+| `/perfil/suscripcion-plan` | Suscripción/Plan (organizador): vista mock de plan y pagos |
+| `/perfil/metricas-rendimiento` | Métricas (organizador): vista mock con alcance/interacciones del mes |
 | `/perfil/sectores` | Sectores favoritos: mostrar/ocultar en el carrusel del inicio |
 | `/perfil/categorias` | Categorías favoritas: mostrar/ocultar categorías y eventos relacionados en Home |
 | `/evento/:categoria/:slug` | Detalle público de evento con URL amigable |
@@ -179,6 +182,11 @@ src/
 - Con sesión: favoritos persistidos en `users/{uid}.favoriteEventIds`.
 - Preferencias de sectores/categorías desde perfil con persistencia y efecto en Home.
 
+**Actualización (avance reciente):**
+- En `/favoritos` hay un **switch de vista** por iconos:
+  - **Grid**: cards como están actualmente.
+  - **Listado**: vista compacta en filas, con **tag de categoría** debajo del precio.
+
 ### 4) Autenticación y perfil
 - Google Sign-In integrado con Firebase Auth, sesión persistente y restauración de ruta tras OAuth.
 - Creación/actualización de documento de usuario en `users/{uid}`.
@@ -205,11 +213,25 @@ src/
 - Ruta `/mis-eventos/crear` para alta de nuevos eventos.
 - Cuota mensual mostrada únicamente para organizador con plan activo.
 
+**Actualización (avance reciente):**
+- En `/mis-eventos` (organizador) se muestran **solo los eventos creados en el mes actual** (filtrado por `createdAt`).
+- Botón **flotante** (FAB) redondo con icono **+** para crear evento, ubicado **encima del BottomNav** en móvil.
+- Nueva ruta `/historial-eventos` para ver **todos** los eventos (antiguos y nuevos).
+
+### 7.1) Perfil (organizador): sección “Gestión”
+- En `/perfil` (organizador) se muestra una agrupación **Gestión** (debajo de Configuración y encima de Legal) con:
+  - **Historial** → `/historial-eventos`
+  - **Mi Suscripción / Plan** → `/perfil/suscripcion-plan` (mock estilo Uber: Plan Pro $7.99, ciclo, método de pago Visa ••••3002, cambiar/cancelar)
+  - **Métricas y Rendimiento** → `/perfil/metricas-rendimiento` (métricas hardcodeadas por ahora)
+
 ### 8) Pantalla Explorar con mapa
 - Integración de Google Maps con marcadores por categoría.
 - Etiquetas de eventos junto al pin (con umbral de zoom configurable).
 - Mini card inferior con resumen del evento seleccionado y acceso a detalle.
 - Requiere `VITE_GOOGLE_MAPS_API_KEY`.
+
+### 8.1) Home: Colecciones Especiales (curado)
+- En el Home, la sección **Colecciones Especiales** muestra **solo 3 cards**: las más cercanas **desde hoy en adelante**.
 
 ### 9) Firestore: consultas, rendimiento y resiliencia
 - Consultas adaptadas al modelo `unique/recurring` y visibilidad (`isVisible`).

@@ -15,6 +15,9 @@ import { FavoriteCategoriesPage } from './pages/FavoriteCategoriesPage.jsx'
 import { ExplorePage } from './pages/ExplorePage.jsx'
 import { MisEventosPage } from './pages/MisEventosPage.jsx'
 import { MisEventosCrearPage } from './pages/MisEventosCrearPage.jsx'
+import { HistorialEventosPage } from './pages/HistorialEventosPage.jsx'
+import { SubscriptionPlanPage } from './pages/SubscriptionPlanPage.jsx'
+import { OrganizerMetricsPage } from './pages/OrganizerMetricsPage.jsx'
 import { OrganizadorBenefitsPage } from './pages/OrganizadorBenefitsPage.jsx'
 import { OrganizadorPlansPage } from './pages/OrganizadorPlansPage.jsx'
 import { RequireOrganizador } from './components/auth/RequireOrganizador.jsx'
@@ -50,6 +53,30 @@ createRoot(document.getElementById('root')).render(
                     }
                   />
                   <Route path="/mis-eventos" element={<MisEventosPage />} />
+                  <Route
+                    path="/historial-eventos"
+                    element={
+                      <RequireOrganizador>
+                        <HistorialEventosPage />
+                      </RequireOrganizador>
+                    }
+                  />
+                  <Route
+                    path="/perfil/suscripcion-plan"
+                    element={
+                      <RequireOrganizador>
+                        <SubscriptionPlanPage />
+                      </RequireOrganizador>
+                    }
+                  />
+                  <Route
+                    path="/perfil/metricas-rendimiento"
+                    element={
+                      <RequireOrganizador>
+                        <OrganizerMetricsPage />
+                      </RequireOrganizador>
+                    }
+                  />
                   <Route path="/explorar" element={<ExplorePage />} />
                   <Route path="/coleccion/:id" element={<CollectionPage />} />
                   <Route path="/legal/:slug" element={<LegalPage />} />
