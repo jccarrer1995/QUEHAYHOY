@@ -75,6 +75,8 @@ export function mapDocToEvent(doc) {
   const endTs = type === 'unique' ? data.endDate ?? data.date : null
   const endDateMs = type === 'unique' ? timestampToMs(endTs) : null
   const dateMs = type === 'unique' ? timestampToMs(data.date) : null
+  const activeUntilMs =
+    type === 'recurring' ? timestampToMsOrNull(data.active_until) : null
 
   const rawLat = data.latitude ?? data.lat
   const rawLng = data.longitude ?? data.lng
@@ -120,6 +122,7 @@ export function mapDocToEvent(doc) {
     dateMs,
     createdAtMs: timestampToMsOrNull(data.createdAt),
     endDateMs,
+    activeUntilMs,
     capacity_level: data.capacity_level ?? null,
     capacity: data.capacity ?? null,
     price: data.price ?? null,

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Heart, LayoutGrid, List } from 'lucide-react'
 import { BottomNav, Footer } from '../components/layout'
-import { EventCard } from '../components/events'
+import { EventCard, FavoriteToggleButton } from '../components/events'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useFavoriteEvents } from '../contexts/FavoriteEventsContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
@@ -286,15 +286,22 @@ export function FavoriteEventsPage() {
                           <p className={`mt-1 text-xs ${mutedCls}`}>{event.date || 'Fecha por confirmar'}</p>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1">
-                          <span className={`text-sm font-semibold ${isDark ? 'text-[#14b8a6]' : 'text-teal-600'}`}>
-                            {event.price != null
-                              ? Number(event.price) > 0
-                                ? Number(event.price) % 1 === 0
-                                  ? `$${Number(event.price)}`
-                                  : `$${Number(event.price).toFixed(2)}`
-                                : 'Gratis'
-                              : ''}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`whitespace-nowrap pr-0.5 text-sm font-semibold tabular-nums ${
+                                isDark ? 'text-[#14b8a6]' : 'text-teal-600'
+                              }`}
+                            >
+                              {event.price != null
+                                ? Number(event.price) > 0
+                                  ? Number(event.price) % 1 === 0
+                                    ? `$${Number(event.price)}`
+                                    : `$${Number(event.price).toFixed(2)}`
+                                  : 'Gratis'
+                                : ''}
+                            </span>
+                            <FavoriteToggleButton eventId={event.id} variant="inline" />
+                          </div>
                           {event.category ? (
                             <span
                               className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${

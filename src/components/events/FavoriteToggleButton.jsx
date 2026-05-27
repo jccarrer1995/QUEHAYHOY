@@ -4,7 +4,10 @@ import { useFavoriteEvents } from '../../contexts/FavoriteEventsContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useFavoriteLoginPrompt } from '../../contexts/FavoriteLoginPromptContext.jsx'
 
-export function FavoriteToggleButton({ eventId, className = '' }) {
+/**
+ * @param {{ eventId: string | number, className?: string, variant?: 'overlay' | 'inline' }} props
+ */
+export function FavoriteToggleButton({ eventId, className = '', variant = 'overlay' }) {
   const { user } = useAuth()
   const { openFavoriteLoginPrompt } = useFavoriteLoginPrompt()
   const { isFavorite, toggleFavorite } = useFavoriteEvents()
@@ -35,6 +38,18 @@ export function FavoriteToggleButton({ eventId, className = '' }) {
     e.stopPropagation()
   }
 
+  const overlayCls =
+    'absolute right-3 top-3 z-20 h-10 w-10 border shadow-sm backdrop-blur-sm ' +
+    (active
+      ? 'border-[#14b8a6] bg-[#14b8a6] text-white'
+      : 'border-white/55 bg-black/35 text-white hover:bg-black/45')
+
+  const inlineCls =
+    'relative z-20 h-9 w-9 shrink-0 ' +
+    (active
+      ? 'border-[#14b8a6] bg-[#14b8a6] text-white'
+      : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-[#14b8a6]/50 hover:text-[#14b8a6] dark:border-gray-600 dark:bg-[#222] dark:text-gray-300 dark:hover:text-[#5eead4]')
+
   return (
     <motion.button
       type="button"
@@ -45,13 +60,15 @@ export function FavoriteToggleButton({ eventId, className = '' }) {
       whileTap={{ scale: 0.92 }}
       aria-label={active ? 'Quitar de favoritos' : 'Agregar a favoritos'}
       aria-pressed={active}
-      className={`absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm backdrop-blur-sm transition-colors ${
-        active
-          ? 'border-[#14b8a6] bg-[#14b8a6] text-white'
-          : 'border-white/55 bg-black/35 text-white hover:bg-black/45'
+      className={`inline-flex items-center justify-center rounded-full border transition-colors ${
+        variant === 'inline' ? inlineCls : overlayCls
       } ${className}`}
     >
-      <Heart className="h-5 w-5" fill={active ? 'currentColor' : 'none'} strokeWidth={2} />
+      <Heart
+        className={`${variant === 'inline' ? 'h-4 w-4' : 'h-5 w-5'}`}
+        fill={active ? 'currentColor' : 'none'}
+        strokeWidth={2}
+      />
     </motion.button>
   )
 }

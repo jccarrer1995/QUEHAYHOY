@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
 import { getEventDetailPath } from '../../lib/slug.js'
 import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
+import { isEventExpired } from '../../lib/eventExpiration.js'
 import { EventBadge } from './EventBadge.jsx'
 import { FavoriteToggleButton } from './FavoriteToggleButton.jsx'
 import { OrganizerEventCardActions } from '../organizer/OrganizerEventCardActions.jsx'
@@ -19,6 +20,8 @@ import { OrganizerEventCardActions } from '../organizer/OrganizerEventCardAction
  *   onEditEvent?: (event: Record<string, unknown>) => void
  *   onDeleteEvent?: (event: Record<string, unknown>) => void
  *   deleteActionDisabled?: boolean
+ *   hideFavoriteButton?: boolean
+ *   showExpiredState?: boolean
  * }} props
  */
 export function EventCard({
@@ -28,6 +31,8 @@ export function EventCard({
   onEditEvent,
   onDeleteEvent,
   deleteActionDisabled = false,
+  hideFavoriteButton = false,
+  showExpiredState = false,
 }) {
   const navigate = useNavigate()
   const {
@@ -78,19 +83,32 @@ export function EventCard({
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const textMuted = isDark ? 'text-gray-400' : 'text-gray-500'
   const borderColor = isDark ? 'border-gray-800' : 'border-gray-200'
+  const expired =
+    showExpiredState &&
+    isEventExpired(
+      /** @type {{ type?: string, endDateMs?: number | null, dateMs?: number | null, activeUntilMs?: number | null }} */ (
+        event
+      )
+    )
+  const canOpenDetail = Boolean(detailPath) && !expired
 
   return (
     <article
       className={`rounded-xl border ${borderColor} ${cardBg} overflow-hidden shadow-sm
         transition-all duration-300 ease-in-out
-        md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)]
-        md:hover:border-b-2 md:hover:border-b-[#00C3BB]
-        ${detailPath ? 'cursor-pointer' : ''}`}
-      onClick={detailPath ? goToDetail : undefined}
-      role={detailPath ? 'button' : undefined}
-      tabIndex={detailPath ? 0 : undefined}
+        ${canOpenDetail ? 'md:hover:-translate-y-[5px] md:hover:scale-[1.02] md:hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] md:hover:border-b-2 md:hover:border-b-[#00C3BB] cursor-pointer' : ''}
+        ${expired ? 'cursor-default opacity-[0.88] grayscale-[0.35]' : ''}`}
+      onClick={canOpenDetail ? goToDetail : undefined}
+      role={canOpenDetail ? 'button' : expired ? 'group' : undefined}
+      tabIndex={canOpenDetail ? 0 : undefined}
+      aria-disabled={expired ? true : undefined}
+      aria-label={
+        expired
+          ? `${title ?? 'Evento'} — expirado, solo consulta en historial`
+          : undefined
+      }
       onKeyDown={
-        detailPath
+        canOpenDetail
           ? (e) => {
               if (e.key === 'Enter' || e.key === ' ') goToDetail()
             }
@@ -106,9 +124,24 @@ export function EventCard({
             onDelete={() => onDeleteEvent?.(event)}
             deleteDisabled={deleteActionDisabled}
           />
-        ) : (
+        ) : hideFavoriteButton ? null : (
           <FavoriteToggleButton eventId={id} />
         )}
+        {expired ? (
+          <>
+            <div
+              className="pointer-events-none absolute inset-0 z-10 bg-black/35"
+              aria-hidden
+            />
+            <span
+              className={`absolute left-3 top-3 z-20 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wide shadow-sm ${
+                isDark ? 'bg-red-950/90 text-red-200' : 'bg-red-600 text-white'
+              }`}
+            >
+              Expirado
+            </span>
+          </>
+        ) : null}
         {imageSrc && !hasImageError ? (
           <img
             ref={imageRef}

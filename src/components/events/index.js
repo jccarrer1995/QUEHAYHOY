@@ -1,4 +1,5 @@
 export { EventCard } from './EventCard'
+export { FavoriteToggleButton } from './FavoriteToggleButton.jsx'
 export { CategoryFilter, CATEGORIES } from './CategoryFilter'
 export { CategorySelector, CATEGORIES as CATEGORIES_SELECTOR } from './CategorySelector'
 export { SectorSelector, SECTORS } from './SectorSelector'
