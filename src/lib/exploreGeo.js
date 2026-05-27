@@ -21,6 +21,7 @@ export const SECTOR_ANCHOR_BY_LABEL = {
   Centro: { lat: -2.1955, lng: -79.8822 },
   Alborada: { lat: -2.085, lng: -79.922 },
   'La Joya': { lat: -2.045, lng: -79.912 },
+  Norte: { lat: -2.098, lng: -79.91 },
 }
 
 /**

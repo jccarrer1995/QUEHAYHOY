@@ -4,6 +4,7 @@ import {
   badgeTypeToFormValue,
   legacyBadgeLabelToFormValue,
 } from '../../lib/eventBadges.js'
+import { parseEventSlugSegmentFromStored } from '../../lib/slug.js'
 
 /** Aforo fijo en Firestore (el formulario ya no lo edita). */
 export const DEFAULT_EVENT_CAPACITY = 100
@@ -25,10 +26,12 @@ export const SECTOR_TO_FIRESTORE = {
   centro: 'Centro',
   alborada: 'Alborada',
   'la-joya': 'La Joya',
+  norte: 'Norte',
 }
 
 export const initialForm = {
   title: '',
+  slug: '',
   description: '',
   sector: 'urdesa',
   category: 'bares',
@@ -128,6 +131,9 @@ export function mapFirestoreDocToForm(data) {
 
   const base = {
     title: typeof data.title === 'string' ? data.title : '',
+    slug: parseEventSlugSegmentFromStored(
+      typeof data.slug === 'string' ? data.slug : ''
+    ),
     description: typeof data.description === 'string' ? data.description : '',
     sector,
     category: firestoreCategoryToFormId(typeof data.category === 'string' ? data.category : ''),

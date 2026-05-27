@@ -15,6 +15,7 @@ import { FavoriteCategoriesPage } from './pages/FavoriteCategoriesPage.jsx'
 import { ExplorePage } from './pages/ExplorePage.jsx'
 import { MisEventosPage } from './pages/MisEventosPage.jsx'
 import { MisEventosCrearPage } from './pages/MisEventosCrearPage.jsx'
+import { MisEventosEditarPage } from './pages/MisEventosEditarPage.jsx'
 import { HistorialEventosPage } from './pages/HistorialEventosPage.jsx'
 import { SubscriptionPlanPage } from './pages/SubscriptionPlanPage.jsx'
 import { OrganizerMetricsPage } from './pages/OrganizerMetricsPage.jsx'
@@ -49,6 +50,14 @@ createRoot(document.getElementById('root')).render(
                     element={
                       <RequireOrganizador>
                         <MisEventosCrearPage />
+                      </RequireOrganizador>
+                    }
+                  />
+                  <Route
+                    path="/mis-eventos/editar/:eventId"
+                    element={
+                      <RequireOrganizador>
+                        <MisEventosEditarPage />
                       </RequireOrganizador>
                     }
                   />

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { deleteDoc, doc } from 'firebase/firestore'
 import { ArrowLeft, CalendarDays, Plus } from 'lucide-react'
 import { BottomNav, Footer } from '../components/layout'
-import { EventCard } from '../components/events'
+import { EventCard, EventSkeleton } from '../components/events'
+import { DeleteEventConfirmDialog } from '../components/organizer/DeleteEventConfirmDialog.jsx'
 import { OrganizerQuotaCard } from '../components/organizer/OrganizerQuotaCard.jsx'
+import { db } from '../config/firebaseConfig.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { useProfileGoogleSignIn } from '../components/layout/useProfileGoogleSignIn.js'
@@ -58,13 +61,57 @@ export function MisEventosPage() {
   const heroTitleRef = useRef(null)
 
   const catalogEnabled = Boolean(user) && canManageEventsRole(role)
-  const { events: eventsToShow, loading: listLoading, error: listError } = useMisEventosCatalog({
+  const {
+    events: eventsToShow,
+    loading: listLoading,
+    error: listError,
+    refetch: refetchEvents,
+  } = useMisEventosCatalog({
     uid: user?.uid,
     role,
     enabled: catalogEnabled,
     scope: 'createdThisMonth',
   })
   const error = listError
+
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteActionError, setDeleteActionError] = useState(null)
+
+  const showOrganizerCardActions = catalogEnabled && !isAdministratorRole(role)
+
+  function handleEditEvent(event) {
+    const id = typeof event?.id === 'string' ? event.id.trim() : ''
+    if (!id) return
+    navigate(`/mis-eventos/editar/${id}`)
+  }
+
+  function handleRequestDelete(event) {
+    const id = typeof event?.id === 'string' ? event.id.trim() : ''
+    if (!id) return
+    setDeleteActionError(null)
+    setDeleteTarget({
+      id,
+      title: typeof event?.title === 'string' ? event.title : 'este evento',
+    })
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget?.id || !db) return
+    setDeleting(true)
+    setDeleteActionError(null)
+    try {
+      await deleteDoc(doc(db, 'events', deleteTarget.id))
+      setDeleteTarget(null)
+      refetchEvents()
+    } catch (e) {
+      const msg =
+        e && typeof e === 'object' && 'message' in e ? String(e.message) : 'No se pudo eliminar el evento'
+      setDeleteActionError(msg)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const showQuota =
     Boolean(user) &&
@@ -172,6 +219,7 @@ export function MisEventosPage() {
                 loading={quotaLoading}
                 error={quotaError}
                 isDark={isDark}
+                lightSkeleton
               />
             </div>
           ) : null}
@@ -202,9 +250,15 @@ export function MisEventosPage() {
             </button>
           </div>
         ) : loading ? (
-          <div className={`rounded-2xl border px-4 py-6 ${panelCls}`}>
-            <p className={`text-sm ${mutedCls}`}>Cargando tus eventos...</p>
-          </div>
+          <section
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            aria-label="Cargando tus eventos"
+            aria-busy="true"
+          >
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <EventSkeleton key={i} layout="grid" lightOnly />
+            ))}
+          </section>
         ) : error ? (
           <div className="rounded-2xl border border-red-500/40 bg-red-50/40 px-4 py-6 dark:bg-red-950/20">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -225,11 +279,26 @@ export function MisEventosPage() {
             </p>
           </div>
         ) : (
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {eventsToShow.map((event) => (
-              <EventCard key={event.id} event={event} isDark={isDark} />
-            ))}
-          </section>
+          <>
+            {deleteActionError ? (
+              <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-50/40 px-4 py-3 dark:bg-red-950/20">
+                <p className="text-sm text-red-600 dark:text-red-400">{deleteActionError}</p>
+              </div>
+            ) : null}
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {eventsToShow.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isDark={isDark}
+                  showOrganizerActions={showOrganizerCardActions}
+                  onEditEvent={handleEditEvent}
+                  onDeleteEvent={handleRequestDelete}
+                  deleteActionDisabled={deleting}
+                />
+              ))}
+            </section>
+          </>
         )}
       </main>
 
@@ -244,6 +313,14 @@ export function MisEventosPage() {
           <Plus className="h-7 w-7" strokeWidth={2.5} aria-hidden />
         </Link>
       ) : null}
+
+      <DeleteEventConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        deleting={deleting}
+        isDark={isDark}
+      />
 
       <Footer />
       <BottomNav activeTab="myEvents" onTabChange={() => {}} />

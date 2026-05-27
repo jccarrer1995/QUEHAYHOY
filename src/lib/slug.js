@@ -56,18 +56,34 @@ export function buildEventSlugPath(categoryId, eventTitleSlug) {
 }
 
 /**
+ * Segmento del evento dentro del slug compuesto guardado en Firestore (`categoria/evento`).
+ * @param {string | null | undefined} storedSlug
+ * @returns {string}
+ */
+export function parseEventSlugSegmentFromStored(storedSlug) {
+  if (typeof storedSlug !== 'string') return ''
+  const trimmed = storedSlug.trim()
+  if (!trimmed) return ''
+  const slashIdx = trimmed.indexOf('/')
+  const segment = slashIdx >= 0 ? trimmed.slice(slashIdx + 1) : trimmed
+  return generateSlug(segment)
+}
+
+/**
  * Genera un slug único en la colección `events` (consulta por campo `slug`).
  * Si hay colisión con otro documento, añade un sufijo corto al segmento del evento.
  *
  * @param {import('firebase/firestore').Firestore} db
- * @param {{ category: string, title: string }} form
+ * @param {{ category: string, title: string, slug?: string }} form
  * @param {string | null | undefined} currentEventId - id del doc al editar, o null al crear
  * @returns {Promise<string>}
  */
 export async function ensureUniqueEventSlug(db, form, currentEventId) {
   const categorySegment = categoryIdToSlugSegment(form.category ?? 'general')
-  const titleSlug = generateSlug((form.title ?? '').trim())
-  let eventSlug = titleSlug || 'evento'
+  const fromSlugField = generateSlug((form.slug ?? '').trim())
+  const fromTitle = generateSlug((form.title ?? '').trim())
+  const baseSlug = fromSlugField || fromTitle || 'evento'
+  let eventSlug = baseSlug
   let fullSlug = `${categorySegment}/${eventSlug}`
 
   for (let attempt = 0; attempt < 24; attempt++) {
@@ -76,7 +92,7 @@ export async function ensureUniqueEventSlug(db, form, currentEventId) {
     if (snap.empty) return fullSlug
     const docSnap = snap.docs[0]
     if (currentEventId && docSnap.id === currentEventId) return fullSlug
-    eventSlug = `${titleSlug || 'evento'}-${generateShortUniqueSuffix(2)}`
+    eventSlug = `${baseSlug}-${generateShortUniqueSuffix(2)}`
     fullSlug = `${categorySegment}/${eventSlug}`
   }
   throw new Error('No se pudo generar un slug único')

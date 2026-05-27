@@ -55,6 +55,11 @@ export const SECTORS = [
     image:
       'https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
   },
+  {
+    id: 'norte',
+    label: 'Norte',
+    image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&h=200&fit=crop',
+  },
 ]
 
 /**

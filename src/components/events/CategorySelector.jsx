@@ -1,6 +1,7 @@
 import {
   Beer,
   Clapperboard,
+  Drama,
   FerrisWheel,
   Gamepad2,
   Music,
@@ -25,6 +26,7 @@ export const CATEGORIES = [
   { id: 'cine', label: 'Cine', Icon: Clapperboard, markerEmoji: '🎬', color: 'bg-purple-100 dark:bg-purple-900/30' },
   { id: 'ferias', label: 'Ferias', Icon: FerrisWheel, markerEmoji: '🎪', color: 'bg-emerald-100 dark:bg-emerald-900/30' },
   { id: 'videojuegos', label: 'Videojuegos', Icon: Gamepad2, markerEmoji: '🎮', color: 'bg-blue-100 dark:bg-blue-900/30' },
+  { id: 'teatro', label: 'Teatro', Icon: Drama, markerEmoji: '🎭', color: 'bg-rose-100 dark:bg-rose-900/30' },
 ]
 
 /**

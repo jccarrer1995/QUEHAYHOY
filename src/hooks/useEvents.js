@@ -146,6 +146,7 @@ const SECTOR_TO_FIRESTORE = {
   centro: 'Centro',
   alborada: 'Alborada',
   'la-joya': 'La Joya',
+  norte: 'Norte',
 }
 
 /**

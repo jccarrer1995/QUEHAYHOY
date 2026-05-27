@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { collection, getDocs, limit, query, where } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
 import { mapDocToEvent } from './useEvents.js'
@@ -20,6 +20,11 @@ export function useMisEventosCatalog({ uid, role, enabled, scope = 'all' }) {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const refetch = useCallback(() => {
+    setReloadToken((t) => t + 1)
+  }, [])
 
   useEffect(() => {
     if (!enabled || !db) {
@@ -81,7 +86,7 @@ export function useMisEventosCatalog({ uid, role, enabled, scope = 'all' }) {
     return () => {
       cancelled = true
     }
-  }, [uid, role, enabled, scope])
+  }, [uid, role, enabled, scope, reloadToken])
 
-  return { events, loading, error }
+  return { events, loading, error, refetch }
 }

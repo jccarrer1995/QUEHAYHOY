@@ -7,9 +7,10 @@
  *   loading?: boolean
  *   error?: string | null
  *   isDark: boolean
+ *   lightSkeleton?: boolean
  * }} props
  */
-export function OrganizerQuotaCard({ used, limit, planLabel, loading, error, isDark }) {
+export function OrganizerQuotaCard({ used, limit, planLabel, loading, error, isDark, lightSkeleton = false }) {
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 0
   const safeUsed = Number.isFinite(used) && used >= 0 ? Math.floor(used) : 0
   const remaining = safeLimit > 0 ? Math.max(0, safeLimit - safeUsed) : 0
@@ -32,10 +33,14 @@ export function OrganizerQuotaCard({ used, limit, planLabel, loading, error, isD
   }
 
   if (loading) {
+    const lineCls = lightSkeleton
+      ? 'bg-gray-200'
+      : 'bg-gray-300/50 dark:bg-gray-600/50'
+    const barCls = lightSkeleton ? 'bg-gray-200' : 'bg-gray-200 dark:bg-gray-700'
     return (
       <div className={`rounded-2xl px-4 py-4 ${cardCls}`} aria-busy="true">
-        <div className="h-4 w-40 animate-pulse rounded bg-gray-300/50 dark:bg-gray-600/50" />
-        <div className="mt-3 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700" />
+        <div className={`h-4 w-40 animate-pulse rounded ${lineCls}`} />
+        <div className={`mt-3 h-2 w-full animate-pulse rounded-full ${barCls}`} />
       </div>
     )
   }

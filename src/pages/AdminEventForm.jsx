@@ -1,11 +1,12 @@
 /**
- * Formulario admin: crear (/wp-admin/nuevo, /mis-eventos/crear) o editar (/wp-admin/editar/:eventId)
+ * Formulario admin: crear (/wp-admin/nuevo, /mis-eventos/crear) o editar
+ * (/wp-admin/editar/:eventId, /mis-eventos/editar/:eventId)
  */
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, CircleHelp } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { isAdministratorRole } from '../lib/organizerPlans.js'
@@ -19,7 +20,7 @@ import {
   SECTOR_TO_FIRESTORE,
   DESCRIPTION_MAX_LENGTH,
 } from './admin/eventAdminUtils.js'
-import { ensureUniqueEventSlug } from '../lib/slug.js'
+import { ensureUniqueEventSlug, generateSlug } from '../lib/slug.js'
 import { geocodeAddressString } from '../lib/geocodeFromAddress.js'
 
 /**
@@ -56,8 +57,13 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
   const [error, setError] = useState(null)
   const [toastError, setToastError] = useState('')
   const [geocoding, setGeocoding] = useState(false)
+  /** Si true, el slug se regenera al cambiar el título (Mis eventos). */
+  const [slugSyncFromTitle, setSlugSyncFromTitle] = useState(true)
 
   const todayYmdMin = getTodayYmdLocal()
+
+  const SLUG_TOOLTIP_TEXT =
+    'Es el texto que se pondrá en la URL cuando compartas el evento. No debe llevar caracteres especiales: solo letras, números y guiones.'
 
   const showError = (message) => {
     setError(message)
@@ -113,7 +119,11 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
             return
           }
         }
-        setForm(mapFirestoreDocToForm(data))
+        const mapped = mapFirestoreDocToForm(data)
+        setForm(mapped)
+        if (embeddedInMisEventos) {
+          setSlugSyncFromTitle(!(mapped.slug ?? '').trim())
+        }
       } catch (e) {
         if (!cancelled) setLoadError(e?.message ?? 'Error al cargar')
       } finally {
@@ -123,7 +133,7 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
     return () => {
       cancelled = true
     }
-  }, [isEdit, eventId, role, user?.uid, authLoading])
+  }, [isEdit, eventId, role, user?.uid, authLoading, embeddedInMisEventos])
 
   useEffect(() => {
     if (!toastError) return
@@ -176,8 +186,31 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    if (embeddedInMisEventos && name === 'title') {
+      setForm((prev) => ({
+        ...prev,
+        title: value,
+        slug: slugSyncFromTitle ? generateSlug(value) : prev.slug,
+      }))
+      setError(null)
+      return
+    }
+    if (embeddedInMisEventos && name === 'slug') {
+      setSlugSyncFromTitle(false)
+      setForm((prev) => ({ ...prev, slug: value }))
+      setError(null)
+      return
+    }
     setForm((prev) => ({ ...prev, [name]: value }))
     setError(null)
+  }
+
+  function handleSlugBlur() {
+    if (!embeddedInMisEventos) return
+    setForm((prev) => {
+      const normalized = generateSlug((prev.slug ?? '').trim())
+      return { ...prev, slug: normalized }
+    })
   }
 
   async function handleGeocodeFromAddress() {
@@ -217,6 +250,20 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
       showError('El título no puede superar 50 caracteres.')
       setSubmitting(false)
       return
+    }
+    let formForSave = form
+    if (embeddedInMisEventos) {
+      const slugRaw = (form.slug ?? '').trim()
+      const slugNormalized = generateSlug(slugRaw)
+      if (!slugRaw || !slugNormalized) {
+        showError('El slug es obligatorio.')
+        setSubmitting(false)
+        return
+      }
+      if (slugRaw !== slugNormalized) {
+        formForSave = { ...form, slug: slugNormalized }
+        setForm(formForSave)
+      }
     }
     const descLen = (form.description || '').trim().length
     if (descLen > DESCRIPTION_MAX_LENGTH) {
@@ -271,8 +318,8 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
     }
 
     try {
-      const slug = await ensureUniqueEventSlug(db, form, isEdit ? eventId : null)
-      const payload = buildEventPayload(form, {
+      const slug = await ensureUniqueEventSlug(db, formForSave, isEdit ? eventId : null)
+      const payload = buildEventPayload(formForSave, {
         isUpdate: isEdit,
         slug,
         organizerUid: !isEdit && user?.uid ? user.uid : null,
@@ -396,6 +443,57 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
               required
             />
           </div>
+
+          {embeddedInMisEventos ? (
+            <div>
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <label htmlFor="slug" className={`text-sm font-medium ${labelCl}`}>
+                  Slug <span className="text-red-500">*</span>
+                </label>
+                <div className="relative group">
+                  <button
+                    type="button"
+                    className={`inline-flex h-7 w-7 items-center justify-center rounded-full transition ${
+                      isDark
+                        ? 'text-gray-400 hover:bg-white/10 hover:text-gray-200'
+                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                    }`}
+                    aria-label="Información sobre el slug"
+                    aria-describedby="event-slug-tooltip"
+                  >
+                    <CircleHelp className="h-4 w-4" strokeWidth={2} aria-hidden />
+                  </button>
+                  <div
+                    id="event-slug-tooltip"
+                    role="tooltip"
+                    className={`pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border px-3 py-2.5 text-xs leading-relaxed shadow-lg opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${
+                      isDark
+                        ? 'border-gray-700 bg-[#252525] text-gray-300'
+                        : 'border-gray-200 bg-white text-gray-600'
+                    }`}
+                  >
+                    {SLUG_TOOLTIP_TEXT}
+                  </div>
+                </div>
+              </div>
+              <input
+                id="slug"
+                name="slug"
+                type="text"
+                value={form.slug}
+                onChange={handleChange}
+                onBlur={handleSlugBlur}
+                placeholder="ej-noche-de-jazz-en-vivo"
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-mono text-sm text-gray-900 outline-none transition placeholder:font-sans placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-[#14b8a6] dark:border-gray-600 dark:bg-gray-800 dark:text-[#E0E0E0]"
+                required
+              />
+              <p className={`mt-1.5 text-xs ${mutedCl}`}>
+                Solo letras minúsculas, números y guiones. Se actualiza con el título hasta que lo edites.
+              </p>
+            </div>
+          ) : null}
 
           <div>
             <label htmlFor="description" className={`mb-1.5 block text-sm font-medium ${labelCl}`}>

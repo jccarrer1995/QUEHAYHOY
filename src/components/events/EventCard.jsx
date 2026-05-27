@@ -9,8 +9,26 @@ import { getEventDetailPath } from '../../lib/slug.js'
 import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
 import { EventBadge } from './EventBadge.jsx'
 import { FavoriteToggleButton } from './FavoriteToggleButton.jsx'
+import { OrganizerEventCardActions } from '../organizer/OrganizerEventCardActions.jsx'
 
-export function EventCard({ event, isDark = false }) {
+/**
+ * @param {{
+ *   event: Record<string, unknown>
+ *   isDark?: boolean
+ *   showOrganizerActions?: boolean
+ *   onEditEvent?: (event: Record<string, unknown>) => void
+ *   onDeleteEvent?: (event: Record<string, unknown>) => void
+ *   deleteActionDisabled?: boolean
+ * }} props
+ */
+export function EventCard({
+  event,
+  isDark = false,
+  showOrganizerActions = false,
+  onEditEvent,
+  onDeleteEvent,
+  deleteActionDisabled = false,
+}) {
   const navigate = useNavigate()
   const {
     id,
@@ -82,7 +100,15 @@ export function EventCard({ event, isDark = false }) {
       <div
         className={`aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden ${isLoading ? 'animate-pulse' : ''}`}
       >
-        <FavoriteToggleButton eventId={id} />
+        {showOrganizerActions ? (
+          <OrganizerEventCardActions
+            onEdit={() => onEditEvent?.(event)}
+            onDelete={() => onDeleteEvent?.(event)}
+            deleteDisabled={deleteActionDisabled}
+          />
+        ) : (
+          <FavoriteToggleButton eventId={id} />
+        )}
         {imageSrc && !hasImageError ? (
           <img
             ref={imageRef}

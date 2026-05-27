@@ -80,6 +80,7 @@ const CATEGORY_MAP_LABEL_HEX = {
   cine: { light: '#7e22ce', dark: '#d8b4fe' },
   ferias: { light: '#047857', dark: '#6ee7b7' },
   videojuegos: { light: '#1d4ed8', dark: '#93c5fd' },
+  teatro: { light: '#be123c', dark: '#fda4af' },
   all: { light: '#0f766e', dark: '#5eead4' },
 }
 
