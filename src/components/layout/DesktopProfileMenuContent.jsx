@@ -98,21 +98,20 @@ function MenuRow({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`group flex w-full cursor-pointer items-center py-4 text-left transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${withBorder ? `border-b ${borderCls}` : ''} ${activeCls} ${hoverCls} ${labelCls}`}
+      className={`group flex w-full cursor-pointer items-center py-2.5 text-left transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${withBorder ? `border-b ${borderCls}` : ''} ${activeCls} ${hoverCls} ${labelCls}`}
     >
       <span
-        className={`flex shrink-0 items-center justify-center transition-transform duration-200 ease-out group-hover:scale-105 ${labelCls}`}
-        style={{ width: 24 }}
+        className={`flex w-5 shrink-0 items-center justify-center transition-transform duration-200 ease-out group-hover:scale-105 ${labelCls}`}
       >
-        <RowIcon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
+        <RowIcon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
       </span>
       <span
-        className={`min-w-0 flex-1 text-base font-medium transition-colors duration-200 ${labelCls}`}
-        style={{ marginLeft: 15 }}
+        className={`min-w-0 flex-1 text-sm font-medium transition-colors duration-200 ${labelCls}`}
+        style={{ marginLeft: 10 }}
       >
         {label}
       </span>
-      {showChevron ? <ChevronRight className={`h-5 w-5 shrink-0 ${chevronCls}`} aria-hidden /> : null}
+      {showChevron ? <ChevronRight className={`h-4 w-4 shrink-0 ${chevronCls}`} aria-hidden /> : null}
     </button>
   )
 }
@@ -205,35 +204,35 @@ export function DesktopProfileMenuContent({ onClose }) {
 
   return (
     <div className={`flex h-full min-h-0 flex-1 flex-col ${drawerBg}`}>
-      <div className={`flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 ${borderBar} ${drawerBg}`}>
-        <p className={`text-lg font-bold ${isDark ? 'text-[#E0E0E0]' : 'text-gray-900'}`}>QUEHAYHOY</p>
+      <div className={`flex shrink-0 items-center justify-between gap-2 border-b px-3.5 py-2.5 ${borderBar} ${drawerBg}`}>
+        <p className={`text-base font-bold tracking-tight ${isDark ? 'text-[#E0E0E0]' : 'text-gray-900'}`}>QUEHAYHOY</p>
         <button
           type="button"
           onClick={onClose}
-          className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full transition ${
+          className={`flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition ${
             isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
           }`}
           aria-label="Cerrar menú"
         >
-          <X className={`h-6 w-6 ${isDark ? 'text-gray-200' : 'text-gray-800'}`} strokeWidth={2} />
+          <X className={`h-5 w-5 ${isDark ? 'text-gray-200' : 'text-gray-800'}`} strokeWidth={2} />
         </button>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="px-5">
-            <header className="flex flex-col items-center pt-6 md:pt-4">
+          <div className="px-4">
+            <header className="flex flex-col items-center pt-4">
               {displayUser ? (
-                <ProfileSignedInSummary className="mb-8" />
+                <ProfileSignedInSummary compact className="mb-4" />
               ) : (
-                <div className="mb-8 flex w-full max-w-sm flex-col items-center">
+                <div className="mb-5 flex w-full flex-col items-center">
                   <button
                     type="button"
                     onClick={handleGoogleClick}
                     disabled={googleBusy}
-                    className={`flex w-full cursor-pointer items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
+                    className={`flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full py-3 pl-4 pr-5 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
                   >
-                    <GoogleLogo className="h-7 w-7 shrink-0" />
+                    <GoogleLogo className="h-6 w-6 shrink-0" />
                     {googleBusy ? 'Conectando…' : 'Continuar con Google'}
                   </button>
                   <p className="mt-2 pt-2 text-center text-xs text-gray-400">
@@ -244,7 +243,7 @@ export function DesktopProfileMenuContent({ onClose }) {
             </header>
 
             <section className="mt-0">
-              <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Menú</h2>
+              <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Menú</h2>
               <MenuRow isDark={isDark} icon={House} label="Home" onClick={() => closeAndNavigate('/')} />
               <MenuRow
                 isDark={isDark}
@@ -262,8 +261,8 @@ export function DesktopProfileMenuContent({ onClose }) {
             </section>
 
             {user ? (
-              <section className="mt-8">
-                <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
+              <section className="mt-5">
+                <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
                 {canManageEvents ? (
                   <MenuRow
                     isDark={isDark}
@@ -291,8 +290,8 @@ export function DesktopProfileMenuContent({ onClose }) {
             ) : null}
 
             {user && isOrganizer ? (
-              <section className="mt-8">
-                <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Gestión</h2>
+              <section className="mt-5">
+                <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Gestión</h2>
                 <MenuRow
                   isDark={isDark}
                   icon={History}
@@ -317,8 +316,8 @@ export function DesktopProfileMenuContent({ onClose }) {
               </section>
             ) : null}
 
-            <section className="mt-8">
-              <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Legal</h2>
+            <section className="mt-5">
+              <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Legal</h2>
               <MenuRow
                 isDark={isDark}
                 icon={FileText}
@@ -343,8 +342,8 @@ export function DesktopProfileMenuContent({ onClose }) {
             </section>
 
             {user ? (
-              <section className="mt-8">
-                <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Cuenta</h2>
+              <section className="mt-5">
+                <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Cuenta</h2>
                 <MenuRow
                   isDark={isDark}
                   icon={LogOut}
@@ -366,7 +365,7 @@ export function DesktopProfileMenuContent({ onClose }) {
         </div>
 
         <p
-          className={`mt-auto px-5 py-6 text-center text-xs font-extralight tracking-wide ${
+          className={`mt-auto px-4 py-4 text-center text-[11px] font-extralight tracking-wide ${
             isDark ? 'text-gray-500' : 'text-gray-400'
           }`}
           aria-label={`Versión ${APP_VERSION}`}

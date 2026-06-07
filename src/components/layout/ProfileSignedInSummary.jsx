@@ -9,9 +9,9 @@ import { resolveAuthUserForDisplay } from '../../lib/authDisplayUser.js'
 import { formatProfileRoleLabel } from '../../lib/profileRoleLabel.js'
 
 /**
- * @param {{ className?: string }} props
+ * @param {{ className?: string, compact?: boolean }} props
  */
-export function ProfileSignedInSummary({ className = '' }) {
+export function ProfileSignedInSummary({ className = '', compact = false }) {
   const { user: contextUser, photoURL: contextPhotoURL, displayName, role } = useAuth()
   /** El padre (`ProfileMenuContent` / drawer) ya suscribe con `useAuthUserForProfileHeader`; aquí solo resolvemos. */
   const user = resolveAuthUserForDisplay(contextUser)
@@ -42,11 +42,15 @@ export function ProfileSignedInSummary({ className = '' }) {
   const nameCls = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const roleLabel = formatProfileRoleLabel(role)
   const roleCls = isDark ? 'text-gray-500' : 'text-gray-500'
+  const avatarSizeCls = compact ? 'h-14 w-14' : 'h-20 w-20'
+  const placeholderIconCls = compact ? 'h-7 w-7' : 'h-10 w-10'
+  const nameSizeCls = compact ? 'text-sm' : 'text-base'
+  const nameMarginCls = compact ? 'mt-2' : 'mt-3'
 
   return (
-    <div className={`flex w-full flex-col items-center px-1 ${className || 'mb-8'}`}>
+    <div className={`flex w-full flex-col items-center px-1 ${className || (compact ? 'mb-5' : 'mb-8')}`}>
       <div
-        className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-full ${ringCls} ${!showPhoto ? placeholderBg : ''}`}
+        className={`relative shrink-0 overflow-hidden rounded-full ${avatarSizeCls} ${ringCls} ${!showPhoto ? placeholderBg : ''}`}
       >
         {showPhoto ? (
           <img
@@ -58,12 +62,12 @@ export function ProfileSignedInSummary({ className = '' }) {
           />
         ) : (
           <span className="flex h-full w-full items-center justify-center" aria-hidden>
-            <User className={`h-10 w-10 ${iconCls}`} strokeWidth={1.5} />
+            <User className={`${placeholderIconCls} ${iconCls}`} strokeWidth={1.5} />
           </span>
         )}
       </div>
-      <p className={`mt-3 max-w-full truncate text-center text-base font-semibold ${nameCls}`}>{name}</p>
-      <p className={`mt-1.5 text-center text-xs font-normal ${roleCls}`} aria-label={`Rol: ${roleLabel}`}>
+      <p className={`${nameMarginCls} max-w-full truncate text-center font-semibold ${nameSizeCls} ${nameCls}`}>{name}</p>
+      <p className={`mt-1 text-center text-[11px] font-normal ${roleCls}`} aria-label={`Rol: ${roleLabel}`}>
         {roleLabel}
       </p>
     </div>

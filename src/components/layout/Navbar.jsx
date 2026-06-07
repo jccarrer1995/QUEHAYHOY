@@ -341,7 +341,7 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
           />
           <aside
             id="desktop-profile-drawer"
-            className={`fixed inset-y-0 left-0 z-[90] hidden h-[100dvh] w-[min(100vw,400px)] max-w-[100vw] flex-col border-r shadow-2xl md:flex md:flex-col ${
+            className={`fixed inset-y-0 left-0 z-[90] hidden h-[100dvh] w-[min(100vw,300px)] max-w-[100vw] flex-col border-r shadow-2xl md:flex md:flex-col ${
               isDark ? 'border-gray-800 bg-[#121212]' : 'border-gray-200 bg-white'
             }`}
             role="dialog"

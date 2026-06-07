@@ -33,15 +33,17 @@
 - PWA: `manifest.json` y metadatos HTML para instalación en iPhone/Android
 
 ### 4. Componentes
-- **Navbar:** Logo QUEHAY/HOY, buscador, campana (planes recientes), tema y menú hamburguesa en desktop; en **móvil** puede incluir una segunda fila opcional bajo el buscador (`mobileHomeFilters`) que permanece **sticky** con el header
-- **HomeMobileFilters (solo Home / móvil):** label «Filtrar» con icono, **pills** horizontales (categoría y sector). Cada pill abre un **bottom sheet** con el selector correspondiente, botón «Aplicar» y cierre sin aplicar. Los pills muestran **Categoría** / **Sector** cuando el filtro está en «todo», o el **nombre de la opción** aplicada; si hay filtro activo el pill usa el **acento teal** y texto blanco. Desktop sigue usando `CategorySelector` + `SectorSelector` en el contenido principal
+- **Navbar:** Logo QUEHAY/HOY, buscador, campana (planes recientes), tema y menú hamburguesa en desktop; segunda fila opcional bajo el buscador (`mobileHomeFilters`) **sticky** con el header — visible en **móvil y desktop** en Home
+- **HomeMobileFilters (Home):** label «Filtrar» con icono, **pills** horizontales (categoría y sector). Cada pill abre un **sheet** (bottom en móvil, centrado en desktop) con el selector correspondiente, botón «Aplicar» y cierre sin aplicar. Los pills muestran **Categoría** / **Sector** cuando el filtro está en «todo», o el **nombre de la opción** aplicada; si hay filtro activo el pill usa el **acento teal** y texto blanco. Los chips del sheet usan scroll horizontal (`HorizontalScrollRow`: rueda, arrastre y touch)
 - **CategorySelector / SectorSelector:** variante `toolbar` (fila con etiqueta) y variante `sheet` (solo chips, sin título duplicado en el sheet)
+- **HorizontalScrollRow:** fila con scroll horizontal reutilizable (carruseles de chips en sheets de filtros)
 - **CategorySelector:** Bares, Conciertos, Comida, Cine, Ferias (tarjetas con iconos)
 - **EventCardCarousel:** Imagen, título, badge de aforo (✨ Exclusivo, 👥 Social, 🔥 Masivo), fecha, ubicación, precio
 - **FloatingButtons:** Tema (☀️/🌙), Filter, Gratis — solo móvil
 - **BottomNav:** Inicio, Explorar, Favoritos (en construcción), **Perfil** → `/perfil`
 - **TodaySection / HorizontalEventRow:** carruseles reactivos al buscador y a sectores favoritos
-- **ProfileMenuContent / DesktopProfileMenuContent:** perfil móvil y drawer desktop desacoplados
+- **ProfileMenuContent / DesktopProfileMenuContent:** perfil móvil (`/perfil`) y drawer desktop (hamburguesa) desacoplados; el drawer replica las secciones del perfil responsive con menú de navegación al inicio
+- **DeleteAccountConfirmDialog:** modal de confirmación para eliminación de cuenta
 - **Footer:** footer exclusivo para desktop con bloque editorial y enlaces legales
 - **LegalBottomSheet / LegalPage:** contenido legal consistente entre móvil y desktop
 
@@ -62,7 +64,7 @@
 - Diseño mobile-first responsive
 - Carrusel horizontal de eventos en móvil, grid en desktop
 - Padding inferior para evitar que los FABs tapen el contenido al hacer scroll en iPhone
-- Filtros de categoría y sector en Home replican patrón tipo app de delivery: barra compacta bajo el buscador (sticky con el `Navbar`), sheets modales con Framer Motion y contraste explícito en títulos para tema claro con `prefers-color-scheme: dark`
+- Filtros de categoría y sector en Home replican patrón tipo app de delivery: barra compacta bajo el buscador (sticky con el `Navbar`), sheets modales con Framer Motion y contraste explícito en títulos para tema claro con `prefers-color-scheme: dark`. En **desktop** el mismo bloque de filtros vive en el `Navbar` (ya no hay selectores duplicados en el `main` del Home)
 - La sección **«¡Pilas Hoy!»** (`TodaySection`) no muestra línea separadora superior respecto al bloque anterior
 
 ### 8. SEO, rutas y descubrimiento
@@ -130,8 +132,8 @@ VITE_GOOGLE_MAPS_API_KEY=
 ```
 src/
 ├── components/
-│   ├── layout/     # Navbar (opc. `mobileHomeFilters` sticky), BottomNav, AppToaster
-│   ├── events/     # carruseles, HomeMobileFilters, CategorySelector, SectorSelector, TodaySection…
+│   ├── layout/     # Navbar (opc. `mobileHomeFilters` sticky), BottomNav, DesktopProfileMenuContent, DeleteAccountConfirmDialog…
+│   ├── events/     # carruseles, HomeMobileFilters, HorizontalScrollRow, CategorySelector, SectorSelector, TodaySection…
 │   ├── explore/    # ExploreMapView (Google Maps), ExploreEventMiniCard (resumen al tocar pin)…
 │   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig
@@ -193,6 +195,14 @@ src/
 - Menús de perfil móviles y desktop con resumen de usuario y cierre de sesión.
 - Secciones legales integradas en perfil y rutas semánticas en desktop.
 
+**Actualización (avance reciente):**
+- **Eliminar cuenta** en `/perfil` (sección Cuenta): modal de confirmación, borrado en Firebase Auth, documento `users/{uid}` y registro lógico en `historical_trials` para bloquear reutilización de trial (`accountDeletion.js`, `AuthContext.deleteAccount`).
+- **Drawer desktop** (`DesktopProfileMenuContent`, botón hamburguesa del `Navbar`):
+  - Ancho compacto **300px**, tipografía y espaciados reducidos; perfil con variante `compact` en `ProfileSignedInSummary`.
+  - Scrollbar fino siempre visible al **borde derecho** del panel (utilidad `.scrollbar-thin` en `index.css`).
+  - Misma estructura que el perfil responsive, con sección **Menú** al inicio: **Home**, **Explorar**, **Favoritos**; luego **Configuración**, **Gestión** (organizador), **Legal** y **Cuenta** (cerrar sesión + eliminar cuenta).
+  - Sheets legales y diálogo de eliminación de cuenta integrados en el drawer.
+
 ### 5) Admin de eventos (CRUD)
 - Dashboard admin en `/wp-admin` con tabla paginada.
 - Crear, editar, eliminar y alternar visibilidad (`isVisible`) de eventos.
@@ -217,6 +227,7 @@ src/
 - En `/mis-eventos` (organizador) se muestran **solo los eventos creados en el mes actual** (filtrado por `createdAt`).
 - Botón **flotante** (FAB) redondo con icono **+** para crear evento, ubicado **encima del BottomNav** en móvil.
 - Nueva ruta `/historial-eventos` para ver **todos** los eventos (antiguos y nuevos).
+- **Bloqueo mismo día del evento** (organizador): no puede editar ni eliminar un evento programado para el día actual (`eventExpiration.js`); la UI muestra acciones deshabilitadas con tooltip/toast en cards, listado y formulario de edición.
 
 ### 7.1) Perfil (organizador): sección “Gestión”
 - En `/perfil` (organizador) se muestra una agrupación **Gestión** (debajo de Configuración y encima de Legal) con:
@@ -233,6 +244,11 @@ src/
 ### 8.1) Home: Colecciones Especiales (curado)
 - En el Home, la sección **Colecciones Especiales** muestra **solo 3 cards**: las más cercanas **desde hoy en adelante**.
 
+### 8.2) Home: filtros en desktop
+- Los filtros de categoría y sector del Home (`HomeMobileFilters`) se muestran también en **desktop**, en la fila sticky bajo el buscador del `Navbar`.
+- Al pulsar **Categoría** o **Sector** se abre un modal centrado (fade + escala) con chips scrolleables horizontalmente.
+- Se eliminaron los selectores duplicados que antes vivían en el `main` de `App.jsx` solo para `md+`.
+
 ### 9) Firestore: consultas, rendimiento y resiliencia
 - Consultas adaptadas al modelo `unique/recurring` y visibilidad (`isVisible`).
 - Índices en `firestore.indexes.json` para soportar consultas compuestas.
@@ -244,6 +260,7 @@ src/
 - Modo claro/oscuro consistente en componentes y pantallas clave.
 - Safe area en iPhone para headers/acciones en pantallas de detalle y colecciones.
 - Toaster global para feedback contextual.
+- Utilidad CSS `.scrollbar-thin` para scrollbars discretos en paneles laterales (drawer de perfil desktop).
 
 ## Pendiente para completar
 
