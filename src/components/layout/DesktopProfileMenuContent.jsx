@@ -1,10 +1,30 @@
 /**
  * Menú de cuenta exclusivo para desktop (drawer del botón hamburguesa).
- * Intencionalmente separado de `ProfileMenuContent` para desacoplar desktop de `/perfil`.
+ * Contenido alineado con `ProfileMenuContent` + sección Menú (Inicio, Explorar, Favoritos).
  */
-import { Compass, Heart, LogOut, MapPin, Tags, X, CalendarDays, CreditCard, BarChart3, History } from 'lucide-react'
+import {
+  BarChart3,
+  CalendarDays,
+  ChevronRight,
+  Compass,
+  CreditCard,
+  FileText,
+  Heart,
+  History,
+  House,
+  Info,
+  Lock,
+  LogOut,
+  MapPin,
+  Tags,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import { LegalBottomSheet } from '../legal'
+import { DeleteAccountConfirmDialog } from './DeleteAccountConfirmDialog.jsx'
 import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
@@ -37,18 +57,48 @@ function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
   )
 }
 
-function SettingsRow({ icon, label, onClick, isDark, withBorder = true }) {
+/**
+ * @param {{
+ *   icon: import('lucide-react').LucideIcon
+ *   label: string
+ *   onClick: () => void
+ *   isDark: boolean
+ *   tone?: 'default' | 'danger'
+ *   disabled?: boolean
+ *   withBorder?: boolean
+ *   showChevron?: boolean
+ * }} props
+ */
+function MenuRow({
+  icon,
+  label,
+  onClick,
+  isDark,
+  tone = 'default',
+  disabled = false,
+  withBorder = true,
+  showChevron = false,
+}) {
   const RowIcon = icon
   const borderCls = isDark ? 'border-gray-800' : 'border-gray-200'
   const activeCls = isDark ? 'active:bg-white/5' : 'active:bg-black/5'
   const hoverCls = isDark ? 'hover:bg-white/[0.03]' : 'hover:bg-black/[0.03]'
-  const labelCls = isDark ? '!text-[#E0E0E0]' : '!text-gray-900'
+  const labelCls =
+    tone === 'danger'
+      ? isDark
+        ? '!text-red-400'
+        : '!text-red-600'
+      : isDark
+        ? '!text-[#E0E0E0]'
+        : '!text-gray-900'
+  const chevronCls = isDark ? '!text-gray-500' : '!text-gray-400'
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group flex w-full cursor-pointer items-center py-4 text-left transition-colors duration-200 ease-out ${withBorder ? `border-b ${borderCls}` : ''} ${activeCls} ${hoverCls} ${labelCls}`}
+      disabled={disabled}
+      className={`group flex w-full cursor-pointer items-center py-4 text-left transition-colors duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-60 ${withBorder ? `border-b ${borderCls}` : ''} ${activeCls} ${hoverCls} ${labelCls}`}
     >
       <span
         className={`flex shrink-0 items-center justify-center transition-transform duration-200 ease-out group-hover:scale-105 ${labelCls}`}
@@ -62,6 +112,7 @@ function SettingsRow({ icon, label, onClick, isDark, withBorder = true }) {
       >
         {label}
       </span>
+      {showChevron ? <ChevronRight className={`h-5 w-5 shrink-0 ${chevronCls}`} aria-hidden /> : null}
     </button>
   )
 }
@@ -73,21 +124,33 @@ export function DesktopProfileMenuContent({ onClose }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, beginGoogleRedirect, user, logout, role } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user, logout, deleteAccount, role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
   const isOrganizer = (role ?? '').trim().toLowerCase() === ROLE_ORGANIZADOR
   const displayUser = useAuthUserForProfileHeader(user)
   const [googleBusy, setGoogleBusy] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [legalSheetOpen, setLegalSheetOpen] = useState(false)
+  const [legalSheetType, setLegalSheetType] = useState('terms')
 
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
     : 'border border-gray-200 bg-white text-black shadow-sm'
   const borderBar = isDark ? 'border-gray-800' : 'border-gray-200'
   const drawerBg = isDark ? 'bg-[#121212]' : 'bg-white'
-  const logoutBtnCls = isDark
-    ? 'border-red-400/35 text-red-300 hover:bg-red-500/10 active:bg-red-500/15'
-    : 'border-red-200 text-red-600 hover:bg-red-50 active:bg-red-100/80'
+  const sectionHeadingCls = isDark ? '!text-gray-400' : '!text-gray-600'
+
+  function closeAndNavigate(path) {
+    navigate(path)
+    onClose?.()
+  }
+
+  function openLegalSheet(t) {
+    setLegalSheetType(t)
+    setLegalSheetOpen(true)
+  }
 
   function handleGoogleClick() {
     if (shouldUseGoogleRedirect()) {
@@ -124,44 +187,20 @@ export function DesktopProfileMenuContent({ onClose }) {
     }
   }
 
-  function goSectores() {
-    navigate('/perfil/sectores')
-    onClose?.()
-  }
-
-  function goCategorias() {
-    navigate('/perfil/categorias')
-    onClose?.()
-  }
-
-  function goFavoritos() {
-    navigate('/favoritos')
-    onClose?.()
-  }
-
-  function goExplorar() {
-    navigate('/explorar')
-    onClose?.()
-  }
-
-  function goMisEventos() {
-    navigate('/mis-eventos')
-    onClose?.()
-  }
-
-  function goHistorialEventos() {
-    navigate('/historial-eventos')
-    onClose?.()
-  }
-
-  function goSubscriptionPlan() {
-    navigate('/perfil/suscripcion-plan')
-    onClose?.()
-  }
-
-  function goMetricasRendimiento() {
-    navigate('/perfil/metricas-rendimiento')
-    onClose?.()
+  async function handleDeleteAccount() {
+    setDeleteBusy(true)
+    try {
+      await deleteAccount()
+      setDeleteDialogOpen(false)
+      toast.success('Tu cuenta fue eliminada correctamente.')
+      onClose?.()
+      navigate('/', { replace: true })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo eliminar la cuenta.'
+      toast.error(msg)
+    } finally {
+      setDeleteBusy(false)
+    }
   }
 
   return (
@@ -182,86 +221,148 @@ export function DesktopProfileMenuContent({ onClose }) {
 
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="px-5">
-        <header className="flex flex-col items-center pt-6 md:pt-4">
-          {displayUser ? (
-            <>
-              <ProfileSignedInSummary className="mb-3" />
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={logoutBusy}
-                className={`mb-8 flex w-full max-w-sm items-center justify-center gap-2 rounded-full border py-3.5 pl-4 pr-5 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${logoutBtnCls}`}
-              >
-                <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
-                {logoutBusy ? 'Cerrando sesión…' : 'Cerrar sesión'}
-              </button>
-            </>
-          ) : (
-            <div className="mb-8 flex w-full max-w-sm flex-col items-center">
-              <button
-                type="button"
-                onClick={handleGoogleClick}
-                disabled={googleBusy}
-                className={`flex w-full cursor-pointer items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
-              >
-                <GoogleLogo className="h-7 w-7 shrink-0" />
-                {googleBusy ? 'Conectando…' : 'Continuar con Google'}
-              </button>
-              <p className="mt-2 pt-2 text-center text-xs text-gray-400">
-                - Para disfrutar la experiencia completa -
-              </p>
-            </div>
-          )}
-        </header>
-
-        <section className="mt-0">
-          <SettingsRow isDark={isDark} icon={Compass} label="Explorar" onClick={goExplorar} />
-          <SettingsRow
-            isDark={isDark}
-            icon={Heart}
-            label="Favoritos"
-            onClick={goFavoritos}
-            withBorder={!user}
-          />
-          {user ? (
-            <>
-              {canManageEvents ? (
-                <SettingsRow isDark={isDark} icon={CalendarDays} label="Mis eventos" onClick={goMisEventos} />
-              ) : null}
-              <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
-              <SettingsRow
-                isDark={isDark}
-                icon={Tags}
-                label="Categorías favoritas"
-                onClick={goCategorias}
-                withBorder={!isOrganizer}
-              />
-              {isOrganizer ? (
-                <>
-                  <p className={`mb-1 mt-7 text-xs font-semibold tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Gestión
+          <div className="px-5">
+            <header className="flex flex-col items-center pt-6 md:pt-4">
+              {displayUser ? (
+                <ProfileSignedInSummary className="mb-8" />
+              ) : (
+                <div className="mb-8 flex w-full max-w-sm flex-col items-center">
+                  <button
+                    type="button"
+                    onClick={handleGoogleClick}
+                    disabled={googleBusy}
+                    className={`flex w-full cursor-pointer items-center justify-center gap-3 rounded-full py-4 pl-5 pr-6 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${googleBtnCls}`}
+                  >
+                    <GoogleLogo className="h-7 w-7 shrink-0" />
+                    {googleBusy ? 'Conectando…' : 'Continuar con Google'}
+                  </button>
+                  <p className="mt-2 pt-2 text-center text-xs text-gray-400">
+                    - Para disfrutar la experiencia completa -
                   </p>
-                  <SettingsRow isDark={isDark} icon={History} label="Historial" onClick={goHistorialEventos} />
-                  <SettingsRow
+                </div>
+              )}
+            </header>
+
+            <section className="mt-0">
+              <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Menú</h2>
+              <MenuRow isDark={isDark} icon={House} label="Home" onClick={() => closeAndNavigate('/')} />
+              <MenuRow
+                isDark={isDark}
+                icon={Compass}
+                label="Explorar"
+                onClick={() => closeAndNavigate('/explorar')}
+              />
+              <MenuRow
+                isDark={isDark}
+                icon={Heart}
+                label="Favoritos"
+                onClick={() => closeAndNavigate('/favoritos')}
+                withBorder={!user}
+              />
+            </section>
+
+            {user ? (
+              <section className="mt-8">
+                <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
+                {canManageEvents ? (
+                  <MenuRow
                     isDark={isDark}
-                    icon={CreditCard}
-                    label="Mi Suscripción / Plan"
-                    onClick={goSubscriptionPlan}
+                    icon={CalendarDays}
+                    label="Mis eventos"
+                    onClick={() => closeAndNavigate('/mis-eventos')}
+                    showChevron
                   />
-                  <SettingsRow
-                    isDark={isDark}
-                    icon={BarChart3}
-                    label="Métricas y Rendimiento"
-                    onClick={goMetricasRendimiento}
-                    withBorder={false}
-                  />
-                </>
-              ) : null}
-            </>
-          ) : null}
-        </section>
-        </div>
+                ) : null}
+                <MenuRow
+                  isDark={isDark}
+                  icon={MapPin}
+                  label="Sectores favoritos"
+                  onClick={() => closeAndNavigate('/perfil/sectores')}
+                  showChevron
+                />
+                <MenuRow
+                  isDark={isDark}
+                  icon={Tags}
+                  label="Categorías favoritas"
+                  onClick={() => closeAndNavigate('/perfil/categorias')}
+                  showChevron
+                />
+              </section>
+            ) : null}
+
+            {user && isOrganizer ? (
+              <section className="mt-8">
+                <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Gestión</h2>
+                <MenuRow
+                  isDark={isDark}
+                  icon={History}
+                  label="Historial"
+                  onClick={() => closeAndNavigate('/historial-eventos')}
+                  showChevron
+                />
+                <MenuRow
+                  isDark={isDark}
+                  icon={CreditCard}
+                  label="Mi Suscripción / Plan"
+                  onClick={() => closeAndNavigate('/perfil/suscripcion-plan')}
+                  showChevron
+                />
+                <MenuRow
+                  isDark={isDark}
+                  icon={BarChart3}
+                  label="Métricas y Rendimiento"
+                  onClick={() => closeAndNavigate('/perfil/metricas-rendimiento')}
+                  showChevron
+                />
+              </section>
+            ) : null}
+
+            <section className="mt-8">
+              <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Legal</h2>
+              <MenuRow
+                isDark={isDark}
+                icon={FileText}
+                label="Términos y Condiciones"
+                onClick={() => openLegalSheet('terms')}
+                showChevron
+              />
+              <MenuRow
+                isDark={isDark}
+                icon={Lock}
+                label="Política de Privacidad"
+                onClick={() => openLegalSheet('privacy')}
+                showChevron
+              />
+              <MenuRow
+                isDark={isDark}
+                icon={Info}
+                label="Acerca de la App"
+                onClick={() => openLegalSheet('about')}
+                showChevron
+              />
+            </section>
+
+            {user ? (
+              <section className="mt-8">
+                <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Cuenta</h2>
+                <MenuRow
+                  isDark={isDark}
+                  icon={LogOut}
+                  label={logoutBusy ? 'Cerrando sesión…' : 'Cerrar sesión'}
+                  onClick={handleLogout}
+                  disabled={logoutBusy}
+                />
+                <MenuRow
+                  isDark={isDark}
+                  icon={Trash2}
+                  label="Eliminar cuenta"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  tone="danger"
+                  withBorder={false}
+                />
+              </section>
+            ) : null}
+          </div>
         </div>
 
         <p
@@ -273,6 +374,19 @@ export function DesktopProfileMenuContent({ onClose }) {
           {APP_VERSION}
         </p>
       </div>
+
+      <LegalBottomSheet
+        open={legalSheetOpen}
+        type={legalSheetType}
+        onClose={() => setLegalSheetOpen(false)}
+      />
+      <DeleteAccountConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteAccount}
+        deleting={deleteBusy}
+        isDark={isDark}
+      />
     </div>
   )
 }
