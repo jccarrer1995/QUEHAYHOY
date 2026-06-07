@@ -180,8 +180,9 @@ export function DesktopProfileMenuContent({ onClose }) {
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-5">
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="px-5">
         <header className="flex flex-col items-center pt-6 md:pt-4">
           {displayUser ? (
             <>
@@ -261,9 +262,10 @@ export function DesktopProfileMenuContent({ onClose }) {
           ) : null}
         </section>
         </div>
+        </div>
 
         <p
-          className={`mt-auto py-6 text-center text-xs font-extralight tracking-wide ${
+          className={`mt-auto px-5 py-6 text-center text-xs font-extralight tracking-wide ${
             isDark ? 'text-gray-500' : 'text-gray-400'
           }`}
           aria-label={`Versión ${APP_VERSION}`}
