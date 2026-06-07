@@ -10,8 +10,6 @@ import { OrganizerPromoBanner } from './components/organizer/OrganizerPromoBanne
 import { HomeStartupSplash } from './components/layout/HomeStartupSplash.jsx'
 import {
   EventCardCarousel,
-  CategorySelector,
-  SectorSelector,
   HomeMobileFilters,
   EventSkeleton,
   TodaySection,
@@ -157,20 +155,6 @@ function App() {
       />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 md:py-6 lg:max-w-7xl">
-        {/* Categorías y sectores: móvil = barra bajo buscador (Navbar sticky); md+ = aquí */}
-        <section className="mb-4 hidden space-y-3 md:block">
-          <CategorySelector
-            activeCategory={effectiveCategory}
-            onSelect={setActiveCategory}
-            isDark={isDark}
-          />
-          <SectorSelector
-            activeSector={effectiveSector}
-            onSelect={setActiveSector}
-            isDark={isDark}
-          />
-        </section>
-
         <TodaySection isDark={isDark} activeSector={effectiveSector} searchQuery={searchQuery} />
 
         {(eventsLoading || eventsError || destacadosEvents.length > 0) && (

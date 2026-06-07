@@ -13,6 +13,12 @@ import { useProfileGoogleSignIn } from '../components/layout/useProfileGoogleSig
 import { useOrganizerMonthlyEventCount } from '../hooks/useOrganizerMonthlyEventCount.js'
 import { useMisEventosCatalog } from '../hooks/useMisEventosCatalog.js'
 import { ROLE_ORGANIZADOR, canManageEventsRole, isAdministratorRole } from '../lib/organizerPlans.js'
+import {
+  isEventScheduledForToday,
+  ORGANIZER_DELETE_LOCKED_MESSAGE,
+  ORGANIZER_EDIT_LOCKED_MESSAGE,
+} from '../lib/eventExpiration.js'
+import { toast } from 'sonner'
 
 const COMPACT_TITLE_TOUCH_OFFSET = 10
 
@@ -80,15 +86,29 @@ export function MisEventosPage() {
 
   const showOrganizerCardActions = catalogEnabled && !isAdministratorRole(role)
 
+  function isEventLockedToday(event) {
+    const ownerUid = typeof event?.createdByUid === 'string' ? event.createdByUid : null
+    const ownedByUser = !ownerUid || ownerUid === user?.uid
+    return ownedByUser && isEventScheduledForToday(event)
+  }
+
   function handleEditEvent(event) {
     const id = typeof event?.id === 'string' ? event.id.trim() : ''
     if (!id) return
+    if (isEventLockedToday(event)) {
+      toast.message(ORGANIZER_EDIT_LOCKED_MESSAGE, { duration: 4500 })
+      return
+    }
     navigate(`/mis-eventos/editar/${id}`)
   }
 
   function handleRequestDelete(event) {
     const id = typeof event?.id === 'string' ? event.id.trim() : ''
     if (!id) return
+    if (isEventLockedToday(event)) {
+      toast.message(ORGANIZER_DELETE_LOCKED_MESSAGE, { duration: 4500 })
+      return
+    }
     setDeleteActionError(null)
     setDeleteTarget({
       id,
@@ -98,6 +118,12 @@ export function MisEventosPage() {
 
   async function handleConfirmDelete() {
     if (!deleteTarget?.id || !db) return
+    const targetEvent = eventsToShow.find((ev) => ev.id === deleteTarget.id)
+    if (targetEvent && isEventLockedToday(targetEvent)) {
+      toast.message(ORGANIZER_DELETE_LOCKED_MESSAGE, { duration: 4500 })
+      setDeleteTarget(null)
+      return
+    }
     setDeleting(true)
     setDeleteActionError(null)
     try {

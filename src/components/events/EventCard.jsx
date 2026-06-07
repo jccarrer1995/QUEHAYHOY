@@ -7,7 +7,13 @@ import { useNavigate } from 'react-router-dom'
 import { optimizeImageUrl, formatRecurrenceLabel } from '../../lib/index.js'
 import { getEventDetailPath } from '../../lib/slug.js'
 import { resolveEventBadgeTypeFromDoc } from '../../lib/eventBadges.js'
-import { isEventExpired } from '../../lib/eventExpiration.js'
+import {
+  isEventExpired,
+  isEventScheduledForToday,
+  ORGANIZER_DELETE_LOCKED_MESSAGE,
+  ORGANIZER_EDIT_LOCKED_MESSAGE,
+} from '../../lib/eventExpiration.js'
+import { useAuth } from '../../contexts/AuthContext.jsx'
 import { EventBadge } from './EventBadge.jsx'
 import { FavoriteToggleButton } from './FavoriteToggleButton.jsx'
 import { OrganizerEventCardActions } from '../organizer/OrganizerEventCardActions.jsx'
@@ -35,6 +41,7 @@ export function EventCard({
   showExpiredState = false,
 }) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     id,
     title,
@@ -91,6 +98,11 @@ export function EventCard({
       )
     )
   const canOpenDetail = Boolean(detailPath) && !expired
+  const ownerUid = typeof event?.createdByUid === 'string' ? event.createdByUid : null
+  const ownedByUser =
+    !ownerUid || (typeof user?.uid === 'string' && ownerUid === user.uid)
+  const lockedOnEventDay =
+    showOrganizerActions && ownedByUser && isEventScheduledForToday(event)
 
   return (
     <article
@@ -122,7 +134,10 @@ export function EventCard({
           <OrganizerEventCardActions
             onEdit={() => onEditEvent?.(event)}
             onDelete={() => onDeleteEvent?.(event)}
-            deleteDisabled={deleteActionDisabled}
+            editDisabled={lockedOnEventDay}
+            deleteDisabled={deleteActionDisabled || lockedOnEventDay}
+            editDisabledMessage={ORGANIZER_EDIT_LOCKED_MESSAGE}
+            deleteDisabledMessage={ORGANIZER_DELETE_LOCKED_MESSAGE}
           />
         ) : hideFavoriteButton ? null : (
           <FavoriteToggleButton eventId={id} />

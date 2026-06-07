@@ -7,12 +7,15 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   onAuthStateChanged,
+  deleteUser,
+  reauthenticateWithPopup,
 } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { auth, db, missingFirebaseEnvKeys } from '../firebaseConfig.js'
 import { shouldUseGoogleRedirect } from '../lib/shouldUseGoogleRedirect.js'
 import { getOrganizerPlan, ROLE_ORGANIZADOR } from '../lib/organizerPlans.js'
+import { hasUsedTrialBefore, recordAccountDeletionTrialFlag } from '../lib/accountDeletion.js'
 
 const FIREBASE_AUTH_SETUP_MSG =
   'En Firebase Console: abre Authentication y pulsa "Comenzar" si aún no está activo; en la pestaña "Sign-in method" habilita el proveedor Google. En Google Cloud, la API "Identity Toolkit API" debe estar habilitada para el proyecto (suele activarse al usar Auth).'
@@ -83,6 +86,7 @@ const AuthContext = createContext({
   signInWithGoogle: async () => {},
   beginGoogleRedirect: () => {},
   upgradeToOrganizerPlan: async () => {},
+  deleteAccount: async () => {},
   signOut: async () => {},
   logout: async () => {},
 })
@@ -395,6 +399,10 @@ export function AuthProvider({ children }) {
       if (!plan) {
         throw new Error('Plan no válido.')
       }
+
+      const trialAlreadyUsed = await hasUsedTrialBefore(user.email)
+      const trialMonths = trialAlreadyUsed ? 0 : plan.trialMonths
+
       const ref = doc(db, USERS_COLLECTION, user.uid)
       await updateDoc(ref, {
         role: ROLE_ORGANIZADOR,
@@ -403,7 +411,8 @@ export function AuthProvider({ children }) {
           label: plan.label,
           maxEventsPerMonth: plan.maxEventsPerMonth,
           priceUsd: plan.priceUsd,
-          trialMonths: plan.trialMonths,
+          trialMonths,
+          trialConsumed: trialAlreadyUsed,
           updatedAt: serverTimestamp(),
         },
       })
@@ -412,6 +421,49 @@ export function AuthProvider({ children }) {
     },
     [user]
   )
+
+  const deleteAccount = useCallback(async () => {
+    if (!auth || !user?.uid) {
+      throw new Error('Debes iniciar sesión para eliminar tu cuenta.')
+    }
+
+    const firebaseUser = auth.currentUser
+    if (!firebaseUser) {
+      throw new Error('Sesión no disponible. Vuelve a iniciar sesión.')
+    }
+
+    const roleLower = (profile?.role ?? '').trim().toLowerCase()
+    const hadOrganizerTrial = roleLower === ROLE_ORGANIZADOR || profile?.activePlan != null
+
+    if (db) {
+      await recordAccountDeletionTrialFlag({
+        email: firebaseUser.email,
+        phone: firebaseUser.phoneNumber,
+        usedTrial: hadOrganizerTrial,
+      })
+      await deleteDoc(doc(db, USERS_COLLECTION, user.uid))
+    }
+
+    async function removeAuthUser() {
+      if (!firebaseUser) return
+      await deleteUser(firebaseUser)
+    }
+
+    try {
+      await removeAuthUser()
+    } catch (err) {
+      const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
+      if (code === 'auth/requires-recent-login') {
+        await reauthenticateWithPopup(firebaseUser, buildGoogleProvider())
+        await removeAuthUser()
+      } else {
+        throw err
+      }
+    }
+
+    setUser(null)
+    setProfile(null)
+  }, [user, profile])
 
   const value = useMemo(
     () => ({
@@ -425,10 +477,11 @@ export function AuthProvider({ children }) {
       signInWithGoogle,
       beginGoogleRedirect,
       upgradeToOrganizerPlan,
+      deleteAccount,
       signOut: logout,
       logout,
     }),
-    [user, profile, loading, signInWithGoogle, beginGoogleRedirect, upgradeToOrganizerPlan, logout]
+    [user, profile, loading, signInWithGoogle, beginGoogleRedirect, upgradeToOrganizerPlan, deleteAccount, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

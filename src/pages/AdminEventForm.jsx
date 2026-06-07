@@ -22,6 +22,8 @@ import {
 } from './admin/eventAdminUtils.js'
 import { ensureUniqueEventSlug, generateSlug } from '../lib/slug.js'
 import { geocodeAddressString } from '../lib/geocodeFromAddress.js'
+import { mapDocToEvent } from '../hooks/useEvents.js'
+import { isEventScheduledForToday, ORGANIZER_EDIT_LOCKED_MESSAGE } from '../lib/eventExpiration.js'
 
 /**
  * Fecha local de hoy en formato `YYYY-MM-DD` (input type="date").
@@ -116,6 +118,13 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
             setLoadError(
               'Este evento no tiene dueño registrado. Solo un administrador puede editarlo.'
             )
+            return
+          }
+        }
+        if (embeddedInMisEventos && !isAdministratorRole(role)) {
+          const eventForLock = mapDocToEvent(snap)
+          if (isEventScheduledForToday(eventForLock)) {
+            setLoadError(ORGANIZER_EDIT_LOCKED_MESSAGE)
             return
           }
         }

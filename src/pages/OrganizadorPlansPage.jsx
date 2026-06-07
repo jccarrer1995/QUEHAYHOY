@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { ORGANIZER_PLANS, ROLE_ORGANIZADOR } from '../lib/organizerPlans.js'
+import { hasUsedTrialBefore } from '../lib/accountDeletion.js'
 
 export function OrganizadorPlansPage() {
   const { theme } = useTheme()
@@ -39,8 +40,15 @@ export function OrganizadorPlansPage() {
     }
     setBusy(true)
     try {
+      const trialAlreadyUsed = user.email ? await hasUsedTrialBefore(user.email) : false
       await upgradeToOrganizerPlan(selected)
-      toast.success('¡Listo! Ya puedes publicar eventos.')
+      if (trialAlreadyUsed) {
+        toast.message('Plan activado sin mes gratis: esta cuenta ya utilizó la prueba anteriormente.', {
+          duration: 5000,
+        })
+      } else {
+        toast.success('¡Listo! Ya puedes publicar eventos.')
+      }
       navigate('/mis-eventos/crear', { replace: true })
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'No se pudo activar el plan.'

@@ -9,6 +9,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react'
 import { useCategoryVisibility } from '../../contexts/CategoryVisibilityContext.jsx'
+import { HorizontalScrollRow } from './HorizontalScrollRow.jsx'
 
 /**
  * @typedef {import('lucide-react').LucideIcon} LucideIcon
@@ -50,10 +51,7 @@ export function CategorySelector({ activeCategory, onSelect, isDark = false, var
     : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:text-gray-900'
   const headingCl = isDark ? '!text-[#E0E0E0]' : '!text-[#0a0a0a]'
 
-  const scrollRowCls =
-    variant === 'sheet'
-      ? 'flex gap-2 overflow-x-auto pb-2 scrollbar-hide'
-      : 'flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-hide'
+  const scrollRowCls = 'flex min-w-0 flex-1 flex-nowrap gap-2 overflow-x-auto overscroll-x-contain pb-2 scrollbar-hide touch-pan-x'
 
   const chipButtons = visibleCategories.map((cat) => {
     const isActive = activeCategory === cat.id
@@ -73,8 +71,8 @@ export function CategorySelector({ activeCategory, onSelect, isDark = false, var
 
   if (variant === 'sheet') {
     return (
-      <div className="w-full">
-        <div className={scrollRowCls}>{chipButtons}</div>
+      <div className="w-full min-w-0">
+        <HorizontalScrollRow className="pb-2">{chipButtons}</HorizontalScrollRow>
       </div>
     )
   }

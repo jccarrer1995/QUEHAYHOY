@@ -1,6 +1,7 @@
 import { MapPin, Sparkles } from 'lucide-react'
 import { useSectorVisibility } from '../../contexts/SectorVisibilityContext.jsx'
 import { SECTORS } from '../../lib/topSectors.js'
+import { HorizontalScrollRow } from './HorizontalScrollRow.jsx'
 
 export { SECTORS }
 
@@ -25,10 +26,7 @@ export function SectorSelector({ activeSector, onSelect, isDark = false, variant
     : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:text-gray-900'
   const headingCl = isDark ? '!text-[#E0E0E0]' : '!text-[#0a0a0a]'
 
-  const scrollRowCls =
-    variant === 'sheet'
-      ? 'flex gap-2 overflow-x-auto pb-2 scrollbar-hide'
-      : 'flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-hide'
+  const scrollRowCls = 'flex min-w-0 flex-1 flex-nowrap gap-2 overflow-x-auto overscroll-x-contain pb-2 scrollbar-hide touch-pan-x'
 
   const chipButtons = visibleSectors.map((sector) => {
     const isActive = activeSector === sector.id
@@ -53,8 +51,8 @@ export function SectorSelector({ activeSector, onSelect, isDark = false, variant
 
   if (variant === 'sheet') {
     return (
-      <div className="w-full">
-        <div className={scrollRowCls}>{chipButtons}</div>
+      <div className="w-full min-w-0">
+        <HorizontalScrollRow className="pb-2">{chipButtons}</HorizontalScrollRow>
       </div>
     )
   }

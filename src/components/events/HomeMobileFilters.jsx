@@ -29,6 +29,9 @@ export function HomeMobileFilters({
   const [sheet, setSheet] = useState(null)
   const [draftCategory, setDraftCategory] = useState(activeCategory)
   const [draftSector, setDraftSector] = useState(activeSector)
+  const [isDesktopSheet, setIsDesktopSheet] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false
+  )
 
   const requestClose = useCallback(() => setSheet(null), [])
 
@@ -51,6 +54,14 @@ export function HomeMobileFilters({
     onSectorSelect(draftSector)
     setSheet(null)
   }
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const sync = () => setIsDesktopSheet(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     if (!sheet) return undefined
@@ -77,7 +88,7 @@ export function HomeMobileFilters({
   const filtrarLabelCl = isDark ? 'text-gray-500' : 'text-gray-600'
 
   const pillBase =
-    'inline-flex max-w-[min(200px,55vw)] shrink-0 items-center gap-1 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm active:scale-[0.98] transition-colors'
+    'inline-flex max-w-[min(200px,55vw)] md:max-w-[240px] shrink-0 items-center gap-1 rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm active:scale-[0.98] transition-colors'
   const pillInactiveCls = isDark
     ? `${pillBase} border-gray-600 bg-[#1e1e1e] text-[#E0E0E0] hover:border-gray-500`
     : `${pillBase} border-gray-200 bg-white text-[#0a0a0a] hover:border-gray-300`
@@ -104,7 +115,7 @@ export function HomeMobileFilters({
       {sheet ? (
         <MotionDiv
           key={`home-filter-sheet-${sheet}`}
-          className="fixed inset-0 z-[90] flex items-end justify-center"
+          className="fixed inset-0 z-[100] flex items-end justify-center md:items-center md:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby={sheetTitleId}
@@ -121,11 +132,15 @@ export function HomeMobileFilters({
           />
 
           <MotionDiv
-            className={`relative z-10 flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md ${pageBg}`}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 32, stiffness: 380 }}
+            className={`relative z-10 flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl shadow-2xl sm:max-w-md md:max-h-[80vh] md:rounded-2xl ${pageBg}`}
+            initial={isDesktopSheet ? { opacity: 0, scale: 0.96, y: 0 } : { y: '100%' }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={isDesktopSheet ? { opacity: 0, scale: 0.96, y: 0 } : { y: '100%' }}
+            transition={
+              isDesktopSheet
+                ? { duration: 0.2 }
+                : { type: 'spring', damping: 32, stiffness: 380 }
+            }
             onClick={(e) => e.stopPropagation()}
           >
             <div className={`flex shrink-0 flex-col items-center border-b pt-2 ${borderCls}`}>
@@ -150,7 +165,7 @@ export function HomeMobileFilters({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+            <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4">
               {sheet === 'category' ? (
                 <CategorySelector
                   variant="sheet"
@@ -193,7 +208,7 @@ export function HomeMobileFilters({
           <ListFilter className="h-4 w-4 shrink-0 text-[#14b8a6]" strokeWidth={2} aria-hidden />
           <span className={`text-sm font-semibold tracking-tight ${filtrarLabelCl}`}>Filtrar</span>
         </div>
-        <div className="scrollbar-hide flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overscroll-x-contain py-0.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2 py-0.5">
           <button
             type="button"
             className={categoryPillCls}

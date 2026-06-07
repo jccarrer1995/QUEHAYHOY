@@ -326,7 +326,7 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
       </div>
 
       {mobileHomeFilters ? (
-        <div className={`md:hidden border-t ${borderColor} ${bgColor}`}>
+        <div className={`border-t ${borderColor} ${bgColor}`}>
           <div className="mx-auto max-w-6xl px-4 pb-3 pt-2.5 lg:max-w-7xl">{mobileHomeFilters}</div>
         </div>
       ) : null}

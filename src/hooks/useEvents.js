@@ -134,6 +134,7 @@ export function mapDocToEvent(doc) {
     badgeLabel: data.badgeLabel ?? data.capacity_level ?? null,
     latitude: latOk ? latitude : null,
     longitude: lngOk ? longitude : null,
+    createdByUid: typeof data.createdByUid === 'string' ? data.createdByUid : null,
   }
 }
 

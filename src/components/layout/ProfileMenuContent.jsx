@@ -1,10 +1,25 @@
 /**
  * Contenido de cuenta / perfil para la página `/perfil`.
  */
-import { MapPin, Tags, ChevronRight, FileText, Lock, Info, LogOut, CalendarDays, CreditCard, BarChart3, History } from 'lucide-react'
+import {
+  MapPin,
+  Tags,
+  ChevronRight,
+  FileText,
+  Lock,
+  Info,
+  LogOut,
+  CalendarDays,
+  CreditCard,
+  BarChart3,
+  History,
+  Trash2,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { LegalBottomSheet } from '../legal'
+import { DeleteAccountConfirmDialog } from './DeleteAccountConfirmDialog.jsx'
 import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
@@ -34,6 +49,39 @@ function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       />
     </svg>
+  )
+}
+
+/**
+ * @param {{ icon: import('lucide-react').LucideIcon, label: string, onClick: () => void, isDark: boolean, tone?: 'default' | 'danger', disabled?: boolean, withBorder?: boolean }} props
+ */
+function AccountActionRow({ icon, label, onClick, isDark, tone = 'default', disabled = false, withBorder = true }) {
+  const RowIcon = icon
+  const borderCls = isDark ? 'border-gray-800' : 'border-gray-200'
+  const activeCls = isDark ? 'active:bg-white/5' : 'active:bg-black/5'
+  const labelCls =
+    tone === 'danger'
+      ? isDark
+        ? '!text-red-400'
+        : '!text-red-600'
+      : isDark
+        ? '!text-[#E0E0E0]'
+        : '!text-gray-900'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex w-full items-center py-4 text-left ${withBorder ? `border-b ${borderCls}` : ''} ${activeCls} ${labelCls} disabled:cursor-not-allowed disabled:opacity-60`}
+    >
+      <span className={`flex shrink-0 items-center justify-center ${labelCls}`} style={{ width: 24 }}>
+        <RowIcon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
+      </span>
+      <span className={`min-w-0 flex-1 text-base font-medium ${labelCls}`} style={{ marginLeft: 15 }}>
+        {label}
+      </span>
+    </button>
   )
 }
 
@@ -68,7 +116,7 @@ export function ProfileMenuContent({ className = '' }) {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
-  const { signInWithGoogle, beginGoogleRedirect, user, logout, role } = useAuth()
+  const { signInWithGoogle, beginGoogleRedirect, user, logout, deleteAccount, role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
   const isOrganizer = (role ?? '').trim().toLowerCase() === ROLE_ORGANIZADOR
   const displayUser = useAuthUserForProfileHeader(user)
@@ -77,6 +125,8 @@ export function ProfileMenuContent({ className = '' }) {
 
   const [legalSheetOpen, setLegalSheetOpen] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const [legalSheetType, setLegalSheetType] = useState('terms')
 
   function openLegalSheet(t) {
@@ -91,9 +141,6 @@ export function ProfileMenuContent({ className = '' }) {
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
     : 'border border-gray-200 bg-white text-black shadow-sm'
-  const logoutBtnCls = isDark
-    ? 'border-red-400/35 text-red-300 hover:bg-red-500/10 active:bg-red-500/15'
-    : 'border-red-200 text-red-600 hover:bg-red-50 active:bg-red-100/80'
   const sectionHeadingCls = isDark ? '!text-gray-400' : '!text-gray-600'
 
   async function handleLogout() {
@@ -131,22 +178,26 @@ export function ProfileMenuContent({ className = '' }) {
     navigate('/perfil/metricas-rendimiento')
   }
 
+  async function handleDeleteAccount() {
+    setDeleteBusy(true)
+    try {
+      await deleteAccount()
+      setDeleteDialogOpen(false)
+      toast.success('Tu cuenta fue eliminada correctamente.')
+      navigate('/', { replace: true })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo eliminar la cuenta.'
+      toast.error(msg)
+    } finally {
+      setDeleteBusy(false)
+    }
+  }
+
   const body = (
     <>
       <header className="flex flex-col items-center pt-6 md:pt-4">
         {displayUser ? (
-          <>
-            <ProfileSignedInSummary className="mb-3" />
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={logoutBusy}
-              className={`mb-8 flex w-full max-w-sm items-center justify-center gap-2 rounded-full border py-3.5 pl-4 pr-5 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${logoutBtnCls}`}
-            >
-              <LogOut className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
-              {logoutBusy ? 'Cerrando sesión…' : 'Cerrar sesión'}
-            </button>
-          </>
+          <ProfileSignedInSummary className="mb-8" />
         ) : (
           <div className="mb-8 flex w-full max-w-sm flex-col items-center">
             <button
@@ -216,32 +267,56 @@ export function ProfileMenuContent({ className = '' }) {
           onClick={() => openLegalSheet('about')}
         />
       </section>
+
+      {user ? (
+        <section className="mt-8">
+          <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Cuenta</h2>
+          <AccountActionRow
+            isDark={isDark}
+            icon={LogOut}
+            label={logoutBusy ? 'Cerrando sesión…' : 'Cerrar sesión'}
+            onClick={handleLogout}
+            disabled={logoutBusy}
+          />
+          <AccountActionRow
+            isDark={isDark}
+            icon={Trash2}
+            label="Eliminar cuenta"
+            onClick={() => setDeleteDialogOpen(true)}
+            tone="danger"
+            withBorder={false}
+          />
+        </section>
+      ) : null}
     </>
   )
 
   return (
     <>
       <div
-        className={`mx-auto flex w-full max-w-lg flex-1 flex-col px-[20px] pb-24 ${className}`}
+        className={`mx-auto flex min-h-full w-full max-w-lg flex-1 flex-col px-[20px] pb-24 ${className}`}
         style={safeAreaTopStyle}
       >
         {body}
+
+        <p
+          className={`mt-auto pt-8 pb-2 text-xs font-extralight tracking-wide ${
+            isDark ? 'text-gray-500' : 'text-gray-400'
+          }`}
+          aria-label={`Versión ${APP_VERSION}`}
+        >
+          {APP_VERSION}
+        </p>
       </div>
 
-      <p
-        className={`pointer-events-none fixed z-40 text-xs font-extralight tracking-wide ${
-          isDark ? 'text-gray-500' : 'text-gray-400'
-        }`}
-        style={{
-          left: 20,
-          bottom: 'max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem))',
-        }}
-        aria-label={`Versión ${APP_VERSION}`}
-      >
-        {APP_VERSION}
-      </p>
-
       <LegalBottomSheet open={legalSheetOpen} type={legalSheetType} onClose={closeLegalSheet} />
+      <DeleteAccountConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteAccount}
+        deleting={deleteBusy}
+        isDark={isDark}
+      />
     </>
   )
 }
