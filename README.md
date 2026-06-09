@@ -42,6 +42,10 @@
 - **FloatingButtons:** Tema (☀️/🌙), Filter, Gratis — solo móvil
 - **BottomNav:** Inicio, Explorar, Favoritos (en construcción), **Perfil** → `/perfil`
 - **TodaySection / HorizontalEventRow:** carruseles reactivos al buscador y a sectores favoritos
+- **DesktopNavbar:** wrapper del `Navbar` visible solo en `md+` para rutas fuera del Home
+- **EventCatalogToolbar:** select «Ordenar por» + botones grid/list en catálogos de eventos
+- **PreferenceSettingsPanel / PreferenceVisibilitySwitch:** shell de preferencias de sectores y categorías
+- **OrganizerEventListMenu:** menú ⋮ con Editar/Eliminar en listado de Mis eventos
 - **ProfileMenuContent / DesktopProfileMenuContent:** perfil móvil (`/perfil`) y drawer desktop (hamburguesa) desacoplados; el drawer replica las secciones del perfil responsive con menú de navegación al inicio
 - **DeleteAccountConfirmDialog:** modal de confirmación para eliminación de cuenta
 - **Footer:** footer exclusivo para desktop con bloque editorial y enlaces legales
@@ -133,13 +137,13 @@ VITE_GOOGLE_MAPS_API_KEY=
 src/
 ├── components/
 │   ├── layout/     # Navbar (opc. `mobileHomeFilters` sticky), BottomNav, DesktopProfileMenuContent, DeleteAccountConfirmDialog…
-│   ├── events/     # carruseles, HomeMobileFilters, HorizontalScrollRow, CategorySelector, SectorSelector, TodaySection…
+│   ├── events/     # carruseles, EventCatalogToolbar, HomeMobileFilters, HorizontalScrollRow, CategorySelector…
 │   ├── explore/    # ExploreMapView (Google Maps), ExploreEventMiniCard (resumen al tocar pin)…
 │   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
 ├── config/         # firebaseConfig
 ├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext, CategoryVisibilityContext, FavoriteEventsContext, FavoriteLoginPromptContext
 ├── hooks/          # useEvents, useEphemeralNotifications…
-├── lib/            # topSectors, appVersion, utilidades compartidas
+├── lib/            # eventSort, eventExpiration, topSectors, sectorZoneBadges, appVersion…
 ├── pages/          # App (home vía ruta /), ProfilePage, FavoriteSectorsPage, FavoriteCategoriesPage, FavoriteEventsPage, EventDetailPage…
 └── ...
 ```
@@ -185,9 +189,15 @@ src/
 - Preferencias de sectores/categorías desde perfil con persistencia y efecto en Home.
 
 **Actualización (avance reciente):**
-- En `/favoritos` hay un **switch de vista** por iconos:
-  - **Grid**: cards como están actualmente.
-  - **Listado**: vista compacta en filas, con **tag de categoría** debajo del precio.
+- **`/favoritos` — toolbar compartido** (`EventCatalogToolbar`):
+  - **Ordenar por** (select): Fecha mayor/menor, Precio menor/mayor, Finalizados al final.
+  - **Vista** (iconos): cuadrícula o listado compacto.
+- **Listado en favoritos:** filas con título, sector, fecha, precio, corazón inline y badge de categoría.
+- **Ordenamiento** (`lib/eventSort.js`): los eventos **expirados siempre al final**, sin importar el criterio elegido; el orden se aplica por separado dentro de vigentes y dentro de expirados.
+- **`/perfil/sectores` y `/perfil/categorias` — UI compacta** (`PreferenceSettingsPanel`):
+  - Contenedor `max-w-xl`, tarjeta con `divide-y`, switches teal y botón «Guardar Preferencias».
+  - Filas con icono, badge de zona/tipo y scroll corregido en desktop.
+  - `DesktopNavbar` en pantallas de preferencias y muros de invitado (`GuestPreferenceWall`).
 
 ### 4) Autenticación y perfil
 - Google Sign-In integrado con Firebase Auth, sesión persistente y restauración de ruta tras OAuth.
@@ -228,6 +238,11 @@ src/
 - Botón **flotante** (FAB) redondo con icono **+** para crear evento, ubicado **encima del BottomNav** en móvil.
 - Nueva ruta `/historial-eventos` para ver **todos** los eventos (antiguos y nuevos).
 - **Bloqueo mismo día del evento** (organizador): no puede editar ni eliminar un evento programado para el día actual (`eventExpiration.js`); la UI muestra acciones deshabilitadas con tooltip/toast en cards, listado y formulario de edición.
+- **Toolbar** (`EventCatalogToolbar`): mismo select **Ordenar por** y toggle grid/list que en favoritos.
+- **Vista listado:** filas alineadas con favoritos; acciones vía menú **⋮** (`OrganizerEventListMenu`) con opciones Editar y Eliminar (misma lógica de bloqueo y diálogo de confirmación que en cards).
+- **Vista cuadrícula:** hasta **4 columnas** en `xl` (`xl:grid-cols-4`); 1 en móvil, 2 en `sm`, 3 en `lg`.
+- **Eventos expirados** en cards: badge «Expirado», sin favorito ni acciones de edición/eliminación; en listado, badge y fila no navegable al detalle.
+- **`DesktopNavbar`** visible en `/mis-eventos`, `/historial-eventos` y rutas de perfil relacionadas; buscador del navbar solo en Home.
 
 ### 7.1) Perfil (organizador): sección “Gestión”
 - En `/perfil` (organizador) se muestra una agrupación **Gestión** (debajo de Configuración y encima de Legal) con:

@@ -315,7 +315,7 @@ export function MisEventosPage() {
           </div>
         ) : loading ? (
           <section
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             aria-label="Cargando tus eventos"
             aria-busy="true"
           >
@@ -359,7 +359,7 @@ export function MisEventosPage() {
             />
 
             {viewMode === 'grid' ? (
-              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {sortedEvents.map((event) => (
                   <EventCard
                     key={event.id}
