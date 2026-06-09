@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { deleteDoc, doc } from 'firebase/firestore'
 import { ArrowLeft, CalendarDays, Plus } from 'lucide-react'
-import { BottomNav, Footer } from '../components/layout'
-import { EventCard, EventSkeleton } from '../components/events'
+import { BottomNav, DesktopNavbar, Footer } from '../components/layout'
+import { EventCard, EventCatalogToolbar, EventSkeleton } from '../components/events'
 import { DeleteEventConfirmDialog } from '../components/organizer/DeleteEventConfirmDialog.jsx'
+import { OrganizerEventListMenu } from '../components/organizer/OrganizerEventListMenu.jsx'
 import { OrganizerQuotaCard } from '../components/organizer/OrganizerQuotaCard.jsx'
 import { db } from '../config/firebaseConfig.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
@@ -14,11 +15,28 @@ import { useOrganizerMonthlyEventCount } from '../hooks/useOrganizerMonthlyEvent
 import { useMisEventosCatalog } from '../hooks/useMisEventosCatalog.js'
 import { ROLE_ORGANIZADOR, canManageEventsRole, isAdministratorRole } from '../lib/organizerPlans.js'
 import {
+  isEventExpired,
   isEventScheduledForToday,
   ORGANIZER_DELETE_LOCKED_MESSAGE,
   ORGANIZER_EDIT_LOCKED_MESSAGE,
+  ORGANIZER_EXPIRED_EVENT_MESSAGE,
 } from '../lib/eventExpiration.js'
+import { DEFAULT_EVENT_SORT, sortEvents } from '../lib/eventSort.js'
+import { getEventDetailPath } from '../lib/slug.js'
 import { toast } from 'sonner'
+
+/**
+ * @param {unknown} price
+ * @returns {string}
+ */
+function formatEventPrice(price) {
+  if (price == null) return ''
+  const num = Number(price)
+  if (Number.isNaN(num)) return ''
+  if (num <= 0) return 'Gratis'
+  return num % 1 === 0 ? `$${num}` : `$${num.toFixed(2)}`
+}
+
 
 const COMPACT_TITLE_TOUCH_OFFSET = 10
 
@@ -63,6 +81,8 @@ export function MisEventosPage() {
   const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
   const isDark = theme === 'dark'
   const [showCompactTitle, setShowCompactTitle] = useState(false)
+  const [viewMode, setViewMode] = useState('grid')
+  const [sortBy, setSortBy] = useState(DEFAULT_EVENT_SORT)
   const compactHeaderRef = useRef(null)
   const heroTitleRef = useRef(null)
 
@@ -80,6 +100,11 @@ export function MisEventosPage() {
   })
   const error = listError
 
+  const sortedEvents = useMemo(
+    () => sortEvents(eventsToShow, sortBy),
+    [eventsToShow, sortBy]
+  )
+
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteActionError, setDeleteActionError] = useState(null)
@@ -95,6 +120,10 @@ export function MisEventosPage() {
   function handleEditEvent(event) {
     const id = typeof event?.id === 'string' ? event.id.trim() : ''
     if (!id) return
+    if (isEventExpired(event)) {
+      toast.message(ORGANIZER_EXPIRED_EVENT_MESSAGE, { duration: 4500 })
+      return
+    }
     if (isEventLockedToday(event)) {
       toast.message(ORGANIZER_EDIT_LOCKED_MESSAGE, { duration: 4500 })
       return
@@ -105,6 +134,10 @@ export function MisEventosPage() {
   function handleRequestDelete(event) {
     const id = typeof event?.id === 'string' ? event.id.trim() : ''
     if (!id) return
+    if (isEventExpired(event)) {
+      toast.message(ORGANIZER_EXPIRED_EVENT_MESSAGE, { duration: 4500 })
+      return
+    }
     if (isEventLockedToday(event)) {
       toast.message(ORGANIZER_DELETE_LOCKED_MESSAGE, { duration: 4500 })
       return
@@ -119,6 +152,11 @@ export function MisEventosPage() {
   async function handleConfirmDelete() {
     if (!deleteTarget?.id || !db) return
     const targetEvent = eventsToShow.find((ev) => ev.id === deleteTarget.id)
+    if (targetEvent && isEventExpired(targetEvent)) {
+      toast.message(ORGANIZER_EXPIRED_EVENT_MESSAGE, { duration: 4500 })
+      setDeleteTarget(null)
+      return
+    }
     if (targetEvent && isEventLockedToday(targetEvent)) {
       toast.message(ORGANIZER_DELETE_LOCKED_MESSAGE, { duration: 4500 })
       setDeleteTarget(null)
@@ -153,7 +191,6 @@ export function MisEventosPage() {
   const pageCls = isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-white text-gray-900'
   const mutedCls = isDark ? 'text-gray-400' : 'text-gray-600'
   const panelCls = isDark ? 'border-gray-800 bg-[#161616]' : 'border-gray-200 bg-gray-50'
-
   const updateCompactTitle = useCallback(() => {
     const headerEl = compactHeaderRef.current
     const titleEl = heroTitleRef.current
@@ -186,10 +223,11 @@ export function MisEventosPage() {
   }, [error, eventsToShow.length, authLoading, user, listLoading, updateCompactTitle])
 
   return (
-    <div className={`min-h-[100dvh] ${pageCls}`}>
+    <div className={`flex min-h-[100dvh] flex-col ${pageCls}`}>
+      <DesktopNavbar />
       <header
         ref={compactHeaderRef}
-        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] transition-colors ${
+        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] transition-colors md:hidden ${
           isDark ? 'bg-[#121212]/95' : 'bg-white/95'
         }`}
       >
@@ -218,7 +256,7 @@ export function MisEventosPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-[calc(env(safe-area-inset-top)+4.5rem)]">
+      <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-1 flex-col px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-6">
         <section className="pb-4">
           <div ref={heroTitleRef} className="flex flex-wrap items-center gap-2">
             <h2
@@ -311,19 +349,115 @@ export function MisEventosPage() {
                 <p className="text-sm text-red-600 dark:text-red-400">{deleteActionError}</p>
               </div>
             ) : null}
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {eventsToShow.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isDark={isDark}
-                  showOrganizerActions={showOrganizerCardActions}
-                  onEditEvent={handleEditEvent}
-                  onDeleteEvent={handleRequestDelete}
-                  deleteActionDisabled={deleting}
-                />
-              ))}
-            </section>
+
+            <EventCatalogToolbar
+              isDark={isDark}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+
+            {viewMode === 'grid' ? (
+              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {sortedEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    isDark={isDark}
+                    showOrganizerActions={showOrganizerCardActions}
+                    showExpiredState
+                    onEditEvent={handleEditEvent}
+                    onDeleteEvent={handleRequestDelete}
+                    deleteActionDisabled={deleting}
+                  />
+                ))}
+              </section>
+            ) : (
+              <section className="flex flex-col gap-3">
+                {sortedEvents.map((event) => {
+                  const detailPath = getEventDetailPath(event) ?? `/evento/${event.id}`
+                  const expired = isEventExpired(event)
+                  const canOpenDetail = Boolean(detailPath) && !expired
+                  const showActions = showOrganizerCardActions && !expired
+                  const lockedToday = showActions && isEventLockedToday(event)
+                  const priceLabel = formatEventPrice(event.price)
+                  const rowCls = `rounded-xl border p-3 transition ${
+                    isDark
+                      ? 'border-gray-800 bg-[#161616] hover:bg-[#1b1b1b]'
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  } ${expired ? 'cursor-default opacity-[0.88]' : ''}`
+
+                  const rowContent = (
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3
+                          className={`m-0 truncate text-base font-semibold ${
+                            isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
+                          }`}
+                        >
+                          {event.title ?? 'Evento sin título'}
+                        </h3>
+                        <p className={`mt-1 text-sm ${mutedCls}`}>{event.sector || 'Sin sector'}</p>
+                        <p className={`mt-1 text-xs ${mutedCls}`}>{event.date || 'Fecha por confirmar'}</p>
+                      </div>
+
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
+                          {priceLabel ? (
+                            <span
+                              className={`whitespace-nowrap pr-0.5 text-sm font-semibold tabular-nums ${
+                                isDark ? 'text-[#14b8a6]' : 'text-teal-600'
+                              }`}
+                            >
+                              {priceLabel}
+                            </span>
+                          ) : null}
+                          {showActions ? (
+                            <OrganizerEventListMenu
+                              isDark={isDark}
+                              onEdit={() => handleEditEvent(event)}
+                              onDelete={() => handleRequestDelete(event)}
+                              editDisabled={lockedToday}
+                              deleteDisabled={deleting || lockedToday}
+                              editDisabledMessage={ORGANIZER_EDIT_LOCKED_MESSAGE}
+                              deleteDisabledMessage={ORGANIZER_DELETE_LOCKED_MESSAGE}
+                            />
+                          ) : null}
+                        </div>
+                        {expired ? (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                              isDark ? 'bg-red-950/70 text-red-300' : 'bg-red-50 text-red-700'
+                            }`}
+                          >
+                            Expirado
+                          </span>
+                        ) : event.category ? (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              isDark ? 'bg-[#14b8a6]/15 text-[#5eead4]' : 'bg-teal-50 text-teal-700'
+                            }`}
+                          >
+                            {event.category}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+
+                  return canOpenDetail ? (
+                    <Link key={event.id} to={detailPath} className={rowCls}>
+                      {rowContent}
+                    </Link>
+                  ) : (
+                    <div key={event.id} className={rowCls}>
+                      {rowContent}
+                    </div>
+                  )
+                })}
+              </section>
+            )}
           </>
         )}
       </main>

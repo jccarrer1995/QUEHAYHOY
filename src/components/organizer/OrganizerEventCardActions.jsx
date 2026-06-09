@@ -9,19 +9,35 @@ import { toast } from 'sonner'
  *   disabled?: boolean
  *   disabledMessage?: string
  *   variant: 'edit' | 'delete'
+ *   layout?: 'overlay' | 'inline'
  * }} props
  */
-function ActionButton({ icon: Icon, label, onClick, disabled = false, disabledMessage, variant }) {
+function ActionButton({
+  icon: Icon,
+  label,
+  onClick,
+  disabled = false,
+  disabledMessage,
+  variant,
+  layout = 'overlay',
+}) {
   const btnBase =
-    'inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm backdrop-blur-sm transition active:scale-95'
+    layout === 'inline'
+      ? `inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition active:scale-95 ${
+          variant === 'delete' ? 'shadow-sm' : ''
+        }`
+      : 'inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm backdrop-blur-sm transition active:scale-95'
 
-  const enabledCls =
-    variant === 'delete'
-      ? 'border-red-400/60 bg-red-600/90 text-white hover:bg-red-700'
-      : 'border-white/55 bg-black/35 text-white hover:bg-black/50'
+  const deleteEnabledCls =
+    'cursor-pointer border-red-400/60 bg-red-600/90 text-white hover:bg-red-700'
+  const editEnabledCls =
+    layout === 'inline'
+      ? 'cursor-pointer border-gray-200 bg-gray-50 text-gray-600 hover:border-[#14b8a6]/50 hover:text-[#14b8a6] dark:border-gray-600 dark:bg-[#222] dark:text-gray-300 dark:hover:text-[#5eead4]'
+      : 'cursor-pointer border-white/55 bg-black/35 text-white hover:bg-black/50'
 
-  const disabledCls =
-    'cursor-not-allowed border-gray-400/55 bg-gray-500/75 text-gray-200 opacity-90'
+  const enabledCls = variant === 'delete' ? deleteEnabledCls : editEnabledCls
+
+  const disabledCls = 'cursor-not-allowed border-gray-400/55 bg-gray-500/75 text-gray-200 opacity-90'
 
   function handleClick(e) {
     e.stopPropagation()
@@ -68,6 +84,7 @@ function ActionButton({ icon: Icon, label, onClick, disabled = false, disabledMe
  *   deleteDisabled?: boolean
  *   editDisabledMessage?: string
  *   deleteDisabledMessage?: string
+ *   layout?: 'overlay' | 'inline'
  * }} props
  */
 export function OrganizerEventCardActions({
@@ -77,14 +94,20 @@ export function OrganizerEventCardActions({
   deleteDisabled = false,
   editDisabledMessage,
   deleteDisabledMessage,
+  layout = 'overlay',
 }) {
   function stopPropagation(e) {
     e.stopPropagation()
   }
 
+  const wrapCls =
+    layout === 'inline'
+      ? 'relative z-20 flex shrink-0 items-center gap-2'
+      : 'absolute right-3 top-3 z-20 flex items-center gap-2'
+
   return (
     <div
-      className="absolute right-3 top-3 z-20 flex items-center gap-2"
+      className={wrapCls}
       onClick={stopPropagation}
       onKeyDown={stopPropagation}
       role="group"
@@ -97,6 +120,7 @@ export function OrganizerEventCardActions({
         disabled={editDisabled}
         disabledMessage={editDisabledMessage}
         variant="edit"
+        layout={layout}
       />
       <ActionButton
         icon={Trash2}
@@ -105,6 +129,7 @@ export function OrganizerEventCardActions({
         disabled={deleteDisabled}
         disabledMessage={deleteDisabledMessage}
         variant="delete"
+        layout={layout}
       />
     </div>
   )

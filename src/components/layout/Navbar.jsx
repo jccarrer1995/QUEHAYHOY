@@ -23,9 +23,10 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
   const { theme, toggleTheme } = useTheme()
   const { user } = useAuth()
   const isDark = theme === 'dark'
-  const showDesktopProfileMenu = !location.pathname.startsWith('/perfil')
-  /** En Explorar la búsqueda va en ExploreFloatingHeader; evitar duplicar el input en desktop. */
-  const hideDesktopSearch = location.pathname === '/explorar'
+  /** Ocultar hamburguesa solo en `/perfil` (ahí el contenido ya es el menú completo). */
+  const showDesktopProfileMenu = location.pathname !== '/perfil'
+  /** Buscador del topbar solo en el home (`/`). */
+  const showNavbarSearch = location.pathname === '/'
 
   const {
     recentEvents,
@@ -142,8 +143,8 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
             <h1 className="sr-only">QUEHAYHOY</h1>
           </div>
 
-          {/* Móvil: buscador en la cabecera para ahorrar espacio vertical */}
-          <div className="flex flex-1 md:hidden">
+          {/* Móvil: buscador solo en home */}
+          <div className={showNavbarSearch ? 'flex flex-1 md:hidden' : 'hidden'}>
             <div className="relative w-full">
               <input
                 type="search"
@@ -170,12 +171,12 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
             </div>
           </div>
 
-          {/* Desktop: búsqueda centrada (oculta en /explorar) */}
+          {/* Desktop: búsqueda centrada solo en home */}
           <div
             className={
-              hideDesktopSearch
-                ? 'hidden'
-                : 'hidden md:flex md:flex-[2] md:justify-center md:items-center md:px-4'
+              showNavbarSearch
+                ? 'hidden md:flex md:flex-[2] md:justify-center md:items-center md:px-4'
+                : 'hidden'
             }
           >
             <div className="relative w-full max-w-md">
@@ -195,8 +196,11 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
             </div>
           </div>
 
+          {/* Espaciador desktop cuando no hay buscador */}
+          {!showNavbarSearch ? <div className="hidden min-w-0 flex-1 md:block" aria-hidden /> : null}
+
           {/* Derecha: campana, tema */}
-          <div className="flex items-center gap-1 md:flex-shrink-0">
+          <div className={`flex items-center gap-1 md:flex-shrink-0 ${showNavbarSearch ? '' : 'md:ml-auto'}`}>
             <button
               type="button"
               onClick={toggleTheme}

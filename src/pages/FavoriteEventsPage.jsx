@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, LayoutGrid, List } from 'lucide-react'
-import { BottomNav, Footer } from '../components/layout'
-import { EventCard, FavoriteToggleButton } from '../components/events'
+import { ArrowLeft, Heart } from 'lucide-react'
+import { BottomNav, DesktopNavbar, Footer } from '../components/layout'
+import { EventCard, EventCatalogToolbar, FavoriteToggleButton } from '../components/events'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useFavoriteEvents } from '../contexts/FavoriteEventsContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { useEvents } from '../hooks/useEvents.js'
 import { useProfileGoogleSignIn } from '../components/layout/useProfileGoogleSignIn.js'
+import { DEFAULT_EVENT_SORT, sortEvents } from '../lib/eventSort.js'
 import { getEventDetailPath } from '../lib/slug.js'
 
 const COMPACT_TITLE_TOUCH_OFFSET = 10
@@ -46,6 +47,7 @@ export function FavoriteEventsPage() {
   const isDark = theme === 'dark'
   const [showCompactTitle, setShowCompactTitle] = useState(false)
   const [viewMode, setViewMode] = useState('grid')
+  const [sortBy, setSortBy] = useState(DEFAULT_EVENT_SORT)
   const compactHeaderRef = useRef(null)
   const heroTitleRef = useRef(null)
 
@@ -54,16 +56,13 @@ export function FavoriteEventsPage() {
 
     const orderMap = new Map(favoriteIds.map((id, index) => [id, index]))
 
-    return events
-      .filter((event) => orderMap.has(String(event.id)))
-      .sort((a, b) => (orderMap.get(String(b.id)) ?? -1) - (orderMap.get(String(a.id)) ?? -1))
-  }, [events, favoriteIds])
+    const matched = events.filter((event) => orderMap.has(String(event.id)))
+    return sortEvents(matched, sortBy)
+  }, [events, favoriteIds, sortBy])
 
   const pageCls = isDark ? 'bg-[#121212] text-[#E0E0E0]' : 'bg-white text-gray-900'
   const mutedCls = isDark ? 'text-gray-400' : 'text-gray-600'
   const panelCls = isDark ? 'border-gray-800 bg-[#161616]' : 'border-gray-200 bg-gray-50'
-  const layoutWrapCls = isDark ? 'border-gray-800 bg-[#161616]' : 'border-gray-200 bg-gray-50'
-
   const updateCompactTitle = useCallback(() => {
     const headerEl = compactHeaderRef.current
     const titleEl = heroTitleRef.current
@@ -105,10 +104,11 @@ export function FavoriteEventsPage() {
   ])
 
   return (
-    <div className={`min-h-[100dvh] ${pageCls}`}>
+    <div className={`flex min-h-[100dvh] flex-col ${pageCls}`}>
+      <DesktopNavbar />
       <header
         ref={compactHeaderRef}
-        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] transition-colors ${
+        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] transition-colors md:hidden ${
           isDark ? 'bg-[#121212]/95' : 'bg-white/95'
         }`}
       >
@@ -137,7 +137,7 @@ export function FavoriteEventsPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-[calc(env(safe-area-inset-top)+4.5rem)]">
+      <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-1 flex-col px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-6">
         <section className="pb-4">
           <div ref={heroTitleRef} className="flex flex-wrap items-center gap-2">
             <h2
@@ -222,40 +222,13 @@ export function FavoriteEventsPage() {
           </div>
         ) : (
           <>
-            <section className="mb-4 flex justify-end">
-              <div className={`inline-flex items-center rounded-xl border p-1 ${layoutWrapCls}`}>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition ${
-                    viewMode === 'grid'
-                      ? 'bg-[#14b8a6] text-white shadow-sm'
-                      : isDark
-                        ? 'text-gray-300 hover:bg-white/10'
-                        : 'text-gray-600 hover:bg-black/5'
-                  }`}
-                  aria-label="Ver en cuadrícula"
-                  aria-pressed={viewMode === 'grid'}
-                >
-                  <LayoutGrid className="h-5 w-5" strokeWidth={2} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition ${
-                    viewMode === 'list'
-                      ? 'bg-[#14b8a6] text-white shadow-sm'
-                      : isDark
-                        ? 'text-gray-300 hover:bg-white/10'
-                        : 'text-gray-600 hover:bg-black/5'
-                  }`}
-                  aria-label="Ver en listado"
-                  aria-pressed={viewMode === 'list'}
-                >
-                  <List className="h-5 w-5" strokeWidth={2} />
-                </button>
-              </div>
-            </section>
+            <EventCatalogToolbar
+              isDark={isDark}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
 
             {viewMode === 'grid' ? (
               <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

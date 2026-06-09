@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Share2, MousePointerClick, MapPinned, Eye } from 'lucide-react'
-import { BottomNav, Footer } from '../components/layout'
+import { BottomNav, DesktopNavbar, Footer } from '../components/layout'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 
 const METRIC_ITEMS = [
@@ -19,9 +19,10 @@ export function OrganizerMetricsPage() {
   const mutedCls = isDark ? 'text-gray-400' : 'text-gray-600'
 
   return (
-    <div className={`min-h-[100dvh] ${pageCls}`}>
+    <div className={`flex min-h-[100dvh] flex-col ${pageCls}`}>
+      <DesktopNavbar />
       <header
-        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] ${
+        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] md:hidden ${
           isDark ? 'bg-[#121212]/95' : 'bg-white/95'
         }`}
       >
@@ -43,7 +44,7 @@ export function OrganizerMetricsPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[100dvh] w-full max-w-5xl flex-col gap-4 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-[calc(env(safe-area-inset-top)+4.5rem)]">
+      <main className="mx-auto flex min-h-[100dvh] w-full max-w-5xl flex-1 flex-col gap-4 px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-6">
         <section className={`rounded-2xl border p-5 ${cardCls}`}>
           <div className="flex items-center gap-3">
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#14b8a6]/15 text-[#14b8a6]">

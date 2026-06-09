@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CalendarDays } from 'lucide-react'
-import { BottomNav, Footer } from '../components/layout'
+import { BottomNav, DesktopNavbar, Footer } from '../components/layout'
 import { EventCard } from '../components/events'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { useTheme } from '../contexts/ThemeContext.jsx'
@@ -59,10 +59,11 @@ export function HistorialEventosPage() {
   const loading = authLoading || (Boolean(user) && listLoading)
 
   return (
-    <div className={`min-h-[100dvh] ${pageCls}`}>
+    <div className={`flex min-h-[100dvh] flex-col ${pageCls}`}>
+      <DesktopNavbar />
       <header
         ref={compactHeaderRef}
-        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] transition-colors ${
+        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] transition-colors md:hidden ${
           isDark ? 'bg-[#121212]/95' : 'bg-white/95'
         }`}
       >
@@ -91,7 +92,7 @@ export function HistorialEventosPage() {
         </div>
       </header>
 
-      <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-[calc(env(safe-area-inset-top)+4.5rem)]">
+      <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-1 flex-col px-4 pb-24 pt-[calc(env(safe-area-inset-top)+3.75rem)] md:pb-8 md:pt-6">
         <section className="pb-4">
           <div ref={heroTitleRef} className="flex flex-wrap items-center gap-2">
             <h2 className="m-0 text-2xl font-bold tracking-tight" style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}>

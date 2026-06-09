@@ -5,6 +5,7 @@ import { ArrowLeft, Settings2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useProfileGoogleSignIn } from './useProfileGoogleSignIn.js'
+import { DesktopNavbar } from './DesktopNavbar.jsx'
 
 function GoogleLogo({ className = 'h-7 w-7 shrink-0' }) {
   return (
@@ -50,9 +51,10 @@ export function GuestPreferenceWall({ isDark, title, subtitle, backTo = '/perfil
     'w-full max-w-sm flex items-center justify-center gap-3 rounded-2xl bg-[#14b8a6] py-4 pl-5 pr-6 text-base font-semibold text-white shadow-lg shadow-[#14b8a6]/25 transition hover:bg-[#0d9488] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60'
 
   return (
-    <div className={`min-h-[100dvh] ${pageCls}`}>
+    <div className={`flex min-h-[100dvh] flex-col ${pageCls}`}>
+      <DesktopNavbar />
       <header
-        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] ${
+        className={`fixed inset-x-0 top-0 z-40 px-4 pb-2 pt-[max(0.25rem,env(safe-area-inset-top))] md:hidden ${
           isDark ? 'bg-[#121212]/95' : 'bg-white/95'
         }`}
       >
@@ -71,7 +73,7 @@ export function GuestPreferenceWall({ isDark, title, subtitle, backTo = '/perfil
       </header>
 
       <main
-        className={`mx-auto flex min-h-[100dvh] max-w-lg flex-col items-center justify-center px-6 pb-24 pt-[calc(env(safe-area-inset-top)+4rem)] text-center`}
+        className="mx-auto flex min-h-[100dvh] max-w-lg flex-1 flex-col items-center justify-center px-6 pb-24 pt-[calc(env(safe-area-inset-top)+4rem)] text-center md:pt-6"
       >
         <div className={`w-full max-w-md rounded-2xl border px-6 py-10 ${panelCls}`}>
           <div

@@ -90,19 +90,19 @@ export function EventCard({
   const textColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-900'
   const textMuted = isDark ? 'text-gray-400' : 'text-gray-500'
   const borderColor = isDark ? 'border-gray-800' : 'border-gray-200'
-  const expired =
-    showExpiredState &&
-    isEventExpired(
-      /** @type {{ type?: string, endDateMs?: number | null, dateMs?: number | null, activeUntilMs?: number | null }} */ (
-        event
-      )
+  const isExpiredEvent = isEventExpired(
+    /** @type {{ type?: string, endDateMs?: number | null, dateMs?: number | null, activeUntilMs?: number | null }} */ (
+      event
     )
+  )
+  const expired = (showExpiredState || showOrganizerActions) && isExpiredEvent
   const canOpenDetail = Boolean(detailPath) && !expired
+  const showOrganizerActionsOnCard = showOrganizerActions && !isExpiredEvent
   const ownerUid = typeof event?.createdByUid === 'string' ? event.createdByUid : null
   const ownedByUser =
     !ownerUid || (typeof user?.uid === 'string' && ownerUid === user.uid)
   const lockedOnEventDay =
-    showOrganizerActions && ownedByUser && isEventScheduledForToday(event)
+    showOrganizerActionsOnCard && ownedByUser && isEventScheduledForToday(event)
 
   return (
     <article
@@ -130,7 +130,7 @@ export function EventCard({
       <div
         className={`aspect-[16/9] bg-gray-200 dark:bg-gray-800 relative overflow-hidden ${isLoading ? 'animate-pulse' : ''}`}
       >
-        {showOrganizerActions ? (
+        {showOrganizerActionsOnCard ? (
           <OrganizerEventCardActions
             onEdit={() => onEditEvent?.(event)}
             onDelete={() => onDeleteEvent?.(event)}
@@ -139,7 +139,7 @@ export function EventCard({
             editDisabledMessage={ORGANIZER_EDIT_LOCKED_MESSAGE}
             deleteDisabledMessage={ORGANIZER_DELETE_LOCKED_MESSAGE}
           />
-        ) : hideFavoriteButton ? null : (
+        ) : hideFavoriteButton || expired ? null : (
           <FavoriteToggleButton eventId={id} />
         )}
         {expired ? (

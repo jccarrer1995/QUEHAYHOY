@@ -4,6 +4,9 @@ export const ORGANIZER_EDIT_LOCKED_MESSAGE =
 export const ORGANIZER_DELETE_LOCKED_MESSAGE =
   'No puedes eliminar el evento el mismo día de su realización'
 
+export const ORGANIZER_EXPIRED_EVENT_MESSAGE =
+  'Este evento ya expiró. Puedes consultarlo en Historial de eventos.'
+
 /**
  * @param {Date} [referenceDate]
  * @returns {{ startMs: number, endMs: number, weekday: number }}

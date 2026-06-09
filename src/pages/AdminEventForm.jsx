@@ -23,7 +23,12 @@ import {
 import { ensureUniqueEventSlug, generateSlug } from '../lib/slug.js'
 import { geocodeAddressString } from '../lib/geocodeFromAddress.js'
 import { mapDocToEvent } from '../hooks/useEvents.js'
-import { isEventScheduledForToday, ORGANIZER_EDIT_LOCKED_MESSAGE } from '../lib/eventExpiration.js'
+import {
+  isEventExpired,
+  isEventScheduledForToday,
+  ORGANIZER_EDIT_LOCKED_MESSAGE,
+  ORGANIZER_EXPIRED_EVENT_MESSAGE,
+} from '../lib/eventExpiration.js'
 
 /**
  * Fecha local de hoy en formato `YYYY-MM-DD` (input type="date").
@@ -123,6 +128,10 @@ export function AdminEventForm({ embeddedInMisEventos = false }) {
         }
         if (embeddedInMisEventos && !isAdministratorRole(role)) {
           const eventForLock = mapDocToEvent(snap)
+          if (isEventExpired(eventForLock)) {
+            setLoadError(ORGANIZER_EXPIRED_EVENT_MESSAGE)
+            return
+          }
           if (isEventScheduledForToday(eventForLock)) {
             setLoadError(ORGANIZER_EDIT_LOCKED_MESSAGE)
             return
