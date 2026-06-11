@@ -9,10 +9,12 @@ import {
   Lock,
   Info,
   LogOut,
+  Building2,
   CalendarDays,
   CreditCard,
   BarChart3,
   History,
+  ShieldCheck,
   Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -26,7 +28,7 @@ import { APP_VERSION } from '../../lib/appVersion.js'
 import { getLegalPathByType } from '../../lib/legalLinks.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { useProfileGoogleSignIn } from './useProfileGoogleSignIn.js'
-import { canManageEventsRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
+import { canManageEventsRole, isAdministratorRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -118,6 +120,7 @@ export function ProfileMenuContent({ className = '' }) {
   const isDark = theme === 'dark'
   const { signInWithGoogle, beginGoogleRedirect, user, logout, deleteAccount, role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
+  const isAdmin = isAdministratorRole(role)
   const isOrganizer = (role ?? '').trim().toLowerCase() === ROLE_ORGANIZADOR
   const displayUser = useAuthUserForProfileHeader(user)
   const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
@@ -149,6 +152,14 @@ export function ProfileMenuContent({ className = '' }) {
 
   function goCategorias() {
     navigate('/perfil/categorias')
+  }
+
+  function goAdminOrganizadores() {
+    navigate('/admin/organizadores')
+  }
+
+  function goModeracion() {
+    navigate('/admin/moderacion')
   }
 
   function goMisEventos() {
@@ -212,17 +223,30 @@ export function ProfileMenuContent({ className = '' }) {
 
       {user ? (
         <section className="mt-0">
-          <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
-          {canManageEvents ? (
-            <SettingsRow
-              isDark={isDark}
-              icon={CalendarDays}
-              label="Mis eventos"
-              onClick={goMisEventos}
-            />
-          ) : null}
-          <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
-          <SettingsRow isDark={isDark} icon={Tags} label="Categorías favoritas" onClick={goCategorias} />
+          {isAdmin ? (
+            <>
+              <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Administrar</h2>
+              <SettingsRow isDark={isDark} icon={Building2} label="Organizadores" onClick={goAdminOrganizadores} />
+              <SettingsRow isDark={isDark} icon={CalendarDays} label="Eventos" onClick={goMisEventos} />
+              <SettingsRow isDark={isDark} icon={ShieldCheck} label="Moderación" onClick={goModeracion} />
+              <SettingsRow isDark={isDark} icon={MapPin} label="Sectores" onClick={goSectores} />
+              <SettingsRow isDark={isDark} icon={Tags} label="Categorías" onClick={goCategorias} />
+            </>
+          ) : (
+            <>
+              <h2 className={`mb-1 text-xs font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
+              {canManageEvents ? (
+                <SettingsRow
+                  isDark={isDark}
+                  icon={CalendarDays}
+                  label="Mis eventos"
+                  onClick={goMisEventos}
+                />
+              ) : null}
+              <SettingsRow isDark={isDark} icon={MapPin} label="Sectores favoritos" onClick={goSectores} />
+              <SettingsRow isDark={isDark} icon={Tags} label="Categorías favoritas" onClick={goCategorias} />
+            </>
+          )}
         </section>
       ) : null}
 

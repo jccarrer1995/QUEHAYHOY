@@ -109,7 +109,9 @@ export function MisEventosPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteActionError, setDeleteActionError] = useState(null)
 
-  const showOrganizerCardActions = catalogEnabled && !isAdministratorRole(role)
+  const isAdmin = isAdministratorRole(role)
+  const pageTitle = isAdmin ? 'Eventos' : 'Mis Eventos'
+  const showOrganizerCardActions = catalogEnabled && !isAdmin
 
   function isEventLockedToday(event) {
     const ownerUid = typeof event?.createdByUid === 'string' ? event.createdByUid : null
@@ -249,7 +251,7 @@ export function MisEventosPage() {
             }`}
             style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
           >
-            Mis Eventos
+            {pageTitle}
           </h2>
 
           <div className="h-11 w-11" aria-hidden />
@@ -263,14 +265,14 @@ export function MisEventosPage() {
               className="m-0 text-2xl font-bold tracking-tight"
               style={{ color: isDark ? '#E0E0E0' : '#0a0a0a' }}
             >
-              Mis Eventos
+              {pageTitle}
             </h2>
             <CalendarDays className="h-6 w-6 shrink-0 text-[#14b8a6]" strokeWidth={2} aria-hidden />
           </div>
           <p className={`mt-2 text-sm leading-5 ${isDark ? '!text-gray-400' : '!text-gray-500'}`}>
             {!user
               ? 'Inicia sesión para ver y administrar tus eventos.'
-              : isAdministratorRole(role)
+              : isAdmin
                 ? 'Como administrador ves todos los eventos del sistema.'
                 : 'Aquí verás solo los eventos que creaste este mes como organizador.'}
           </p>

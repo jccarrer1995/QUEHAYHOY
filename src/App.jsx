@@ -1,9 +1,12 @@
 import { Flame, MapPin, Sparkles, Ticket } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext.jsx'
 import { useCategoryVisibility } from './contexts/CategoryVisibilityContext.jsx'
 import { useTheme } from './contexts/ThemeContext.jsx'
 import { useSectorVisibility } from './contexts/SectorVisibilityContext.jsx'
+import { AdminMasterDashboard } from './pages/AdminMasterDashboard.jsx'
+import { isAdministratorRole } from './lib/organizerPlans.js'
 import { useEvents } from './hooks/useEvents'
 import { Navbar, BottomNav, Footer } from './components/layout'
 import { OrganizerPromoBanner } from './components/organizer/OrganizerPromoBanner.jsx'
@@ -45,6 +48,7 @@ function shouldShowHomeStartupSplash() {
 
 function App() {
   const navigate = useNavigate()
+  const { role, loading: authLoading } = useAuth()
   const { theme } = useTheme()
   const { isCategoryVisible } = useCategoryVisibility()
   const { isSectorVisible } = useSectorVisibility()
@@ -130,8 +134,14 @@ function App() {
     }
   }, [showHomeStartupSplash])
 
-  if (showHomeStartupSplash) {
+  const isAdminHome = !authLoading && isAdministratorRole(role)
+
+  if (!isAdminHome && showHomeStartupSplash) {
     return <HomeStartupSplash />
+  }
+
+  if (isAdminHome) {
+    return <AdminMasterDashboard />
   }
 
   return (

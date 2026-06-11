@@ -4,6 +4,7 @@
  */
 import {
   BarChart3,
+  Building2,
   CalendarDays,
   ChevronRight,
   Compass,
@@ -16,6 +17,7 @@ import {
   Lock,
   LogOut,
   MapPin,
+  ShieldCheck,
   Tags,
   Trash2,
   X,
@@ -31,7 +33,7 @@ import { APP_VERSION } from '../../lib/appVersion.js'
 import { getLegalPathByType } from '../../lib/legalLinks.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
-import { canManageEventsRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
+import { canManageEventsRole, isAdministratorRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
 
 /** Logo oficial de Google a color (marca G multicolor) */
 function GoogleLogo({ className = 'h-6 w-6 shrink-0' }) {
@@ -125,6 +127,7 @@ export function DesktopProfileMenuContent({ onClose }) {
   const isDark = theme === 'dark'
   const { signInWithGoogle, beginGoogleRedirect, user, logout, deleteAccount, role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
+  const isAdmin = isAdministratorRole(role)
   const isOrganizer = (role ?? '').trim().toLowerCase() === ROLE_ORGANIZADOR
   const displayUser = useAuthUserForProfileHeader(user)
   const [googleBusy, setGoogleBusy] = useState(false)
@@ -241,48 +244,112 @@ export function DesktopProfileMenuContent({ onClose }) {
 
             <section className="mt-0">
               <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Menú</h2>
-              <MenuRow isDark={isDark} icon={House} label="Home" onClick={() => closeAndNavigate('/')} />
               <MenuRow
                 isDark={isDark}
-                icon={Compass}
-                label="Explorar"
-                onClick={() => closeAndNavigate('/explorar')}
+                icon={House}
+                label="Home"
+                onClick={() => closeAndNavigate('/')}
               />
-              <MenuRow
-                isDark={isDark}
-                icon={Heart}
-                label="Favoritos"
-                onClick={() => closeAndNavigate('/favoritos')}
-                withBorder={!user}
-              />
+              {isAdmin ? (
+                <MenuRow
+                  isDark={isDark}
+                  icon={ShieldCheck}
+                  label="Moderación"
+                  onClick={() => closeAndNavigate('/admin/moderacion')}
+                  withBorder={Boolean(user)}
+                />
+              ) : (
+                <>
+                  <MenuRow
+                    isDark={isDark}
+                    icon={Compass}
+                    label="Explorar"
+                    onClick={() => closeAndNavigate('/explorar')}
+                  />
+                  <MenuRow
+                    isDark={isDark}
+                    icon={Heart}
+                    label="Favoritos"
+                    onClick={() => closeAndNavigate('/favoritos')}
+                    withBorder={!user}
+                  />
+                </>
+              )}
             </section>
 
             {user ? (
               <section className="mt-5">
-                <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>Configuración</h2>
-                {canManageEvents ? (
-                  <MenuRow
-                    isDark={isDark}
-                    icon={CalendarDays}
-                    label="Mis eventos"
-                    onClick={() => closeAndNavigate('/mis-eventos')}
-                    showChevron
-                  />
-                ) : null}
-                <MenuRow
-                  isDark={isDark}
-                  icon={MapPin}
-                  label="Sectores favoritos"
-                  onClick={() => closeAndNavigate('/perfil/sectores')}
-                  showChevron
-                />
-                <MenuRow
-                  isDark={isDark}
-                  icon={Tags}
-                  label="Categorías favoritas"
-                  onClick={() => closeAndNavigate('/perfil/categorias')}
-                  showChevron
-                />
+                {isAdmin ? (
+                  <>
+                    <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>
+                      Administrar
+                    </h2>
+                    <MenuRow
+                      isDark={isDark}
+                      icon={Building2}
+                      label="Organizadores"
+                      onClick={() => closeAndNavigate('/admin/organizadores')}
+                      showChevron
+                    />
+                    <MenuRow
+                      isDark={isDark}
+                      icon={CalendarDays}
+                      label="Eventos"
+                      onClick={() => closeAndNavigate('/mis-eventos')}
+                      showChevron
+                    />
+                    <MenuRow
+                      isDark={isDark}
+                      icon={ShieldCheck}
+                      label="Moderación"
+                      onClick={() => closeAndNavigate('/admin/moderacion')}
+                      showChevron
+                    />
+                    <MenuRow
+                      isDark={isDark}
+                      icon={MapPin}
+                      label="Sectores"
+                      onClick={() => closeAndNavigate('/perfil/sectores')}
+                      showChevron
+                    />
+                    <MenuRow
+                      isDark={isDark}
+                      icon={Tags}
+                      label="Categorías"
+                      onClick={() => closeAndNavigate('/perfil/categorias')}
+                      showChevron
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h2 className={`mb-0.5 text-[11px] font-semibold tracking-wide ${sectionHeadingCls}`}>
+                      Configuración
+                    </h2>
+                    {canManageEvents ? (
+                      <MenuRow
+                        isDark={isDark}
+                        icon={CalendarDays}
+                        label="Mis eventos"
+                        onClick={() => closeAndNavigate('/mis-eventos')}
+                        showChevron
+                      />
+                    ) : null}
+                    <MenuRow
+                      isDark={isDark}
+                      icon={MapPin}
+                      label="Sectores favoritos"
+                      onClick={() => closeAndNavigate('/perfil/sectores')}
+                      showChevron
+                    />
+                    <MenuRow
+                      isDark={isDark}
+                      icon={Tags}
+                      label="Categorías favoritas"
+                      onClick={() => closeAndNavigate('/perfil/categorias')}
+                      showChevron
+                    />
+                  </>
+                )}
               </section>
             ) : null}
 

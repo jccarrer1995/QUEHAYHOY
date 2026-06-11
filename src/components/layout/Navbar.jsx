@@ -11,6 +11,7 @@ import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
+import { isAdministratorRole } from '../../lib/organizerPlans.js'
 import { useEphemeralNotifications } from '../../hooks/useEphemeralNotifications.js'
 import { EventDetailModal } from '../events'
 import { DesktopProfileMenuContent } from './DesktopProfileMenuContent.jsx'
@@ -21,12 +22,13 @@ import { DesktopProfileMenuContent } from './DesktopProfileMenuContent.jsx'
 export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = null }) {
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
-  const { user } = useAuth()
+  const { user, role } = useAuth()
   const isDark = theme === 'dark'
+  const isAdminHome = location.pathname === '/' && isAdministratorRole(role)
   /** Ocultar hamburguesa solo en `/perfil` (ahí el contenido ya es el menú completo). */
   const showDesktopProfileMenu = location.pathname !== '/perfil'
-  /** Buscador del topbar solo en el home (`/`). */
-  const showNavbarSearch = location.pathname === '/'
+  /** Buscador del topbar solo en el home público (`/`), no en el panel de administrador. */
+  const showNavbarSearch = location.pathname === '/' && !isAdminHome
 
   const {
     recentEvents,
@@ -196,24 +198,15 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
             </div>
           </div>
 
-          {/* Espaciador desktop cuando no hay buscador */}
-          {!showNavbarSearch ? <div className="hidden min-w-0 flex-1 md:block" aria-hidden /> : null}
+          {/* Espaciador cuando no hay buscador (empuja acciones a la derecha en móvil y desktop) */}
+          {!showNavbarSearch ? <div className="min-w-0 flex-1" aria-hidden /> : null}
 
-          {/* Derecha: campana, tema */}
-          <div className={`flex items-center gap-1 md:flex-shrink-0 ${showNavbarSearch ? '' : 'md:ml-auto'}`}>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="cursor-pointer rounded-lg p-1.5 md:p-1.5"
-              aria-label={isDark ? 'Modo claro' : 'Modo oscuro'}
-            >
-              {isDark ? (
-                <Sun className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
-              ) : (
-                <Moon className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
-              )}
-            </button>
-
+          {/* Derecha: notificaciones y tema */}
+          <div
+            className={`ml-auto flex shrink-0 items-center gap-1 md:flex-shrink-0 ${
+              showNavbarSearch ? 'md:ml-0' : ''
+            }`}
+          >
             <div className="relative" ref={bellWrapRef}>
               <button
                 type="button"
@@ -324,6 +317,19 @@ export function Navbar({ searchValue = '', onSearchChange, mobileHomeFilters = n
                 </div>
               ) : null}
             </div>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="cursor-pointer rounded-lg p-1.5 md:p-1.5"
+              aria-label={isDark ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {isDark ? (
+                <Sun className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
+              ) : (
+                <Moon className={`h-6 w-6 md:h-5 md:w-5 ${textColor}`} strokeWidth={2} aria-hidden />
+              )}
+            </button>
           </div>
         </div>
 

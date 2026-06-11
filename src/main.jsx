@@ -21,7 +21,10 @@ import { SubscriptionPlanPage } from './pages/SubscriptionPlanPage.jsx'
 import { OrganizerMetricsPage } from './pages/OrganizerMetricsPage.jsx'
 import { OrganizadorBenefitsPage } from './pages/OrganizadorBenefitsPage.jsx'
 import { OrganizadorPlansPage } from './pages/OrganizadorPlansPage.jsx'
+import { RequireAdministrator } from './components/auth/RequireAdministrator.jsx'
 import { RequireOrganizador } from './components/auth/RequireOrganizador.jsx'
+import { AdminOrganizersPage } from './pages/AdminOrganizersPage.jsx'
+import { ModeracionScreen } from './pages/ModeracionScreen.jsx'
 import { CategoryVisibilityProvider } from './contexts/CategoryVisibilityContext.jsx'
 import { FavoriteEventsProvider } from './contexts/FavoriteEventsContext.jsx'
 import { FavoriteLoginPromptProvider } from './contexts/FavoriteLoginPromptContext.jsx'
@@ -92,6 +95,22 @@ createRoot(document.getElementById('root')).render(
                   <Route path="/perfil" element={<ProfilePage />} />
                   <Route path="/perfil/sectores" element={<FavoriteSectorsPage />} />
                   <Route path="/perfil/categorias" element={<FavoriteCategoriesPage />} />
+                  <Route
+                    path="/admin/organizadores"
+                    element={
+                      <RequireAdministrator>
+                        <AdminOrganizersPage />
+                      </RequireAdministrator>
+                    }
+                  />
+                  <Route
+                    path="/admin/moderacion"
+                    element={
+                      <RequireAdministrator>
+                        <ModeracionScreen />
+                      </RequireAdministrator>
+                    }
+                  />
                   <Route path="/evento/:categoria/:slug" element={<EventDetailPage />} />
                   <Route path="/evento/:id" element={<EventDetailPage />} />
                   <Route path="/onboarding-organizador" element={<OrganizadorBenefitsPage />} />

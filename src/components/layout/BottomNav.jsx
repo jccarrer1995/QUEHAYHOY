@@ -1,11 +1,11 @@
 /**
- * BottomNav - Navegación inferior móvil: Inicio, Explorar, (Mis eventos si gestiona eventos), Favoritos, Perfil
+ * BottomNav - Navegación inferior móvil. Admin: Inicio, Eventos, Moderación, Perfil.
  */
-import { CalendarDays, Compass, Heart, House, User } from 'lucide-react'
+import { CalendarDays, Compass, Heart, House, ShieldCheck, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext'
-import { canManageEventsRole } from '../../lib/organizerPlans.js'
+import { canManageEventsRole, isAdministratorRole } from '../../lib/organizerPlans.js'
 
 const ICON_STROKE = 2
 
@@ -14,6 +14,7 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
   const { theme } = useTheme()
   const { role } = useAuth()
   const canManageEvents = canManageEventsRole(role)
+  const isAdmin = isAdministratorRole(role)
   const isDark = theme === 'dark'
   const accentCl = 'text-[#14b8a6]'
   const mutedCl = 'text-gray-400'
@@ -22,25 +23,42 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
     paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   }
 
-  const items = canManageEvents
+  const items = isAdmin
     ? [
         { id: 'home', label: 'Inicio', icon: House, active: activeTab === 'home' },
-        { id: 'explore', label: 'Explorar', icon: Compass, active: activeTab === 'explore' },
         {
           id: 'myEvents',
-          label: 'Mis Eventos',
+          label: 'Eventos',
           icon: CalendarDays,
           active: activeTab === 'myEvents',
         },
-        { id: 'favorites', label: 'Favoritos', icon: Heart, active: activeTab === 'favorites' },
+        {
+          id: 'moderation',
+          label: 'Moderación',
+          icon: ShieldCheck,
+          active: activeTab === 'moderation',
+        },
         { id: 'profile', label: 'Perfil', icon: User, active: activeTab === 'profile' },
       ]
-    : [
-        { id: 'home', label: 'Inicio', icon: House, active: activeTab === 'home' },
-        { id: 'explore', label: 'Explorar', icon: Compass, active: activeTab === 'explore' },
-        { id: 'favorites', label: 'Favoritos', icon: Heart, active: activeTab === 'favorites' },
-        { id: 'profile', label: 'Perfil', icon: User, active: activeTab === 'profile' },
-      ]
+    : canManageEvents
+      ? [
+          { id: 'home', label: 'Inicio', icon: House, active: activeTab === 'home' },
+          { id: 'explore', label: 'Explorar', icon: Compass, active: activeTab === 'explore' },
+          {
+            id: 'myEvents',
+            label: 'Mis Eventos',
+            icon: CalendarDays,
+            active: activeTab === 'myEvents',
+          },
+          { id: 'favorites', label: 'Favoritos', icon: Heart, active: activeTab === 'favorites' },
+          { id: 'profile', label: 'Perfil', icon: User, active: activeTab === 'profile' },
+        ]
+      : [
+          { id: 'home', label: 'Inicio', icon: House, active: activeTab === 'home' },
+          { id: 'explore', label: 'Explorar', icon: Compass, active: activeTab === 'explore' },
+          { id: 'favorites', label: 'Favoritos', icon: Heart, active: activeTab === 'favorites' },
+          { id: 'profile', label: 'Perfil', icon: User, active: activeTab === 'profile' },
+        ]
 
   function handleItemClick(id) {
     if (id === 'home') {
@@ -56,6 +74,11 @@ export function BottomNav({ activeTab = 'home', onTabChange }) {
     if (id === 'myEvents') {
       navigate('/mis-eventos')
       onTabChange?.('myEvents')
+      return
+    }
+    if (id === 'moderation') {
+      navigate('/admin/moderacion')
+      onTabChange?.('moderation')
       return
     }
     if (id === 'favorites') {

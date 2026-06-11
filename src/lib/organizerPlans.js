@@ -33,8 +33,17 @@ export function getOrganizerPlan(planId) {
 /** Rol en Firestore: publica eventos con cuota y solo ve los suyos */
 export const ROLE_ORGANIZADOR = 'organizador'
 
-/** Rol en Firestore: ve y gestiona todos los eventos (sin cuota de organizador) */
-export const ROLE_ADMINISTRADOR = 'administrador'
+/** Rol en Firestore: Super Admin — ve y gestiona toda la plataforma */
+export const ROLE_ADMINISTRADOR = 'Admin'
+
+/**
+ * @param {string | null | undefined} roleRaw
+ * @returns {boolean}
+ */
+export function isAdministratorRole(roleRaw) {
+  const r = (roleRaw ?? '').trim().toLowerCase()
+  return r === 'admin' || r === 'administrador'
+}
 
 /**
  * Puede acceder a `/wp-admin`, crear/editar eventos y ver «Mis eventos».
@@ -43,13 +52,5 @@ export const ROLE_ADMINISTRADOR = 'administrador'
  */
 export function canManageEventsRole(roleRaw) {
   const r = (roleRaw ?? '').trim().toLowerCase()
-  return r === ROLE_ORGANIZADOR || r === ROLE_ADMINISTRADOR
-}
-
-/**
- * @param {string | null | undefined} roleRaw
- * @returns {boolean}
- */
-export function isAdministratorRole(roleRaw) {
-  return (roleRaw ?? '').trim().toLowerCase() === ROLE_ADMINISTRADOR
+  return r === ROLE_ORGANIZADOR || isAdministratorRole(roleRaw)
 }
