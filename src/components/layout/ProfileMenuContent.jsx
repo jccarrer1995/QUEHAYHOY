@@ -18,12 +18,12 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { LegalBottomSheet } from '../legal'
 import { DeleteAccountConfirmDialog } from './DeleteAccountConfirmDialog.jsx'
 import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
+import { getLegalPathByType } from '../../lib/legalLinks.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { useProfileGoogleSignIn } from './useProfileGoogleSignIn.js'
 import { canManageEventsRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
@@ -123,20 +123,9 @@ export function ProfileMenuContent({ className = '' }) {
   const { handleGoogleClick, googleBusy } = useProfileGoogleSignIn({ signInWithGoogle, beginGoogleRedirect })
   const safeAreaTopStyle = { paddingTop: 'env(safe-area-inset-top, 0px)' }
 
-  const [legalSheetOpen, setLegalSheetOpen] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
-  const [legalSheetType, setLegalSheetType] = useState('terms')
-
-  function openLegalSheet(t) {
-    setLegalSheetType(t)
-    setLegalSheetOpen(true)
-  }
-
-  function closeLegalSheet() {
-    setLegalSheetOpen(false)
-  }
 
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
@@ -176,6 +165,11 @@ export function ProfileMenuContent({ className = '' }) {
 
   function goMetricasRendimiento() {
     navigate('/perfil/metricas-rendimiento')
+  }
+
+  /** @param {'terms' | 'privacy' | 'about'} type */
+  function goLegalPage(type) {
+    navigate(getLegalPathByType(type))
   }
 
   async function handleDeleteAccount() {
@@ -252,19 +246,19 @@ export function ProfileMenuContent({ className = '' }) {
           isDark={isDark}
           icon={FileText}
           label="Términos y Condiciones"
-          onClick={() => openLegalSheet('terms')}
+          onClick={() => goLegalPage('terms')}
         />
         <SettingsRow
           isDark={isDark}
           icon={Lock}
           label="Política de Privacidad"
-          onClick={() => openLegalSheet('privacy')}
+          onClick={() => goLegalPage('privacy')}
         />
         <SettingsRow
           isDark={isDark}
           icon={Info}
           label="Acerca de la App"
-          onClick={() => openLegalSheet('about')}
+          onClick={() => goLegalPage('about')}
         />
       </section>
 
@@ -309,7 +303,6 @@ export function ProfileMenuContent({ className = '' }) {
         </p>
       </div>
 
-      <LegalBottomSheet open={legalSheetOpen} type={legalSheetType} onClose={closeLegalSheet} />
       <DeleteAccountConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}

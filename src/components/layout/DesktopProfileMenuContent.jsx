@@ -23,12 +23,12 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { LegalBottomSheet } from '../legal'
 import { DeleteAccountConfirmDialog } from './DeleteAccountConfirmDialog.jsx'
 import { ProfileSignedInSummary } from './ProfileSignedInSummary.jsx'
 import { useAuth } from '../../contexts/AuthContext.jsx'
 import { useTheme } from '../../contexts/ThemeContext.jsx'
 import { APP_VERSION } from '../../lib/appVersion.js'
+import { getLegalPathByType } from '../../lib/legalLinks.js'
 import { useAuthUserForProfileHeader } from '../../lib/authDisplayUser.js'
 import { shouldUseGoogleRedirect } from '../../lib/shouldUseGoogleRedirect.js'
 import { canManageEventsRole, ROLE_ORGANIZADOR } from '../../lib/organizerPlans.js'
@@ -131,9 +131,6 @@ export function DesktopProfileMenuContent({ onClose }) {
   const [logoutBusy, setLogoutBusy] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
-  const [legalSheetOpen, setLegalSheetOpen] = useState(false)
-  const [legalSheetType, setLegalSheetType] = useState('terms')
-
   const googleBtnCls = isDark
     ? 'bg-white text-black shadow-sm'
     : 'border border-gray-200 bg-white text-black shadow-sm'
@@ -146,9 +143,9 @@ export function DesktopProfileMenuContent({ onClose }) {
     onClose?.()
   }
 
-  function openLegalSheet(t) {
-    setLegalSheetType(t)
-    setLegalSheetOpen(true)
+  /** @param {'terms' | 'privacy' | 'about'} type */
+  function goLegalPage(type) {
+    closeAndNavigate(getLegalPathByType(type))
   }
 
   function handleGoogleClick() {
@@ -322,21 +319,21 @@ export function DesktopProfileMenuContent({ onClose }) {
                 isDark={isDark}
                 icon={FileText}
                 label="Términos y Condiciones"
-                onClick={() => openLegalSheet('terms')}
+                onClick={() => goLegalPage('terms')}
                 showChevron
               />
               <MenuRow
                 isDark={isDark}
                 icon={Lock}
                 label="Política de Privacidad"
-                onClick={() => openLegalSheet('privacy')}
+                onClick={() => goLegalPage('privacy')}
                 showChevron
               />
               <MenuRow
                 isDark={isDark}
                 icon={Info}
                 label="Acerca de la App"
-                onClick={() => openLegalSheet('about')}
+                onClick={() => goLegalPage('about')}
                 showChevron
               />
             </section>
@@ -374,11 +371,6 @@ export function DesktopProfileMenuContent({ onClose }) {
         </p>
       </div>
 
-      <LegalBottomSheet
-        open={legalSheetOpen}
-        type={legalSheetType}
-        onClose={() => setLegalSheetOpen(false)}
-      />
       <DeleteAccountConfirmDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
