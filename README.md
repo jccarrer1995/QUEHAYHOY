@@ -40,16 +40,17 @@
 - **CategorySelector:** Bares, Conciertos, Comida, Cine, Ferias (tarjetas con iconos)
 - **EventCardCarousel:** Imagen, título, badge de aforo (✨ Exclusivo, 👥 Social, 🔥 Masivo), fecha, ubicación, precio
 - **FloatingButtons:** Tema (☀️/🌙), Filter, Gratis — solo móvil
-- **BottomNav:** Inicio, Explorar, Favoritos (en construcción), **Perfil** → `/perfil`
+- **BottomNav:** Inicio, Explorar, Favoritos (en construcción), **Perfil** → `/perfil`. Con rol **Admin**: Inicio, **Eventos**, **Moderación**, Perfil (sin Explorar ni Favoritos)
 - **TodaySection / HorizontalEventRow:** carruseles reactivos al buscador y a sectores favoritos
 - **DesktopNavbar:** wrapper del `Navbar` visible solo en `md+` para rutas fuera del Home
 - **EventCatalogToolbar:** select «Ordenar por» + botones grid/list en catálogos de eventos
 - **PreferenceSettingsPanel / PreferenceVisibilitySwitch:** shell de preferencias de sectores y categorías
 - **OrganizerEventListMenu:** menú ⋮ con Editar/Eliminar en listado de Mis eventos
-- **ProfileMenuContent / DesktopProfileMenuContent:** perfil móvil (`/perfil`) y drawer desktop (hamburguesa) desacoplados; el drawer replica las secciones del perfil responsive con menú de navegación al inicio
+- **ProfileMenuContent / DesktopProfileMenuContent:** perfil móvil (`/perfil`) y drawer desktop (hamburguesa) desacoplados; el drawer replica las secciones del perfil responsive con menú de navegación al inicio. Con rol **Admin**, la sección **Configuración** se sustituye por **Administrar** (Organizadores, Eventos, Moderación, Sectores, Categorías)
 - **DeleteAccountConfirmDialog:** modal de confirmación para eliminación de cuenta
 - **Footer:** footer exclusivo para desktop con bloque editorial y enlaces legales
-- **LegalBottomSheet / LegalPage:** contenido legal consistente entre móvil y desktop
+- **OrganizerPromoBanner:** carrusel horizontal deslizable (asistente logueado) con promo «Subir eventos» y planes Estándar/Pro; cards más grandes y badge **Mejor valor** legible en plan Pro
+- **LegalPage:** páginas legales dedicadas (`/legal/*`) con header compacto en móvil
 
 ### 5. Badges de Aforo
 - **✨ Exclusivo:** &lt;30 personas (dorado)
@@ -139,12 +140,14 @@ src/
 │   ├── layout/     # Navbar (opc. `mobileHomeFilters` sticky), BottomNav, DesktopProfileMenuContent, DeleteAccountConfirmDialog…
 │   ├── events/     # carruseles, EventCatalogToolbar, HomeMobileFilters, HorizontalScrollRow, CategorySelector…
 │   ├── explore/    # ExploreMapView (Google Maps), ExploreEventMiniCard (resumen al tocar pin)…
-│   └── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
+│   ├── legal/      # LegalBottomSheet (términos, privacidad, acerca de)
+│   ├── organizer/  # OrganizerPromoBanner, OrganizerQuotaCard, OrganizerEventListMenu…
+│   └── auth/       # RequireOrganizador, RequireAdministrator
 ├── config/         # firebaseConfig
 ├── contexts/       # ThemeContext, AuthContext, SectorVisibilityContext, CategoryVisibilityContext, FavoriteEventsContext, FavoriteLoginPromptContext
 ├── hooks/          # useEvents, useEphemeralNotifications…
 ├── lib/            # eventSort, eventExpiration, topSectors, sectorZoneBadges, appVersion…
-├── pages/          # App (home vía ruta /), ProfilePage, FavoriteSectorsPage, FavoriteCategoriesPage, FavoriteEventsPage, EventDetailPage…
+├── pages/          # App (home vía ruta /), AdminMasterDashboard, ModeracionScreen, ProfilePage, FavoriteSectorsPage…
 └── ...
 ```
 
@@ -152,7 +155,9 @@ src/
 
 | Ruta | Descripción |
 |------|-------------|
-| `/` | Home (eventos, categorías, sectores) |
+| `/` | Home (eventos, categorías, sectores). Con rol **Admin** → **Dashboard** con KPIs y gráficos |
+| `/admin/moderacion` | Centro de Moderación (Admin): pestañas Eventos/Organizadores, revisión en modal y aprobación con animación |
+| `/admin/organizadores` | Gestión de organizadores (Admin, placeholder) |
 | `/favoritos` | Favoritos: con sesión lista eventos marcados con el corazón (Firestore); sin sesión, pantalla de bienvenida e inicio de sesión |
 | `/perfil` | Cuenta, Google, configuración y legales |
 | `/historial-eventos` | Historial de eventos (organizador): antiguos y nuevos |
@@ -175,6 +180,7 @@ src/
 - Home con secciones de descubrimiento y filtros por categorías/sectores.
 - Bloque “¿No sabes a dónde ir?” con selección aleatoria de evento.
 - Sección “Más eventos” para no perder contenido fuera de los bloques principales.
+- **Promo organizador (asistente logueado):** debajo del bloque «Sorpréndeme», carrusel horizontal con 3 cards (promo + planes Estándar/Pro), deslizable como los eventos.
 
 ### 2) Detalle de evento y rutas públicas
 - Detalle en página dedicada con carga por documento y estados de `loading/error`.
@@ -210,7 +216,7 @@ src/
 - **Drawer desktop** (`DesktopProfileMenuContent`, botón hamburguesa del `Navbar`):
   - Ancho compacto **300px**, tipografía y espaciados reducidos; perfil con variante `compact` en `ProfileSignedInSummary`.
   - Scrollbar fino siempre visible al **borde derecho** del panel (utilidad `.scrollbar-thin` en `index.css`).
-  - Misma estructura que el perfil responsive, con sección **Menú** al inicio: **Home**, **Explorar**, **Favoritos**; luego **Configuración**, **Gestión** (organizador), **Legal** y **Cuenta** (cerrar sesión + eliminar cuenta).
+  - Misma estructura que el perfil responsive, con sección **Menú** al inicio: **Home**, **Explorar**, **Favoritos** (Admin: **Home** y **Moderación**); luego **Configuración** o **Administrar** (Admin), **Gestión** (organizador), **Legal** y **Cuenta** (cerrar sesión + eliminar cuenta).
   - Sheets legales y diálogo de eliminación de cuenta integrados en el drawer.
 
 ### 5) Admin de eventos (CRUD)
@@ -221,10 +227,18 @@ src/
 
 ### 6) Modelo de roles y permisos de gestión
 - Rol `organizador`: gestiona solo sus eventos (`createdByUid`) y aplica cuota por plan.
-- Rol `administrador`: acceso de gestión global y visibilidad de todos los eventos.
+- Rol **`Admin`** (Firestore): Super Admin con acceso global a la plataforma, dashboard en `/` y rutas `/admin/*`.
 - Guard de rutas (`RequireOrganizador`) habilita acceso a organizador y administrador.
+- Guard **`RequireAdministrator`** protege rutas exclusivas de Admin (`/admin/moderacion`, `/admin/organizadores`).
 - En edición, un organizador no puede modificar eventos de otro usuario.
 - Eventos legacy sin `createdByUid`: solo administrador puede editarlos.
+
+**Actualización (panel Admin):**
+- **Dashboard en inicio** (`AdminMasterDashboard`): KPIs en grid 2×2 (usuarios, organizadores, eventos, ingresos — demo), gráficos de crecimiento usuarios vs organizadores; sin splash móvil de bienvenida.
+- **Centro de Moderación** (`ModeracionScreen`, `/admin/moderacion`): pestañas **Eventos (n)** / **Organizadores (n)**, panel de revisión al pulsar **Revisar**, aprobación simulada con animación de salida de la tarjeta.
+- **Navegación Admin:** bottom nav Inicio · Eventos · Moderación · Perfil; drawer desktop con **Moderación** en Menú; perfil con sección **Administrar** (sin Explorar/Favoritos).
+- En `/mis-eventos`, el título muestra **Eventos** (no «Mis Eventos») para Admin.
+- Navbar en home Admin: sin buscador ni filtros del topbar.
 
 ### 7) Mis eventos y cuota mensual
 - Ruta `/mis-eventos` para gestión de catálogo según rol:
